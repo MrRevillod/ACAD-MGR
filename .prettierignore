@@ -7,6 +7,8 @@ apps/client/.svelte-kit/
 **/dist/
 **/static/
 
+**/.pnpm-store
+
 package-lock.json
 yarn.lock
 pnpm-lock.yaml

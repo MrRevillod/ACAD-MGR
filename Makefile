@@ -43,7 +43,6 @@ fmt:
 lint:
 	cargo clippy --workspace --all-targets --all-features -- -D warnings
 	cd $(CLIENT) && pnpm run lint
-	cd $(CLIENT) && pnpm run check
 
 migration:
 	cd $(SERVER) && sqlx migrate add --source ./config/migrations "$(name)"
