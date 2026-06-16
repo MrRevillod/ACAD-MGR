@@ -6,6 +6,7 @@ async fn main() {
 
     let orcid_client = OrcidClient::new();
     let author = orcid_client.author(author).await.unwrap();
+    let works = author.works();
 
-    dbg!(author);
+    dbg!(works);
 }
