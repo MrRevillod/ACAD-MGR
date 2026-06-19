@@ -1,12 +1,19 @@
-use orcid::Client as OrcidClient;
+mod academic;
+mod auth;
+mod imports;
+mod shared;
+mod university;
+
+use sword::Application;
 
 #[tokio::main]
 async fn main() {
-    let author = "0000-0003-0792-7733";
+    let application = Application::builder()
+        .with_module::<shared::SharedModule>()
+        .with_module::<university::UniversityModule>()
+        .with_module::<academic::AcademicModule>()
+        .with_module::<auth::AuthModule>()
+        .build();
 
-    let orcid_client = OrcidClient::new();
-    let author = orcid_client.author(author).await.unwrap();
-    let works = author.works();
-
-    dbg!(works);
+    application.run().await
 }

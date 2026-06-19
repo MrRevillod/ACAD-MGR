@@ -1,37 +1,38 @@
-CREATE TYPE AcademicOption AS ENUM (
+CREATE TYPE academic_option AS ENUM (
     'teaching',
     'research'
 );
 
-CREATE TYPE Planta AS ENUM (
-    'Adjunta',
-    'Permanente'
+CREATE TYPE academic_planta AS ENUM (
+    'adjunta',
+    'permanente'
 );
 
 CREATE TABLE academic_categories (
     code    TEXT    PRIMARY KEY,
     name    TEXT    NOT NULL,
-    planta  Planta  NOT NULL
+    planta  academic_planta  NOT NULL
 );
 
 INSERT INTO academic_categories (code, name, planta) VALUES
     -- Planta Permanente
-    ('titular_teacher',    'Profesor Titular',    'Permanente'),
-    ('associated_teacher', 'Profesor Asociado',   'Permanente'),
-    ('assistant_teacher',  'Profesor Asistente',  'Permanente'),
-    ('instructor_teacher', 'Profesor Instructor', 'Permanente'),
-    ('young_doctor',       'Doctor Joven',        'Permanente'),
-    ('uncategorized',      'Sin Categorizar',     'Permanente'),
+    ('titular_teacher',    'Profesor Titular',    'permanente'),
+    ('associated_teacher', 'Profesor Asociado',   'permanente'),
+    ('assistant_teacher',  'Profesor Asistente',  'permanente'),
+    ('instructor_teacher', 'Profesor Instructor', 'permanente'),
+    ('young_doctor',       'Doctor Joven',        'permanente'),
+    ('uncategorized',      'Sin Categorizar',     'permanente'),
     -- Planta Adjunta
-    ('attached_teacher',    'Profesor Adjunto',     'Adjunta'),
-    ('attached_instructor', 'Instructor Adjunto',   'Adjunta'),
-    ('attached_researcher', 'Investigador Adjunto', 'Adjunta');
+    ('attached_teacher',    'Profesor Adjunto',     'adjunta'),
+    ('attached_instructor', 'Instructor Adjunto',   'adjunta'),
+    ('attached_researcher', 'Investigador Adjunto', 'adjunta');
 
 -- Combinaciones válidas según reglamento UCT
 CREATE TABLE academic_category_options (
+    id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     category_code TEXT           NOT NULL REFERENCES academic_categories(code),
     option        AcademicOption NOT NULL,
-    PRIMARY KEY (category_code, option)
+    UNIQUE (category_code, option)
 );
 
 INSERT INTO academic_category_options (category_code, option) VALUES

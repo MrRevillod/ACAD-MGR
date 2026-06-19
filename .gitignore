@@ -4,6 +4,7 @@ target/
 dist/
 **/node-compile-cache
 data/
+!data/raw_columns.csv
 presharedkey
 privatekey
 **/.svelte-kit

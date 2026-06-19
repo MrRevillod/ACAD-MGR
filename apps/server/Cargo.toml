@@ -6,3 +6,31 @@ edition = "2024"
 [dependencies]
 orcid = "0.2.3"
 tokio = { version = "1.52.3", features = ["full"] }
+
+polars = "0.54.4"
+strum = "0.28"
+strum_macros = "0.28"
+
+sword = { git = "https://github.com/sword-web/sword.git", features = [
+    "web",
+    "validation-validator",
+] }
+
+sqlx = { version = "0.8.6", features = [
+    "chrono",
+    "macros",
+    "postgres",
+    "runtime-tokio",
+    "uuid",
+] }
+
+time = "0.3.47"
+tracing = "0.1.44"
+tower-http = { version = "0.6.8", features = ["trace", "tracing"] }
+
+thiserror = "2.0.17"
+uuid = { version = "1.19.0", features = ["serde", "v4"] }
+chrono = { version = "0.4.42", features = ["serde"] }
+jsonwebtoken = { version = "10.2.0", features = ["rust_crypto"] }
+serde = { version = "1.0.228", features = ["derive"] }
+validator = { version = "0.20.0", features = ["derive"] }

@@ -1,11 +1,11 @@
 -- Add migration script here
 
 CREATE TABLE faculties (
-	id TEXT PRIMARY KEY,
+	id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 	name TEXT NOT NULL
 );
 
-INSERT INTO faculties (id, name) VALUES ('FA-ING', 'Facultad de Ingeniería');
+INSERT INTO faculties (name) VALUES ('Facultad de Ingeniería');
 
 CREATE TABLE departments (
 	id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -14,10 +14,10 @@ CREATE TABLE departments (
 );
 
 INSERT INTO departments (name, faculty_id) VALUES
-('Ciencias Matemáticas y Físicas', 'FA-ING'),
-('Obras Civiles y Geología', 'FA-ING'),
-('Procesos Industriales', 'FA-ING'),
-('Ingeniería Informática', 'FA-ING');
+('Ciencias Matemáticas y Físicas', (SELECT id FROM faculties WHERE name = 'Facultad de Ingeniería')),
+('Obras Civiles y Geología', (SELECT id FROM faculties WHERE name = 'Facultad de Ingeniería')),
+('Procesos Industriales', (SELECT id FROM faculties WHERE name = 'Facultad de Ingeniería')),
+('Ingeniería Informática', (SELECT id FROM faculties WHERE name = 'Facultad de Ingeniería'));
 
 CREATE TABLE careers (
 	id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -35,5 +35,6 @@ INSERT INTO careers (name, department_id) VALUES
 ('Ingeniería Eléctrica', (SELECT id FROM departments WHERE name = 'Procesos Industriales')),
 ('Ingeniería Civil Química', (SELECT id FROM departments WHERE name = 'Procesos Industriales')),
 ('Ingeniería Civil Ambiental', (SELECT id FROM departments WHERE name = 'Procesos Industriales')),
+('Ingeniería Civil Plan Común', (SELECT id FROM departments WHERE name = 'Procesos Industriales')),
 
 ('Ingeniería Civil en Informática', (SELECT id FROM departments WHERE name = 'Ingeniería Informática'));
