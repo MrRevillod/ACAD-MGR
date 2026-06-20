@@ -31,7 +31,7 @@ INSERT INTO academic_categories (code, name, planta) VALUES
 CREATE TABLE academic_category_options (
     id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     category_code TEXT           NOT NULL REFERENCES academic_categories(code),
-    option        AcademicOption NOT NULL,
+    option        academic_option NOT NULL,
     UNIQUE (category_code, option)
 );
 

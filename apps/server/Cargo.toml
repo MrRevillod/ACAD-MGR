@@ -10,10 +10,13 @@ tokio = { version = "1.52.3", features = ["full"] }
 polars = "0.54.4"
 strum = "0.28"
 strum_macros = "0.28"
+csv = "1.3"
 
 sword = { git = "https://github.com/sword-web/sword.git", features = [
     "web",
     "validation-validator",
+    "web-multipart",
+    "web-swagger-ui"
 ] }
 
 sqlx = { version = "0.8.6", features = [
@@ -34,3 +37,6 @@ chrono = { version = "0.4.42", features = ["serde"] }
 jsonwebtoken = { version = "10.2.0", features = ["rust_crypto"] }
 serde = { version = "1.0.228", features = ["derive"] }
 validator = { version = "0.20.0", features = ["derive"] }
+bcrypt = "0.19.2"
+bon = "3.9.3"
+sha2 = "0.11.0"

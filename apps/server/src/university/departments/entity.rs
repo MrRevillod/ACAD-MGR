@@ -1,14 +1,23 @@
 use crate::shared::{Entity, Id};
 use crate::university::FacultyId;
+use bon::Builder;
+use serde::Serialize;
 use sqlx::FromRow;
 
 pub type DepartmentId = Id<Department>;
 
-#[derive(Debug, Clone, FromRow)]
+#[derive(Debug, Clone, Serialize, FromRow, Builder)]
 pub struct Department {
+    #[builder(default = DepartmentId::new())]
     pub id: DepartmentId,
     pub name: String,
     pub faculty_id: FacultyId,
+}
+
+#[derive(Debug)]
+pub struct DepartmentFilter {
+    pub name: Option<String>,
+    pub faculty_id: Option<FacultyId>,
 }
 
 impl Entity for Department {

@@ -1,12 +1,12 @@
-pub mod categories;
-pub mod options;
 pub mod academics;
+pub mod categories;
 pub mod degrees;
+pub mod options;
 
-pub use categories::*;
-pub use options::*;
 pub use academics::*;
+pub use categories::*;
 pub use degrees::*;
+pub use options::*;
 
 use sword::prelude::*;
 
@@ -16,9 +16,9 @@ impl Module for AcademicModule {
     fn register_controllers(_controllers: &ControllerRegistry) {}
 
     fn register_components(components: &ComponentRegistry) {
-        components.register::<categories::AcademicCategoriesRepository>();
-        components.register::<options::AcademicCategoryOptionsRepository>();
-        components.register::<academics::AcademicsRepository>();
-        components.register::<degrees::DegreesRepository>();
+        components.register::<AcademicCategoriesRepository>();
+        components.register::<AcademicCategoryOptionsRepository>();
+        components.register::<AcademicsRepository>();
+        components.register::<DegreesRepository>();
     }
 }

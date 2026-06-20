@@ -1,3 +1,5 @@
+use crate::{auth::AuthError, university::UniversityError};
+
 use sqlx::Error as SqlxError;
 use std::io::Error as IoError;
 use sword::web::*;
@@ -7,6 +9,14 @@ pub type AppResult<T = JsonResponse> = Result<T, AppError>;
 
 #[derive(Debug, Error, HttpError)]
 pub enum AppError {
+    #[http(transparent)]
+    #[error(transparent)]
+    Auth(#[from] AuthError),
+
+    #[http(transparent)]
+    #[error(transparent)]
+    University(#[from] UniversityError),
+
     #[http(code = 500)]
     #[tracing(error)]
     #[error("Database error: {0}")]

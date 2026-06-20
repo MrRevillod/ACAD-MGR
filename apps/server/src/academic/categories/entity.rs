@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, Type};
 
-#[derive(Debug, Clone, Type, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Type, Serialize, Deserialize)]
 #[sqlx(type_name = "academic_option", rename_all = "lowercase")]
 #[serde(rename_all = "lowercase")]
 pub enum AcademicOption {

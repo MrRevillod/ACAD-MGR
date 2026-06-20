@@ -1,7 +1,6 @@
 use crate::academic::options::AcademicCategoryOptionId;
 use crate::shared::{Entity, Id};
-use crate::university::CareerId;
-use crate::university::DepartmentId;
+use crate::university::{CareerId, DepartmentId};
 
 use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
@@ -9,7 +8,7 @@ use sqlx::{FromRow, Type};
 
 pub type AcademicId = Id<Academic>;
 
-#[derive(Debug, Clone, Type, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Type, Serialize, Deserialize)]
 #[sqlx(type_name = "sex", rename_all = "UPPERCASE")]
 #[serde(rename_all = "UPPERCASE")]
 pub enum Sex {

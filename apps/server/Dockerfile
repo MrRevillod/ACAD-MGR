@@ -8,10 +8,12 @@ RUN apk add --no-cache \
 	openssl-dev \
 	openssl-libs-static \
 	unzip \
+	netcat-openbsd \
 	xz \
 	build-base \
 	pkgconf \
 	bash \
+	curl \
 	&& rm -rf /var/cache/apk/*
 
 RUN wget https://github.com/watchexec/cargo-watch/releases/download/v8.5.3/cargo-watch-v8.5.3-x86_64-unknown-linux-musl.tar.xz && \

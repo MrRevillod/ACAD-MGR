@@ -8,6 +8,12 @@ body-limit = "5MB"
 request-timeout = { enabled = true, timeout = "15s" }
 router-prefix = "/api"
 
+[web.openapi]
+title = "ORCID ACAD MGR API"
+version = "0.1.0"
+description = "API documentation for the ORCID ACAD MGR Server"
+spec-file-paths = ["docs/university.yaml"]
+
 [postgres-db]
 user = "${POSTGRES_USER}"
 password = "${POSTGRES_PASSWORD}"
@@ -24,10 +30,20 @@ jwt_secret = "${JWT_SECRET}"
 access_exp_minutes = 15
 refresh_exp_days = 7
 
+[cookies]
+path = "/"
+secure = true
+http_only = true
+access_cookie_name = "RAMTUN_ACCESS_TOKEN"
+refresh_cookie_name = "RAMTUN_REFRESH_TOKEN"
+
+[hasher]
+cost = 12
+
 [tracing]
 enabled = true
 display = false
-filter = "info,sword=info,sqlx=error"
+filter = "debug,sword=info,sqlx=error"
 format = "dev"
 time-style = "none"
 time-pattern = "%H:%M:%S"

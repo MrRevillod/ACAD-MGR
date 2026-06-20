@@ -1,0 +1,27 @@
+use crate::shared::{Entity, Id};
+use serde::{Deserialize, Serialize};
+use sqlx::{FromRow, Type};
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type, Copy)]
+#[serde(rename_all = "lowercase")]
+#[sqlx(type_name = "user_role", rename_all = "lowercase")]
+pub enum UserRole {
+    Admin,
+}
+
+pub type UserId = Id<User>;
+
+#[derive(Debug, Clone, FromRow, Serialize)]
+pub struct User {
+    pub id: UserId,
+    pub name: String,
+    pub email: String,
+    pub role: UserRole,
+    pub password_hash: String,
+}
+
+impl Entity for User {
+    fn key_name() -> &'static str {
+        "user"
+    }
+}

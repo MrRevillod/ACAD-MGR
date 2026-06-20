@@ -10,7 +10,7 @@ INSERT INTO faculties (name) VALUES ('Facultad de Ingeniería');
 CREATE TABLE departments (
 	id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 	name TEXT NOT NULL,
-	faculty_id TEXT NOT NULL REFERENCES faculties(id)
+	faculty_id UUID NOT NULL REFERENCES faculties(id)
 );
 
 INSERT INTO departments (name, faculty_id) VALUES

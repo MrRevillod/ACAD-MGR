@@ -5,6 +5,7 @@ mod errors;
 mod extensions;
 mod id;
 mod jsonwebtoken;
+mod logger;
 
 use database::DatabaseConfig;
 use sword::prelude::*;
@@ -15,6 +16,8 @@ pub use database::{Database, TransactionManager, Tx};
 pub use errors::*;
 pub use extensions::*;
 pub use id::{Entity, Id};
+pub use jsonwebtoken::JsonWebTokenService;
+pub use logger::LoggerLayer;
 
 pub struct SharedModule;
 
@@ -28,5 +31,6 @@ impl Module for SharedModule {
 
     fn register_components(components: &ComponentRegistry) {
         components.register::<TransactionManager>();
+        components.register::<JsonWebTokenService>();
     }
 }

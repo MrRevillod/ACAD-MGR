@@ -1,0 +1,640 @@
+openapi: "3.0.3"
+
+info:
+  title: "ORCID ACAD MGR API - University Module"
+  description: |
+    API para la gestión de la estructura universitaria.
+
+    Proporciona operaciones CRUD para:
+      - **Facultades** (`/faculties`)
+      - **Departamentos** (`/departments`)
+      - **Carreras** (`/careers`)
+      - **Cargos Laborales Académicos** (`/work-positions`)
+
+    Los endpoints de listado soportan filtros opcionales mediante query parameters.
+    Todos los IDs de tipo UUID se generan automáticamente en el servidor.
+  version: "0.1.0"
+
+servers:
+  - url: /api
+    description: API Gateway
+
+tags:
+  - name: Facultades
+    description: Gestión de facultades
+  - name: Departamentos
+    description: Gestión de departamentos académicos
+  - name: Carreras
+    description: Gestión de carreras profesionales
+  - name: Cargos Laborales
+    description: Gestión de cargos laborales académicos
+
+paths:
+  # ============================================================================
+  # FACULTIES
+  # ============================================================================
+  /faculties:
+    get:
+      tags:
+        - Facultades
+      summary: Listar facultades
+      description: >
+        Obtiene un listado de todas las facultades.
+        Soporta filtro opcional por nombre (búsqueda parcial insensible a mayúsculas).
+      operationId: listFaculties
+      parameters:
+        - name: name
+          in: query
+          description: Filtro por nombre (ILIKE). Ej. `name=Ingeniería`
+          required: false
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 255
+          example: Ingeniería
+      responses:
+        "200":
+          description: Listado de facultades obtenido exitosamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Faculty"
+
+    post:
+      tags:
+        - Facultades
+      summary: Crear facultad
+      description: Crea una nueva facultad en el sistema.
+      operationId: createFaculty
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateFacultyDto"
+      responses:
+        "201":
+          description: Facultad creada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Faculty"
+        "422":
+          description: Error de validación en los datos de entrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+
+  /faculties/{id}:
+    get:
+      tags:
+        - Facultades
+      summary: Obtener facultad por ID
+      description: Obtiene una facultad específica mediante su UUID.
+      operationId: getFaculty
+      parameters:
+        - name: id
+          in: path
+          description: UUID de la facultad
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+      responses:
+        "200":
+          description: Facultad encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Faculty"
+        "404":
+          description: Facultad no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                status: 404
+                message: "Faculty not found"
+                error: "Not Found"
+
+  # ============================================================================
+  # DEPARTMENTS
+  # ============================================================================
+  /departments:
+    get:
+      tags:
+        - Departamentos
+      summary: Listar departamentos
+      description: >
+        Obtiene un listado de todos los departamentos.
+        Soporta filtros opcionales por nombre y/o facultad.
+      operationId: listDepartments
+      parameters:
+        - name: name
+          in: query
+          description: Filtro por nombre (ILIKE)
+          required: false
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 255
+          example: Ciencias
+        - name: faculty_id
+          in: query
+          description: UUID de la facultad para filtrar departamentos
+          required: false
+          schema:
+            type: string
+            format: uuid
+          example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+      responses:
+        "200":
+          description: Listado de departamentos obtenido exitosamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Department"
+
+    post:
+      tags:
+        - Departamentos
+      summary: Crear departamento
+      description: Crea un nuevo departamento asociado a una facultad.
+      operationId: createDepartment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDepartmentDto"
+      responses:
+        "201":
+          description: Departamento creado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Department"
+        "422":
+          description: Error de validación en los datos de entrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+
+  /departments/{id}:
+    get:
+      tags:
+        - Departamentos
+      summary: Obtener departamento por ID
+      description: Obtiene un departamento específico mediante su UUID.
+      operationId: getDepartment
+      parameters:
+        - name: id
+          in: path
+          description: UUID del departamento
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: b2c3d4e5-f6a7-8901-bcde-f12345678901
+      responses:
+        "200":
+          description: Departamento encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Department"
+        "404":
+          description: Departamento no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # ============================================================================
+  # CAREERS
+  # ============================================================================
+  /careers:
+    get:
+      tags:
+        - Carreras
+      summary: Listar carreras
+      description: >
+        Obtiene un listado de todas las carreras.
+        Soporta filtros opcionales por nombre y/o departamento.
+      operationId: listCareers
+      parameters:
+        - name: name
+          in: query
+          description: Filtro por nombre (ILIKE)
+          required: false
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 255
+          example: Informática
+        - name: department_id
+          in: query
+          description: UUID del departamento para filtrar carreras
+          required: false
+          schema:
+            type: string
+            format: uuid
+          example: b2c3d4e5-f6a7-8901-bcde-f12345678901
+      responses:
+        "200":
+          description: Listado de carreras obtenido exitosamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Career"
+
+    post:
+      tags:
+        - Carreras
+      summary: Crear carrera
+      description: Crea una nueva carrera asociada a un departamento.
+      operationId: createCareer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCareerDto"
+      responses:
+        "201":
+          description: Carrera creada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Career"
+        "422":
+          description: Error de validación en los datos de entrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+
+  /careers/{id}:
+    get:
+      tags:
+        - Carreras
+      summary: Obtener carrera por ID
+      description: Obtiene una carrera específica mediante su UUID.
+      operationId: getCareer
+      parameters:
+        - name: id
+          in: path
+          description: UUID de la carrera
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: c3d4e5f6-a7b8-9012-cdef-123456789012
+      responses:
+        "200":
+          description: Carrera encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Career"
+        "404":
+          description: Carrera no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # ============================================================================
+  # WORK POSITIONS
+  # ============================================================================
+  /work-positions:
+    get:
+      tags:
+        - Cargos Laborales
+      summary: Listar cargos laborales
+      description: >
+        Obtiene un listado de todos los cargos laborales académicos.
+        Soporta filtros opcionales por código y/o nombre.
+      operationId: listWorkPositions
+      parameters:
+        - name: name
+          in: query
+          description: Filtro por nombre (ILIKE)
+          required: false
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 255
+          example: Docente
+        - name: code
+          in: query
+          description: Filtro por código (ILIKE)
+          required: false
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 50
+          example: jefe_carrera
+      responses:
+        "200":
+          description: Listado de cargos laborales obtenido exitosamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AcademicWorkPosition"
+
+    post:
+      tags:
+        - Cargos Laborales
+      summary: Crear cargo laboral
+      description: Crea un nuevo cargo laboral académico.
+      operationId: createWorkPosition
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAcademicWorkPositionDto"
+      responses:
+        "201":
+          description: Cargo laboral creado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AcademicWorkPosition"
+        "422":
+          description: Error de validación en los datos de entrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+
+  /work-positions/{code}:
+    get:
+      tags:
+        - Cargos Laborales
+      summary: Obtener cargo laboral por código
+      description: Obtiene un cargo laboral específico mediante su código textual.
+      operationId: getWorkPosition
+      parameters:
+        - name: code
+          in: path
+          description: Código textual del cargo laboral
+          required: true
+          schema:
+            type: string
+          example: jefe_carrera
+      responses:
+        "200":
+          description: Cargo laboral encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AcademicWorkPosition"
+        "404":
+          description: Cargo laboral no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  schemas:
+    # ==========================================================================
+    # FACULTY
+    # ==========================================================================
+    Faculty:
+      description: Representa una facultad universitaria
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: UUID único generado automáticamente
+          example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+        name:
+          type: string
+          description: Nombre de la facultad
+          minLength: 1
+          maxLength: 255
+          example: Facultad de Ingeniería
+
+    CreateFacultyDto:
+      description: Datos de entrada para crear una facultad
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: Nombre de la facultad
+          minLength: 1
+          maxLength: 255
+          example: Facultad de Ingeniería
+
+    # ==========================================================================
+    # DEPARTMENT
+    # ==========================================================================
+    Department:
+      description: Representa un departamento académico
+      type: object
+      required:
+        - id
+        - name
+        - faculty_id
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: UUID único generado automáticamente
+          example: b2c3d4e5-f6a7-8901-bcde-f12345678901
+        name:
+          type: string
+          description: Nombre del departamento
+          minLength: 1
+          maxLength: 255
+          example: Ciencias Matemáticas y Físicas
+        faculty_id:
+          type: string
+          format: uuid
+          description: UUID de la facultad a la que pertenece
+          example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+
+    CreateDepartmentDto:
+      description: Datos de entrada para crear un departamento
+      type: object
+      required:
+        - name
+        - faculty_id
+      properties:
+        name:
+          type: string
+          description: Nombre del departamento
+          minLength: 1
+          maxLength: 255
+          example: Ciencias Matemáticas y Físicas
+        faculty_id:
+          type: string
+          format: uuid
+          description: UUID de la facultad a la que pertenece
+          example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+
+    # ==========================================================================
+    # CAREER
+    # ==========================================================================
+    Career:
+      description: Representa una carrera profesional
+      type: object
+      required:
+        - id
+        - name
+        - department_id
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: UUID único generado automáticamente
+          example: c3d4e5f6-a7b8-9012-cdef-123456789012
+        name:
+          type: string
+          description: Nombre de la carrera
+          minLength: 1
+          maxLength: 255
+          example: Ingeniería Civil en Informática
+        department_id:
+          type: string
+          format: uuid
+          description: UUID del departamento al que pertenece
+          example: b2c3d4e5-f6a7-8901-bcde-f12345678901
+
+    CreateCareerDto:
+      description: Datos de entrada para crear una carrera
+      type: object
+      required:
+        - name
+        - department_id
+      properties:
+        name:
+          type: string
+          description: Nombre de la carrera
+          minLength: 1
+          maxLength: 255
+          example: Ingeniería Civil en Informática
+        department_id:
+          type: string
+          format: uuid
+          description: UUID del departamento al que pertenece
+          example: b2c3d4e5-f6a7-8901-bcde-f12345678901
+
+    # ==========================================================================
+    # ACADEMIC WORK POSITION
+    # ==========================================================================
+    AcademicWorkPosition:
+      description: Representa un cargo laboral académico
+      type: object
+      required:
+        - code
+        - name
+      properties:
+        code:
+          type: string
+          description: Código único textual del cargo
+          minLength: 1
+          maxLength: 50
+          example: jefe_carrera
+        name:
+          type: string
+          description: Nombre descriptivo del cargo
+          minLength: 1
+          maxLength: 255
+          example: Jefe(a) de Carrera
+
+    CreateAcademicWorkPositionDto:
+      description: Datos de entrada para crear un cargo laboral
+      type: object
+      required:
+        - code
+        - name
+      properties:
+        code:
+          type: string
+          description: Código único textual del cargo
+          minLength: 1
+          maxLength: 50
+          example: jefe_carrera
+        name:
+          type: string
+          description: Nombre descriptivo del cargo
+          minLength: 1
+          maxLength: 255
+          example: Jefe(a) de Carrera
+
+    # ==========================================================================
+    # COMMON ERROR SCHEMAS
+    # ==========================================================================
+    ErrorResponse:
+      description: Error estándar del API
+      type: object
+      required:
+        - status
+        - message
+        - error
+      properties:
+        status:
+          type: integer
+          description: Código de estado HTTP
+          example: 404
+        message:
+          type: string
+          description: Mensaje descriptivo del error
+          example: "Career not found"
+        error:
+          type: string
+          description: Tipo de error
+          example: "Not Found"
+
+    ValidationError:
+      description: Error de validación en los datos de entrada
+      type: object
+      required:
+        - status
+        - message
+        - errors
+      properties:
+        status:
+          type: integer
+          description: Código de estado HTTP
+          example: 422
+        message:
+          type: string
+          description: Mensaje de error general
+          example: "Validation error"
+        errors:
+          type: array
+          description: Lista de errores de validación por campo
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                description: Nombre del campo con error
+                example: name
+              message:
+                type: string
+                description: Descripción del error de validación
+                example: "El nombre de la carrera debe tener entre 1 y 255 caracteres"
