@@ -20,6 +20,12 @@ pub struct User {
     pub password_hash: String,
 }
 
+#[derive(Debug)]
+pub struct UserFilter {
+    pub search: Option<String>,
+    pub role: Option<UserRole>,
+}
+
 impl Entity for User {
     fn key_name() -> &'static str {
         "user"

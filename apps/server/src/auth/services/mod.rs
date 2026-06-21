@@ -1,5 +1,7 @@
+mod cookies;
 mod hasher;
 
+pub use cookies::*;
 pub use hasher::*;
 
 use crate::{auth::*, shared::*};
@@ -51,7 +53,7 @@ impl AuthService {
         self.sessions.save(&session).await?;
 
         Ok(LoginResponse {
-            user,
+            user: user.into(),
             access_token,
             access_token_exp,
             refresh_token,

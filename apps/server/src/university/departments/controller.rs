@@ -1,3 +1,4 @@
+use crate::auth::SessionCheck;
 use crate::university::*;
 
 use std::sync::Arc;
@@ -27,6 +28,7 @@ impl DepartmentsController {
     }
 
     #[post("/")]
+    #[interceptor(SessionCheck)]
     pub async fn create_department(&self, req: Request) -> WebResult<Department> {
         let input = req.body_validator::<CreateDepartmentDto>()?;
         let department = self.departments.create(input).await?;

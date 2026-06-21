@@ -1,3 +1,4 @@
+use crate::auth::SessionCheck;
 use crate::university::*;
 
 use std::sync::Arc;
@@ -27,6 +28,7 @@ impl WorkPositionsController {
     }
 
     #[post("/")]
+    #[interceptor(SessionCheck)]
     pub async fn create_position(&self, req: Request) -> WebResult<AcademicWorkPosition> {
         let input = req.body_validator::<CreateAcademicWorkPositionDto>()?;
         let position = self.positions.create(input).await?;

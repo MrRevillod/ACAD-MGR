@@ -1,3 +1,4 @@
+use crate::auth::SessionCheck;
 use crate::university::*;
 
 use std::sync::Arc;
@@ -27,6 +28,7 @@ impl CareersController {
     }
 
     #[post("/")]
+    #[interceptor(SessionCheck)]
     pub async fn create_career(&self, req: Request) -> WebResult<Career> {
         let input = req.body_validator::<CreateCareerDto>()?;
         let career = self.careers.create(input).await?;

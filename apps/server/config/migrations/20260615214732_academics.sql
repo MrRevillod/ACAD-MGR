@@ -1,5 +1,3 @@
--- Add migration script here
-
 CREATE TYPE sex AS ENUM ('H', 'M', 'O');
 
 CREATE TABLE academics (
@@ -9,7 +7,7 @@ CREATE TABLE academics (
 	paternal_surname TEXT NOT NULL,
 	maternal_surname TEXT NOT NULL,
 	email TEXT NOT NULL UNIQUE,
-	orcid TEXT UNIQUE,
+	orcid TEXT NOT NULL UNIQUE,
 	sex sex NOT NULL,
 	birth_date DATE NOT NULL,
 	joined_at DATE NOT NULL DEFAULT CURRENT_DATE,

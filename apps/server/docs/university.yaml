@@ -87,6 +87,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ValidationError"
+      security:
+        - CookieAuth: []
 
   /faculties/{id}:
     get:
@@ -187,6 +189,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ValidationError"
+      security:
+        - CookieAuth: []
 
   /departments/{id}:
     get:
@@ -283,6 +287,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ValidationError"
+      security:
+        - CookieAuth: []
 
   /careers/{id}:
     get:
@@ -380,6 +386,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ValidationError"
+      security:
+        - CookieAuth: []
 
   /work-positions/{code}:
     get:
@@ -411,6 +419,15 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
 
 components:
+  securitySchemes:
+    CookieAuth:
+      type: apiKey
+      in: cookie
+      name: ACAD_MGR_ACCESS_TOKEN
+      description: >
+        Cookie HTTP-only que contiene el JWT de acceso.
+        Se obtiene automáticamente al iniciar sesión.
+
   schemas:
     # ==========================================================================
     # FACULTY

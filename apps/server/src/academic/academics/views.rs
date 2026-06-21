@@ -1,0 +1,31 @@
+use crate::academic::{AcademicId, AcademicOption, AcademicPlanta, Sex};
+
+use chrono::NaiveDate;
+use serde::Serialize;
+use sqlx::FromRow;
+
+#[derive(Debug, Clone, Serialize, FromRow)]
+pub struct AcademicView {
+    pub id: AcademicId,
+    pub rut: String,
+    pub names: String,
+    pub paternal_surname: String,
+    pub maternal_surname: String,
+    pub email: String,
+    pub orcid: Option<String>,
+    pub sex: Sex,
+    pub birth_date: NaiveDate,
+    pub joined_at: NaiveDate,
+    pub work_position: Option<String>,
+    pub work_position_details: Option<String>,
+    pub department: String,
+    pub career: Option<String>,
+    pub uct_working_hours: f64,
+    pub category: String,
+    pub planta: AcademicPlanta,
+    pub option: AcademicOption,
+    pub acad_category_hours: f64,
+    pub annual_discount_hours: f64,
+    pub nationality: String,
+    pub city: String,
+}

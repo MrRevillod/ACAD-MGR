@@ -21,6 +21,10 @@ pub enum AuthError {
     #[error("Encryption error: {0}")]
     EncryptionError(#[from] BcryptError),
 
+    #[http(code = 409, message = "El email ya está registrado")]
+    #[error("Email already exists")]
+    EmailAlreadyExists,
+
     #[http(code = 403)]
     #[tracing(error)]
     #[error("JWT Error: {0}")]

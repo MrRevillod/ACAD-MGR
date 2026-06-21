@@ -37,7 +37,7 @@ impl AcademicWorkPositionsRepository {
 
         let positions = query
             .build_query_as::<AcademicWorkPosition>()
-            .fetch_all(self.database.get_pool())
+            .fetch_all(self.database.pool())
             .await?;
 
         Ok(positions)
@@ -48,7 +48,7 @@ impl AcademicWorkPositionsRepository {
             "SELECT code, name FROM academic_work_positions WHERE code = $1",
         )
         .bind(code)
-        .fetch_optional(self.database.get_pool())
+        .fetch_optional(self.database.pool())
         .await?;
 
         Ok(item)
@@ -58,7 +58,7 @@ impl AcademicWorkPositionsRepository {
         sqlx::query("INSERT INTO academic_work_positions (code, name) VALUES ($1, $2)")
             .bind(&position.code)
             .bind(&position.name)
-            .execute(self.database.get_pool())
+            .execute(self.database.pool())
             .await?;
 
         Ok(())

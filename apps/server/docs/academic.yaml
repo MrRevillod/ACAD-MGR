@@ -1,0 +1,949 @@
+openapi: "3.0.3"
+
+info:
+  title: "ORCID ACAD MGR API - Academic Module"
+  description: |
+    API para la gestión de académicos, categorías académicas, opciones
+    de categoría y grados académicos.
+
+    Proporciona operaciones CRUD para:
+      - **Categorías Académicas** (`/academic-categories`)
+      - **Opciones de Categoría** (`/category-options`)
+      - **Grados Académicos** (`/degrees`)
+      - **Académicos** (`/academics`)
+
+    La vista detallada de académicos (`AcademicView`) resuelve automáticamente
+    las claves foráneas en nombres legibles (departamento, carrera, categoría,
+    opción, planta, nacionalidad, puesto de trabajo).
+  version: "0.1.0"
+
+servers:
+  - url: /api
+    description: API Gateway
+
+tags:
+  - name: Categorías Académicas
+    description: Gestión de categorías académicas por planta
+  - name: Opciones de Categoría
+    description: Gestión de opciones válidas por categoría académica
+  - name: Grados Académicos
+    description: Gestión de grados académicos de los académicos
+  - name: Académicos
+    description: Gestión de académicos
+
+paths:
+  # ============================================================================
+  # ACADEMIC CATEGORIES
+  # ============================================================================
+  /academic-categories:
+    get:
+      tags:
+        - Categorías Académicas
+      summary: Listar categorías académicas
+      description: >
+        Obtiene un listado de todas las categorías académicas.
+        Soporta filtros opcionales por nombre y/o planta.
+      operationId: listAcademicCategories
+      parameters:
+        - name: name
+          in: query
+          description: Filtro por nombre (ILIKE)
+          required: false
+          schema:
+            type: string
+            maxLength: 255
+          example: Titular
+        - name: planta
+          in: query
+          description: Filtrar por planta
+          required: false
+          schema:
+            $ref: "#/components/schemas/AcademicPlanta"
+      responses:
+        "200":
+          description: Listado de categorías obtenido exitosamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AcademicCategory"
+
+    post:
+      tags:
+        - Categorías Académicas
+      summary: Crear categoría académica
+      description: Crea una nueva categoría académica en el sistema.
+      operationId: createAcademicCategory
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAcademicCategoryDto"
+      responses:
+        "201":
+          description: Categoría creada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AcademicCategory"
+        "422":
+          description: Error de validación en los datos de entrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+      security:
+        - CookieAuth: []
+
+  /academic-categories/{id}:
+    get:
+      tags:
+        - Categorías Académicas
+      summary: Obtener categoría por ID
+      description: Obtiene una categoría académica específica mediante su UUID.
+      operationId: getAcademicCategory
+      parameters:
+        - name: id
+          in: path
+          description: UUID de la categoría académica
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+      responses:
+        "200":
+          description: Categoría encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AcademicCategory"
+        "404":
+          description: Categoría no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                status: 404
+                message: "Categoría académica no encontrada"
+                error: "Not Found"
+
+  # ============================================================================
+  # CATEGORY OPTIONS
+  # ============================================================================
+  /category-options:
+    get:
+      tags:
+        - Opciones de Categoría
+      summary: Listar opciones de categoría
+      description: >
+        Obtiene un listado de todas las opciones de categoría académica.
+        Soporta filtro opcional por categoría.
+      operationId: listCategoryOptions
+      parameters:
+        - name: category_id
+          in: query
+          description: UUID de la categoría para filtrar opciones
+          required: false
+          schema:
+            type: string
+            format: uuid
+          example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+      responses:
+        "200":
+          description: Listado de opciones obtenido exitosamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AcademicCategoryOption"
+
+    post:
+      tags:
+        - Opciones de Categoría
+      summary: Crear opción de categoría
+      description: >
+        Crea una nueva opción válida para una categoría académica.
+        La combinación categoría + opción debe ser única.
+      operationId: createCategoryOption
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCategoryOptionDto"
+      responses:
+        "201":
+          description: Opción creada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AcademicCategoryOption"
+        "422":
+          description: Error de validación en los datos de entrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+      security:
+        - CookieAuth: []
+
+  /category-options/{id}:
+    get:
+      tags:
+        - Opciones de Categoría
+      summary: Obtener opción por ID
+      description: Obtiene una opción de categoría específica mediante su UUID.
+      operationId: getCategoryOption
+      parameters:
+        - name: id
+          in: path
+          description: UUID de la opción de categoría
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: b2c3d4e5-f6a7-8901-bcde-f12345678901
+      responses:
+        "200":
+          description: Opción encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AcademicCategoryOption"
+        "404":
+          description: Opción no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # ============================================================================
+  # DEGREES
+  # ============================================================================
+  /degrees:
+    get:
+      tags:
+        - Grados Académicos
+      summary: Listar grados académicos
+      description: >
+        Obtiene un listado de todos los grados académicos.
+        Soporta filtro opcional por académico.
+      operationId: listDegrees
+      parameters:
+        - name: academic_id
+          in: query
+          description: UUID del académico para filtrar grados
+          required: false
+          schema:
+            type: string
+            format: uuid
+          example: c3d4e5f6-a7b8-9012-cdef-123456789012
+      responses:
+        "200":
+          description: Listado de grados obtenido exitosamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Degree"
+
+    post:
+      tags:
+        - Grados Académicos
+      summary: Crear grado académico
+      description: Crea un nuevo grado académico asociado a un académico.
+      operationId: createDegree
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDegreeDto"
+      responses:
+        "201":
+          description: Grado creado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Degree"
+        "422":
+          description: Error de validación en los datos de entrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+      security:
+        - CookieAuth: []
+
+  /degrees/{id}:
+    get:
+      tags:
+        - Grados Académicos
+      summary: Obtener grado por ID
+      description: Obtiene un grado académico específico mediante su UUID.
+      operationId: getDegree
+      parameters:
+        - name: id
+          in: path
+          description: UUID del grado académico
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: d4e5f6a7-b8c9-0123-def4-567890123456
+      responses:
+        "200":
+          description: Grado encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Degree"
+        "404":
+          description: Grado no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # ============================================================================
+  # ACADEMICS
+  # ============================================================================
+  /academics:
+    get:
+      tags:
+        - Académicos
+      summary: Listar académicos
+      description: >
+        Obtiene un listado detallado de todos los académicos con sus datos
+        resueltos (departamento, carrera, categoría, opción, planta,
+        nacionalidad, puesto de trabajo). Soporta búsqueda por texto y
+        ordenamiento por distintos campos.
+      operationId: listAcademics
+      parameters:
+        - name: search
+          in: query
+          description: >
+            Búsqueda por RUT, nombres, apellidos o email (ILIKE).
+          required: false
+          schema:
+            type: string
+          example: López
+        - name: sort
+          in: query
+          description: Campo por el cual ordenar los resultados (ASC)
+          required: false
+          schema:
+            $ref: "#/components/schemas/AcademicSortField"
+          example: paternal_surname
+      responses:
+        "200":
+          description: Listado de académicos obtenido exitosamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AcademicView"
+
+    post:
+      tags:
+        - Académicos
+      summary: Crear académico
+      description: >
+        Crea un nuevo académico en el sistema con todos sus datos
+        personales, laborales y de categorización académica.
+      operationId: createAcademic
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAcademicDto"
+      responses:
+        "201":
+          description: Académico creado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AcademicView"
+        "422":
+          description: Error de validación en los datos de entrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+      security:
+        - CookieAuth: []
+
+  /academics/{id}:
+    get:
+      tags:
+        - Académicos
+      summary: Obtener académico por ID
+      description: >
+        Obtiene un académico específico con todos sus datos resueltos
+        mediante JOIN (departamento, carrera, categoría, etc.).
+      operationId: getAcademic
+      parameters:
+        - name: id
+          in: path
+          description: UUID del académico
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: e5f6a7b8-c9d0-1234-ef56-789012345678
+      responses:
+        "200":
+          description: Académico encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AcademicView"
+        "404":
+          description: Académico no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  securitySchemes:
+    CookieAuth:
+      type: apiKey
+      in: cookie
+      name: ACAD_MGR_ACCESS_TOKEN
+      description: >
+        Cookie HTTP-only que contiene el JWT de acceso.
+        Se obtiene automáticamente al iniciar sesión.
+
+  schemas:
+    # ==========================================================================
+    # ENUMS
+    # ==========================================================================
+    AcademicPlanta:
+      description: Tipo de planta académica
+      type: string
+      enum:
+        - adjunta
+        - permanente
+      example: permanente
+
+    AcademicOption:
+      description: Opción académica (docencia/investigación)
+      type: string
+      enum:
+        - teaching
+        - research
+      example: teaching
+
+    DegreeKind:
+      description: Tipo de grado académico
+      type: string
+      enum:
+        - base
+        - advanced
+      example: base
+
+    Sex:
+      description: Sexo del académico
+      type: string
+      enum:
+        - H
+        - M
+        - O
+      example: H
+
+    AcademicSortField:
+      description: Campo de ordenamiento para listar académicos
+      type: string
+      enum:
+        - names
+        - paternal_surname
+        - maternal_surname
+        - joined_at
+        - birth_date
+      example: paternal_surname
+
+    # ==========================================================================
+    # ACADEMIC CATEGORY
+    # ==========================================================================
+    AcademicCategory:
+      description: "Representa una categoría académica (ej: Profesor Titular)"
+      type: object
+      required:
+        - id
+        - name
+        - planta
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: UUID único generado automáticamente
+          example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+        name:
+          type: string
+          description: Nombre de la categoría
+          minLength: 1
+          maxLength: 255
+          example: Profesor Titular
+        planta:
+          $ref: "#/components/schemas/AcademicPlanta"
+
+    CreateAcademicCategoryDto:
+      description: Datos de entrada para crear una categoría académica
+      type: object
+      required:
+        - name
+        - planta
+      properties:
+        name:
+          type: string
+          description: Nombre de la categoría
+          minLength: 1
+          maxLength: 255
+          example: Profesor Titular
+        planta:
+          $ref: "#/components/schemas/AcademicPlanta"
+
+    # ==========================================================================
+    # ACADEMIC CATEGORY OPTION
+    # ==========================================================================
+    AcademicCategoryOption:
+      description: Representa una opción válida para una categoría académica
+      type: object
+      required:
+        - id
+        - category_id
+        - option
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: UUID único generado automáticamente
+          example: b2c3d4e5-f6a7-8901-bcde-f12345678901
+        category_id:
+          type: string
+          format: uuid
+          description: UUID de la categoría académica asociada
+          example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+        option:
+          $ref: "#/components/schemas/AcademicOption"
+
+    CreateCategoryOptionDto:
+      description: Datos de entrada para crear una opción de categoría
+      type: object
+      required:
+        - category_id
+        - option
+      properties:
+        category_id:
+          type: string
+          format: uuid
+          description: UUID de la categoría académica
+          example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+        option:
+          $ref: "#/components/schemas/AcademicOption"
+
+    # ==========================================================================
+    # DEGREE
+    # ==========================================================================
+    Degree:
+      description: Representa un grado académico obtenido por un académico
+      type: object
+      required:
+        - id
+        - academic_id
+        - name
+        - university
+        - obtained_at
+        - kind
+        - country_code
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: UUID único generado automáticamente
+          example: c3d4e5f6-a7b8-9012-cdef-123456789012
+        academic_id:
+          type: string
+          format: uuid
+          description: UUID del académico al que pertenece
+          example: e5f6a7b8-c9d0-1234-ef56-789012345678
+        name:
+          type: string
+          description: Nombre del grado obtenido
+          minLength: 1
+          maxLength: 255
+          example: Licenciatura en Ciencias de la Computación
+        university:
+          type: string
+          description: Universidad que otorgó el grado
+          minLength: 1
+          maxLength: 255
+          example: Universidad Católica de Temuco
+        obtained_at:
+          type: string
+          format: date
+          description: Fecha de obtención del grado
+          example: "2015-12-15"
+        kind:
+          $ref: "#/components/schemas/DegreeKind"
+        country_code:
+          type: string
+          description: Código ISO 3166-1 alpha-2 del país
+          minLength: 2
+          maxLength: 2
+          example: CL
+
+    CreateDegreeDto:
+      description: Datos de entrada para crear un grado académico
+      type: object
+      required:
+        - academic_id
+        - name
+        - university
+        - obtained_at
+        - kind
+        - country_code
+      properties:
+        academic_id:
+          type: string
+          format: uuid
+          description: UUID del académico
+          example: e5f6a7b8-c9d0-1234-ef56-789012345678
+        name:
+          type: string
+          description: Nombre del grado
+          minLength: 1
+          maxLength: 255
+          example: Magíster en Ciencias
+        university:
+          type: string
+          description: Universidad que otorga el grado
+          minLength: 1
+          maxLength: 255
+          example: Universidad Católica de Temuco
+        obtained_at:
+          type: string
+          format: date
+          description: Fecha de obtención
+          example: "2020-06-30"
+        kind:
+          $ref: "#/components/schemas/DegreeKind"
+        country_code:
+          type: string
+          description: Código ISO 3166-1 alpha-2 del país
+          minLength: 2
+          maxLength: 2
+          example: CL
+
+    # ==========================================================================
+    # ACADEMIC VIEW
+    # ==========================================================================
+    AcademicView:
+      description: >
+        Vista detallada de un académico con todos los datos resueltos.
+        Las claves foráneas se presentan como nombres legibles
+        (departamento, carrera, categoría, planta, opción,
+        nacionalidad, puesto de trabajo).
+      type: object
+      required:
+        - id
+        - rut
+        - names
+        - paternal_surname
+        - maternal_surname
+        - email
+        - sex
+        - birth_date
+        - joined_at
+        - department
+        - uct_working_hours
+        - category
+        - planta
+        - option
+        - acad_category_hours
+        - annual_discount_hours
+        - nationality
+        - city
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: UUID único del académico
+          example: e5f6a7b8-c9d0-1234-ef56-789012345678
+        rut:
+          type: string
+          description: RUT del académico (formato XXXXXXXX-X)
+          example: "12345678-9"
+        names:
+          type: string
+          description: Nombres del académico
+          example: Juan Carlos
+        paternal_surname:
+          type: string
+          description: Apellido paterno
+          example: López
+        maternal_surname:
+          type: string
+          description: Apellido materno
+          example: Martínez
+        email:
+          type: string
+          format: email
+          description: Correo electrónico institucional
+          example: jlopez@uct.cl
+        orcid:
+          type: string
+          description: ORCID ID (formato XXXX-XXXX-XXXX-XXXX)
+          nullable: true
+          example: "0000-0002-1234-5678"
+        sex:
+          $ref: "#/components/schemas/Sex"
+        birth_date:
+          type: string
+          format: date
+          description: Fecha de nacimiento
+          example: "1980-03-15"
+        joined_at:
+          type: string
+          format: date
+          description: Fecha de ingreso a la universidad
+          example: "2010-05-01"
+        work_position:
+          type: string
+          description: Nombre del cargo laboral
+          nullable: true
+          example: Docente
+        work_position_details:
+          type: string
+          description: Detalles adicionales del cargo
+          nullable: true
+          example: Jornada completa
+        department:
+          type: string
+          description: Nombre del departamento al que pertenece
+          example: Ciencias Matemáticas y Físicas
+        career:
+          type: string
+          description: Nombre de la carrera asociada
+          nullable: true
+          example: Ingeniería Civil en Informática
+        uct_working_hours:
+          type: number
+          format: double
+          description: Horas semanales de trabajo en la UCT
+          example: 44.0
+        category:
+          type: string
+          description: Nombre de la categoría académica
+          example: Profesor Titular
+        planta:
+          $ref: "#/components/schemas/AcademicPlanta"
+        option:
+          $ref: "#/components/schemas/AcademicOption"
+        acad_category_hours:
+          type: number
+          format: double
+          description: Horas semanales dedicadas a la categoría académica
+          example: 40.0
+        annual_discount_hours:
+          type: number
+          format: double
+          description: Horas de descuento anuales
+          example: 120.0
+        nationality:
+          type: string
+          description: Nombre del país de nacionalidad
+          example: Chile
+        city:
+          type: string
+          description: Ciudad de residencia
+          example: Temuco
+
+    # ==========================================================================
+    # CREATE ACADEMIC DTO
+    # ==========================================================================
+    CreateAcademicDto:
+      description: Datos de entrada para crear un académico
+      type: object
+      required:
+        - rut
+        - names
+        - paternal_surname
+        - maternal_surname
+        - email
+        - orcid
+        - sex
+        - birth_date
+        - joined_at
+        - work_position_code
+        - department_id
+        - uct_working_hours
+        - acad_category_options_id
+        - acad_category_hours
+        - annual_discount_hours
+        - nationality_code
+        - city
+      properties:
+        rut:
+          type: string
+          description: "RUT del académico (formato: XXXXXXXX-X)"
+          pattern: '^\d{7,8}-[\dkK]$'
+          example: "12345678-9"
+        names:
+          type: string
+          description: Nombres del académico
+          minLength: 1
+          maxLength: 255
+          example: Juan Carlos
+        paternal_surname:
+          type: string
+          description: Apellido paterno
+          minLength: 1
+          maxLength: 255
+          example: López
+        maternal_surname:
+          type: string
+          description: Apellido materno
+          minLength: 1
+          maxLength: 255
+          example: Martínez
+        email:
+          type: string
+          format: email
+          description: Correo electrónico institucional
+          example: jlopez@uct.cl
+        orcid:
+          type: string
+          description: "ORCID ID (formato: XXXX-XXXX-XXXX-XXXX)"
+          pattern: '^\d{4}-\d{4}-\d{4}-\d{3}[\dX]$'
+          example: "0000-0002-1234-5678"
+        sex:
+          $ref: "#/components/schemas/Sex"
+        birth_date:
+          type: string
+          format: date
+          description: "Fecha de nacimiento (no puede ser futura)"
+          example: "1980-03-15"
+        joined_at:
+          type: string
+          format: date
+          description: >
+            Fecha de ingreso a la universidad. No puede ser futura
+            ni anterior a la fundación de la UCT (1959-09-08).
+          example: "2010-05-01"
+        work_position_code:
+          type: string
+          description: Código del cargo laboral
+          example: docente
+        work_position_details:
+          type: string
+          description: Detalles adicionales del cargo
+          nullable: true
+          example: Jornada completa
+        department_id:
+          type: string
+          format: uuid
+          description: UUID del departamento al que pertenece
+          example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+        career_id:
+          type: string
+          format: uuid
+          description: UUID de la carrera asociada (opcional)
+          nullable: true
+          example: c3d4e5f6-a7b8-9012-cdef-123456789012
+        uct_working_hours:
+          type: number
+          format: double
+          description: Horas semanales de trabajo en la UCT
+          example: 44.0
+        acad_category_options_id:
+          type: string
+          format: uuid
+          description: UUID de la opción de categoría académica
+          example: b2c3d4e5-f6a7-8901-bcde-f12345678901
+        acad_category_hours:
+          type: number
+          format: double
+          description: Horas semanales dedicadas a la categoría académica
+          example: 40.0
+        annual_discount_hours:
+          type: number
+          format: double
+          description: Horas de descuento anuales
+          example: 120.0
+        nationality_code:
+          type: string
+          description: Código ISO 3166-1 alpha-2 del país de nacionalidad
+          minLength: 2
+          maxLength: 2
+          example: CL
+        city:
+          type: string
+          description: Ciudad de residencia
+          minLength: 1
+          maxLength: 255
+          example: Temuco
+
+    # ==========================================================================
+    # COMMON ERROR SCHEMAS
+    # ==========================================================================
+    ErrorResponse:
+      description: Error estándar del API
+      type: object
+      required:
+        - status
+        - message
+        - error
+      properties:
+        status:
+          type: integer
+          description: Código de estado HTTP
+          example: 404
+        message:
+          type: string
+          description: Mensaje descriptivo del error
+          example: "Categoría académica no encontrada"
+        error:
+          type: string
+          description: Tipo de error
+          example: "Not Found"
+
+    ValidationError:
+      description: Error de validación en los datos de entrada
+      type: object
+      required:
+        - status
+        - message
+        - errors
+      properties:
+        status:
+          type: integer
+          description: Código de estado HTTP
+          example: 422
+        message:
+          type: string
+          description: Mensaje de error general
+          example: "Validation error"
+        errors:
+          type: array
+          description: Lista de errores de validación por campo
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                description: Nombre del campo con error
+                example: rut
+              message:
+                type: string
+                description: Descripción del error de validación
+                example: "El RUT debe tener el formato XXXXXXXX-X"

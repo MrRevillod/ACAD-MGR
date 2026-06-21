@@ -36,7 +36,7 @@ impl SessionRepository {
         .bind(session.expires_at)
         .bind(session.refresh_expires_at)
         .bind(session.revoked_at)
-        .fetch_one(self.database.get_pool())
+        .fetch_one(self.database.pool())
         .await?;
 
         Ok(session)
@@ -48,7 +48,7 @@ impl SessionRepository {
              WHERE id = $1 AND revoked_at IS NULL AND expires_at > NOW()",
         )
         .bind(id)
-        .fetch_optional(self.database.get_pool())
+        .fetch_optional(self.database.pool())
         .await?;
 
         Ok(res.is_some())
@@ -60,7 +60,7 @@ impl SessionRepository {
              WHERE id = $1 AND revoked_at IS NULL AND expires_at > NOW()",
         )
         .bind(id)
-        .fetch_optional(self.database.get_pool())
+        .fetch_optional(self.database.pool())
         .await?;
 
         Ok(res)
@@ -72,7 +72,7 @@ impl SessionRepository {
              WHERE id = $1 AND revoked_at IS NULL AND refresh_expires_at > NOW()",
         )
         .bind(id)
-        .fetch_optional(self.database.get_pool())
+        .fetch_optional(self.database.pool())
         .await?;
 
         Ok(res)
@@ -86,7 +86,7 @@ impl SessionRepository {
         sqlx::query("UPDATE sessions SET expires_at = $1 WHERE id = $2")
             .bind(expires_at)
             .bind(id)
-            .execute(self.database.get_pool())
+            .execute(self.database.pool())
             .await?;
 
         Ok(())

@@ -26,7 +26,7 @@ impl FacultiesRepository {
 
         let faculties = query
             .build_query_as::<Faculty>()
-            .fetch_all(self.database.get_pool())
+            .fetch_all(self.database.pool())
             .await?;
 
         Ok(faculties)
@@ -35,7 +35,7 @@ impl FacultiesRepository {
     pub async fn find_by_id(&self, id: &FacultyId) -> AppResult<Option<Faculty>> {
         let item = sqlx::query_as::<_, Faculty>("SELECT id, name FROM faculties WHERE id = $1")
             .bind(id)
-            .fetch_optional(self.database.get_pool())
+            .fetch_optional(self.database.pool())
             .await?;
 
         Ok(item)
@@ -45,7 +45,7 @@ impl FacultiesRepository {
         sqlx::query("INSERT INTO faculties (id, name) VALUES ($1, $2)")
             .bind(faculty.id)
             .bind(&faculty.name)
-            .execute(self.database.get_pool())
+            .execute(self.database.pool())
             .await?;
 
         Ok(())

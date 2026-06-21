@@ -1,9 +1,9 @@
+use crate::shared::AppResult;
+
 use serde::Deserialize;
 use sqlx::{PgPool, migrate::Migrator, postgres::PgPoolOptions};
 use std::{path::Path, sync::Arc, time::Duration};
 use sword::prelude::*;
-
-use crate::shared::AppResult;
 
 pub type Tx<'a> = sqlx::Transaction<'a, sqlx::Postgres>;
 
@@ -28,8 +28,6 @@ pub struct DatabaseConfig {
 
 impl Database {
     pub async fn new(db_conf: DatabaseConfig) -> Self {
-        dbg!(&db_conf);
-
         let pool = PgPoolOptions::new()
             .min_connections(db_conf.min_connections.into())
             .max_connections(db_conf.max_connections.into())
@@ -62,7 +60,7 @@ impl Database {
         )
     }
 
-    pub fn get_pool(&self) -> &PgPool {
+    pub fn pool(&self) -> &PgPool {
         &self.pool
     }
 

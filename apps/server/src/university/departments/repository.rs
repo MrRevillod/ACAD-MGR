@@ -33,7 +33,7 @@ impl DepartmentsRepository {
 
         let departments = query
             .build_query_as::<Department>()
-            .fetch_all(self.database.get_pool())
+            .fetch_all(self.database.pool())
             .await?;
 
         Ok(departments)
@@ -44,7 +44,7 @@ impl DepartmentsRepository {
             "SELECT id, name, faculty_id FROM departments WHERE id = $1",
         )
         .bind(id)
-        .fetch_optional(self.database.get_pool())
+        .fetch_optional(self.database.pool())
         .await?;
 
         Ok(item)
@@ -55,7 +55,7 @@ impl DepartmentsRepository {
             .bind(department.id)
             .bind(&department.name)
             .bind(department.faculty_id)
-            .execute(self.database.get_pool())
+            .execute(self.database.pool())
             .await?;
 
         Ok(())

@@ -56,6 +56,7 @@ impl OnRequest for SessionCheck {
                 user_id = %claims.user_id,
                 "SessionCheck rejected: session is not active"
             );
+
             return Err(JsonResponse::Unauthorized());
         }
 
@@ -68,7 +69,6 @@ impl OnRequest for SessionCheck {
         );
 
         req.extensions.insert(claims);
-
         req.next().await
     }
 }

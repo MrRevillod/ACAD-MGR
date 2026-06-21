@@ -1,5 +1,4 @@
 use crate::auth::*;
-use crate::shared::CookieManager;
 use crate::shared::RequestExt;
 
 use chrono::Utc;

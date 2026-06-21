@@ -1,4 +1,4 @@
-use crate::{auth::AuthError, university::UniversityError};
+use crate::{academic::AcademicError, auth::AuthError, university::UniversityError};
 
 use sqlx::Error as SqlxError;
 use std::io::Error as IoError;
@@ -12,6 +12,10 @@ pub enum AppError {
     #[http(transparent)]
     #[error(transparent)]
     Auth(#[from] AuthError),
+
+    #[http(transparent)]
+    #[error(transparent)]
+    Academic(#[from] AcademicError),
 
     #[http(transparent)]
     #[error(transparent)]

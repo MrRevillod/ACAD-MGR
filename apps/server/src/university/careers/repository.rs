@@ -1,9 +1,8 @@
-use std::sync::Arc;
-
 use crate::shared::{AppResult, Database, Tx};
-use crate::university::careers::Career;
-use crate::university::{CareerFilter, CareerId};
-use sqlx::{Postgres, QueryBuilder};
+use crate::university::{Career, CareerFilter, CareerId};
+
+use sqlx::Postgres;
+use std::sync::Arc;
 use sword::prelude::*;
 
 #[injectable]
@@ -13,8 +12,9 @@ pub struct CareersRepository {
 
 impl CareersRepository {
     pub async fn list(&self, filter: CareerFilter) -> AppResult<Vec<Career>> {
-        let mut query =
-            QueryBuilder::<Postgres>::new("SELECT id, name, department_id FROM careers WHERE 1=1");
+        let mut query = sqlx::QueryBuilder::<Postgres>::new(
+            "SELECT id, name, department_id FROM careers WHERE 1=1",
+        );
 
         if let Some(n) = filter.name {
             let pattern = format!("%{}%", n.trim());
@@ -31,7 +31,7 @@ impl CareersRepository {
 
         let careers = query
             .build_query_as::<Career>()
-            .fetch_all(self.database.get_pool())
+            .fetch_all(self.database.pool())
             .await?;
 
         Ok(careers)
@@ -42,7 +42,7 @@ impl CareersRepository {
             "SELECT id, name, department_id FROM careers WHERE id = $1",
         )
         .bind(id)
-        .fetch_optional(self.database.get_pool())
+        .fetch_optional(self.database.pool())
         .await?;
 
         Ok(item)
@@ -53,7 +53,7 @@ impl CareersRepository {
             .bind(career.id)
             .bind(&career.name)
             .bind(career.department_id)
-            .execute(self.database.get_pool())
+            .execute(self.database.pool())
             .await?;
 
         Ok(())

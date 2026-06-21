@@ -7,6 +7,7 @@ mod repository;
 mod services;
 mod users;
 
+pub use controller::*;
 pub use dtos::*;
 pub use entity::*;
 pub use errors::*;
@@ -29,10 +30,18 @@ pub struct AuthConfig {
 pub struct AuthModule;
 
 impl Module for AuthModule {
-    fn register_controllers(_: &ControllerRegistry) {}
+    fn register_controllers(controllers: &ControllerRegistry) {
+        controllers.register::<AuthController>();
+        controllers.register::<UsersController>();
+    }
 
     fn register_components(components: &ComponentRegistry) {
         components.register::<UsersRepository>();
+        components.register::<SessionRepository>();
+
+        components.register::<AuthService>();
+        components.register::<UsersService>();
+        components.register::<CookieManager>();
     }
 
     async fn register_providers(config: &Config, providers: &ProviderRegistry) {

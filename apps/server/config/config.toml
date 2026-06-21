@@ -12,7 +12,7 @@ router-prefix = "/api"
 title = "ORCID ACAD MGR API"
 version = "0.1.0"
 description = "API documentation for the ORCID ACAD MGR Server"
-spec-file-paths = ["docs/university.yaml"]
+spec-file-paths = ["docs/university.yaml", "docs/academic.yaml", "docs/auth.yaml"]
 
 [postgres-db]
 user = "${POSTGRES_USER}"
@@ -34,8 +34,8 @@ refresh_exp_days = 7
 path = "/"
 secure = true
 http_only = true
-access_cookie_name = "RAMTUN_ACCESS_TOKEN"
-refresh_cookie_name = "RAMTUN_REFRESH_TOKEN"
+access_cookie_name = "ACAD_MGR_ACCESS_TOKEN"
+refresh_cookie_name = "ACAD_MGR_REFRESH_TOKEN"
 
 [hasher]
 cost = 12

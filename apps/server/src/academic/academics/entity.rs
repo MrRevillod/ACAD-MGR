@@ -1,4 +1,6 @@
-use crate::academic::options::AcademicCategoryOptionId;
+use bon::Builder;
+
+use crate::academic::AcademicCategoryOptionId;
 use crate::shared::{Entity, Id};
 use crate::university::{CareerId, DepartmentId};
 
@@ -17,8 +19,9 @@ pub enum Sex {
     O,
 }
 
-#[derive(Debug, Clone, FromRow)]
+#[derive(Debug, Clone, Serialize, FromRow, Builder)]
 pub struct Academic {
+    #[builder(default = AcademicId::new())]
     pub id: AcademicId,
     pub rut: String,
     pub names: String,

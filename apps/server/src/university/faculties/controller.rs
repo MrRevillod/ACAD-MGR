@@ -1,3 +1,4 @@
+use crate::auth::SessionCheck;
 use crate::university::*;
 
 use std::sync::Arc;
@@ -27,6 +28,7 @@ impl FacultiesController {
     }
 
     #[post("/")]
+    #[interceptor(SessionCheck)]
     pub async fn create_faculty(&self, req: Request) -> WebResult<Faculty> {
         let input = req.body_validator::<CreateFacultyDto>()?;
         let faculty = self.faculties.create(input).await?;

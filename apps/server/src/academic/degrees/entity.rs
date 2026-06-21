@@ -1,3 +1,5 @@
+use bon::Builder;
+
 use crate::academic::academics::AcademicId;
 use crate::shared::{Entity, Id};
 
@@ -15,8 +17,9 @@ pub enum DegreeKind {
 
 pub type DegreeId = Id<Degree>;
 
-#[derive(Debug, Clone, FromRow)]
+#[derive(Debug, Clone, Serialize, FromRow, Builder)]
 pub struct Degree {
+    #[builder(default = DegreeId::new())]
     pub id: DegreeId,
     pub academic_id: AcademicId,
     pub name: String,
