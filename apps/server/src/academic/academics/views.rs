@@ -7,7 +7,6 @@ use sqlx::FromRow;
 #[derive(Debug, Clone, Serialize, FromRow)]
 pub struct AcademicView {
     pub id: AcademicId,
-    pub rut: String,
     pub names: String,
     pub paternal_surname: String,
     pub maternal_surname: String,

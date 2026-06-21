@@ -21,7 +21,7 @@ impl AcademicsRepository {
         let mut query = QueryBuilder::new(
             r#"
             SELECT
-                a.id, a.rut, a.names, a.paternal_surname, a.maternal_surname,
+                a.id, a.names, a.paternal_surname, a.maternal_surname,
                 a.email, a.orcid, a.sex, a.birth_date, a.joined_at,
                 wp.name AS work_position, a.work_position_details,
                 d.name AS department,
@@ -53,8 +53,6 @@ impl AcademicsRepository {
                 .push(" OR a.paternal_surname ILIKE ")
                 .push_bind(pattern.clone())
                 .push(" OR a.maternal_surname ILIKE ")
-                .push_bind(pattern.clone())
-                .push(" OR a.rut ILIKE ")
                 .push_bind(pattern.clone())
                 .push(" OR a.email ILIKE ")
                 .push_bind(pattern)
@@ -94,7 +92,7 @@ impl AcademicsRepository {
         let item = sqlx::query_as::<_, AcademicView>(
             r#"
             SELECT
-                a.id, a.rut, a.names, a.paternal_surname, a.maternal_surname,
+                a.id, a.names, a.paternal_surname, a.maternal_surname,
                 a.email, a.orcid, a.sex, a.birth_date, a.joined_at,
                 wp.name AS work_position, a.work_position_details,
                 d.name AS department,
@@ -126,15 +124,6 @@ impl AcademicsRepository {
     pub async fn find_by_id(&self, id: &AcademicId) -> AppResult<Option<Academic>> {
         let item = sqlx::query_as::<_, Academic>("SELECT * FROM academics WHERE id = $1")
             .bind(id)
-            .fetch_optional(self.database.pool())
-            .await?;
-
-        Ok(item)
-    }
-
-    pub async fn find_by_rut(&self, rut: &str) -> AppResult<Option<Academic>> {
-        let item = sqlx::query_as::<_, Academic>("SELECT * FROM academics WHERE rut = $1")
-            .bind(rut)
             .fetch_optional(self.database.pool())
             .await?;
 

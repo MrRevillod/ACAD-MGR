@@ -88,7 +88,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/AcademicCategory"
-        "422":
+        "400":
           description: Error de validación en los datos de entrada
           content:
             application/json:
@@ -183,7 +183,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/AcademicCategoryOption"
-        "422":
+        "400":
           description: Error de validación en los datos de entrada
           content:
             application/json:
@@ -272,7 +272,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Degree"
-        "422":
+        "400":
           description: Error de validación en los datos de entrada
           content:
             application/json:
@@ -372,7 +372,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/AcademicView"
-        "422":
+        "400":
           description: Error de validación en los datos de entrada
           content:
             application/json:
@@ -656,7 +656,6 @@ components:
       type: object
       required:
         - id
-        - rut
         - names
         - paternal_surname
         - maternal_surname
@@ -679,10 +678,6 @@ components:
           format: uuid
           description: UUID único del académico
           example: e5f6a7b8-c9d0-1234-ef56-789012345678
-        rut:
-          type: string
-          description: RUT del académico (formato XXXXXXXX-X)
-          example: "12345678-9"
         names:
           type: string
           description: Nombres del académico
