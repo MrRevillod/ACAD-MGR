@@ -130,15 +130,6 @@ impl AcademicsRepository {
         Ok(item)
     }
 
-    pub async fn find_by_id(&self, id: &AcademicId) -> AppResult<Option<Academic>> {
-        let item = sqlx::query_as::<_, Academic>("SELECT * FROM academics WHERE id = $1")
-            .bind(id)
-            .fetch_optional(self.database.pool())
-            .await?;
-
-        Ok(item)
-    }
-
     pub async fn find_by_orcid(&self, orcid: &str) -> AppResult<Option<Academic>> {
         let item = sqlx::query_as::<_, Academic>("SELECT * FROM academics WHERE orcid = $1")
             .bind(orcid)

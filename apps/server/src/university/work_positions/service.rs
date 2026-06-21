@@ -3,16 +3,6 @@ use crate::{shared::AppResult, university::*};
 use std::sync::Arc;
 use sword::prelude::*;
 
-fn slugify(name: &str) -> String {
-    name.to_lowercase()
-        .chars()
-        .filter(|c| c.is_alphanumeric() || *c == ' ')
-        .collect::<String>()
-        .split_whitespace()
-        .collect::<Vec<&str>>()
-        .join("_")
-}
-
 #[injectable]
 pub struct AcademicWorkPositionsService {
     positions: Arc<AcademicWorkPositionsRepository>,
@@ -20,9 +10,7 @@ pub struct AcademicWorkPositionsService {
 
 impl AcademicWorkPositionsService {
     pub async fn find(&self, query: GetWorkPositionsQuery) -> AppResult<Vec<AcademicWorkPosition>> {
-        let filter = WorkPositionFilter {
-            name: query.name,
-        };
+        let filter = WorkPositionFilter { name: query.name };
 
         self.positions.list(filter).await
     }
@@ -39,10 +27,7 @@ impl AcademicWorkPositionsService {
         &self,
         input: CreateAcademicWorkPositionDto,
     ) -> AppResult<AcademicWorkPosition> {
-        let position = AcademicWorkPosition::builder()
-            .code(slugify(&input.name))
-            .name(input.name)
-            .build();
+        let position = AcademicWorkPosition::new(input.name);
 
         self.positions.save(&position).await?;
 

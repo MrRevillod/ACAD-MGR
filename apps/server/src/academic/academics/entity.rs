@@ -32,6 +32,7 @@ pub struct Academic {
     pub sex: Sex,
     pub birth_date: NaiveDate,
     pub joined_at: NaiveDate,
+    #[builder(default = AcademicWorkPositionId::new())]
     pub work_position_id: AcademicWorkPositionId,
     pub work_position_details: Option<String>,
     pub department_id: DepartmentId,

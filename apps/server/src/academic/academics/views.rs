@@ -5,6 +5,7 @@ use serde::Serialize;
 use sqlx::FromRow;
 
 #[derive(Debug, Clone, Serialize, FromRow)]
+#[serde(rename_all = "camelCase")]
 pub struct AcademicView {
     pub id: AcademicId,
     pub names: String,

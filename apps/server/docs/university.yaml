@@ -342,15 +342,6 @@ paths:
             minLength: 1
             maxLength: 255
           example: Docente
-        - name: code
-          in: query
-          description: Filtro por código (ILIKE)
-          required: false
-          schema:
-            type: string
-            minLength: 1
-            maxLength: 50
-          example: jefe_carrera
       responses:
         "200":
           description: Listado de cargos laborales obtenido exitosamente
@@ -474,7 +465,7 @@ components:
       required:
         - id
         - name
-        - faculty_id
+        - facultyId
       properties:
         id:
           type: string
@@ -487,7 +478,7 @@ components:
           minLength: 1
           maxLength: 255
           example: Ciencias Matemáticas y Físicas
-        faculty_id:
+        facultyId:
           type: string
           format: uuid
           description: UUID de la facultad a la que pertenece
@@ -498,7 +489,7 @@ components:
       type: object
       required:
         - name
-        - faculty_id
+        - facultyId
       properties:
         name:
           type: string
@@ -506,7 +497,7 @@ components:
           minLength: 1
           maxLength: 255
           example: Ciencias Matemáticas y Físicas
-        faculty_id:
+        facultyId:
           type: string
           format: uuid
           description: UUID de la facultad a la que pertenece
@@ -521,7 +512,7 @@ components:
       required:
         - id
         - name
-        - department_id
+        - departmentId
       properties:
         id:
           type: string
@@ -534,7 +525,7 @@ components:
           minLength: 1
           maxLength: 255
           example: Ingeniería Civil en Informática
-        department_id:
+        departmentId:
           type: string
           format: uuid
           description: UUID del departamento al que pertenece
@@ -545,7 +536,7 @@ components:
       type: object
       required:
         - name
-        - department_id
+        - departmentId
       properties:
         name:
           type: string
@@ -553,7 +544,7 @@ components:
           minLength: 1
           maxLength: 255
           example: Ingeniería Civil en Informática
-        department_id:
+        departmentId:
           type: string
           format: uuid
           description: UUID del departamento al que pertenece
@@ -567,7 +558,6 @@ components:
       type: object
       required:
         - id
-        - code
         - name
       properties:
         id:
@@ -575,11 +565,6 @@ components:
           format: uuid
           description: UUID único generado automáticamente
           example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
-        code:
-          type: string
-          description: Código único textual del cargo (autogenerado)
-          readOnly: true
-          example: jefe_carrera
         name:
           type: string
           description: Nombre descriptivo del cargo

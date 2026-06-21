@@ -1,9 +1,8 @@
-use std::sync::Arc;
-
 use crate::shared::{AppResult, Database};
-use crate::university::WorkPositionFilter;
-use crate::university::work_positions::{AcademicWorkPosition, AcademicWorkPositionId};
+use crate::university::{AcademicWorkPosition, AcademicWorkPositionId, WorkPositionFilter};
+
 use sqlx::{Postgres, QueryBuilder};
+use std::sync::Arc;
 use sword::prelude::*;
 
 #[injectable]
@@ -13,9 +12,8 @@ pub struct AcademicWorkPositionsRepository {
 
 impl AcademicWorkPositionsRepository {
     pub async fn list(&self, filter: WorkPositionFilter) -> AppResult<Vec<AcademicWorkPosition>> {
-        let mut query = QueryBuilder::<Postgres>::new(
-            "SELECT id, code, name FROM academic_work_positions WHERE 1=1",
-        );
+        let mut query =
+            QueryBuilder::<Postgres>::new("SELECT id, name FROM academic_work_positions WHERE 1=1");
 
         if let Some(n) = filter.name {
             let pattern = format!("%{}%", n.trim());
@@ -34,9 +32,36 @@ impl AcademicWorkPositionsRepository {
         Ok(positions)
     }
 
-    pub async fn find_by_id(&self, id: &AcademicWorkPositionId) -> AppResult<Option<AcademicWorkPosition>> {
+    pub async fn create_uknown(&self) -> AppResult<AcademicWorkPosition> {
+        let position = AcademicWorkPosition {
+            id: AcademicWorkPositionId::new(),
+            name: "Desconocido".to_string(),
+        };
+
+        self.save(&position).await?;
+
+        Ok(position)
+    }
+
+    pub async fn find_uknown(&self) -> AppResult<AcademicWorkPosition> {
         let item = sqlx::query_as::<_, AcademicWorkPosition>(
-            "SELECT id, code, name FROM academic_work_positions WHERE id = $1",
+            "SELECT id, name FROM academic_work_positions WHERE name = 'Desconocido'",
+        )
+        .fetch_optional(self.database.pool())
+        .await?;
+
+        match item {
+            Some(position) => Ok(position),
+            None => self.create_uknown().await,
+        }
+    }
+
+    pub async fn find_by_id(
+        &self,
+        id: &AcademicWorkPositionId,
+    ) -> AppResult<Option<AcademicWorkPosition>> {
+        let item = sqlx::query_as::<_, AcademicWorkPosition>(
+            "SELECT id, name FROM academic_work_positions WHERE id = $1",
         )
         .bind(id)
         .fetch_optional(self.database.pool())
@@ -46,9 +71,8 @@ impl AcademicWorkPositionsRepository {
     }
 
     pub async fn save(&self, position: &AcademicWorkPosition) -> AppResult<()> {
-        sqlx::query("INSERT INTO academic_work_positions (id, code, name) VALUES ($1, $2, $3)")
+        sqlx::query("INSERT INTO academic_work_positions (id, name) VALUES ($1, $2)")
             .bind(position.id)
-            .bind(&position.code)
             .bind(&position.name)
             .execute(self.database.pool())
             .await?;

@@ -7,6 +7,7 @@ use sqlx::FromRow;
 pub type DepartmentId = Id<Department>;
 
 #[derive(Debug, Clone, Serialize, FromRow, Builder)]
+#[serde(rename_all = "camelCase")]
 pub struct Department {
     #[builder(default = DepartmentId::new())]
     pub id: DepartmentId,

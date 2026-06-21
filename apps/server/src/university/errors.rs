@@ -22,4 +22,11 @@ pub enum UniversityError {
     #[http(code = 404, message = "El Cargo no fue encontrado")]
     #[error("Work position not found")]
     WorkPositionNotFound,
+
+    #[http(
+        code = 400,
+        message = "Se debe especificar un cargo nuevo o un cargo existente"
+    )]
+    #[error("Either a new work position or an existing work position must be specified")]
+    WorkPositionMissing,
 }

@@ -1,7 +1,8 @@
 use std::sync::LazyLock;
 
 use crate::academic::{Academic, AcademicCategoryOptionId, Sex};
-use crate::university::{AcademicWorkPositionId, CareerId, DepartmentId};
+use crate::shared::AppResult;
+use crate::university::{AcademicWorkPositionId, CareerId, DepartmentId, UniversityError};
 
 use chrono::{NaiveDate, Utc};
 use regex::Regex;
@@ -16,7 +17,9 @@ static ORCID_ID_REGEX: LazyLock<Regex> =
 
 static UCT_FOUNDATION_DATE: NaiveDate = NaiveDate::from_ymd_opt(1959, 9, 8).unwrap();
 
-#[derive(Debug, Serialize, Deserialize, Validate)]
+#[derive(Debug, Clone, Serialize, Deserialize, Validate)]
+#[serde(rename_all = "camelCase")]
+#[validate(schema(function = "validate_create_academic_dto"))]
 pub struct CreateAcademicDto {
     #[validate(regex(
 		path = *RUT_REGEX,
@@ -60,7 +63,8 @@ pub struct CreateAcademicDto {
 
     #[validate(custom(function = "validate_joined_at"))]
     pub joined_at: NaiveDate,
-    pub work_position_id: AcademicWorkPositionId,
+    pub work_position_id: Option<AcademicWorkPositionId>,
+    pub work_position_new: Option<String>,
     pub work_position_details: Option<String>,
     pub department_id: DepartmentId,
     pub career_id: Option<CareerId>,
@@ -98,6 +102,41 @@ pub enum AcademicSortField {
 pub struct GetAcademicsQuery {
     pub search: Option<String>,
     pub sort: Option<AcademicSortField>,
+}
+
+pub enum WorkPositionResult {
+    Id(AcademicWorkPositionId),
+    New(String),
+}
+
+impl CreateAcademicDto {
+    pub fn work_position(&self) -> AppResult<WorkPositionResult> {
+        if let Some(id) = self.work_position_id {
+            Ok(WorkPositionResult::Id(id))
+        } else if let Some(name) = &self.work_position_new {
+            Ok(WorkPositionResult::New(name.clone()))
+        } else {
+            Err(UniversityError::WorkPositionMissing)?
+        }
+    }
+}
+
+fn validate_create_academic_dto(dto: &CreateAcademicDto) -> Result<(), ValidationError> {
+    match (&dto.work_position_id, &dto.work_position_new) {
+        (Some(_), Some(_)) => {
+            return Err(ValidationError::new(
+                "No se puede proporcionar un work_position_id y un work_position_new al mismo tiempo",
+            ));
+        }
+        (None, None) => {
+            return Err(ValidationError::new(
+                "Se debe proporcionar un work_position_id o un work_position_new",
+            ));
+        }
+        _ => {}
+    }
+
+    Ok(())
 }
 
 fn validate_birth_date(date: &NaiveDate) -> Result<(), ValidationError> {
@@ -138,7 +177,6 @@ impl From<CreateAcademicDto> for Academic {
             .sex(input.sex)
             .birth_date(input.birth_date)
             .joined_at(input.joined_at)
-            .work_position_id(input.work_position_id)
             .maybe_work_position_details(input.work_position_details)
             .department_id(input.department_id)
             .maybe_career_id(input.career_id)

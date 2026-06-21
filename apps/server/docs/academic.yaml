@@ -520,7 +520,7 @@ components:
       type: object
       required:
         - id
-        - category_id
+        - categoryId
         - option
       properties:
         id:
@@ -528,7 +528,7 @@ components:
           format: uuid
           description: UUID único generado automáticamente
           example: b2c3d4e5-f6a7-8901-bcde-f12345678901
-        category_id:
+        categoryId:
           type: string
           format: uuid
           description: UUID de la categoría académica asociada
@@ -540,10 +540,10 @@ components:
       description: Datos de entrada para crear una opción de categoría
       type: object
       required:
-        - category_id
+        - categoryId
         - option
       properties:
-        category_id:
+        categoryId:
           type: string
           format: uuid
           description: UUID de la categoría académica
@@ -559,19 +559,19 @@ components:
       type: object
       required:
         - id
-        - academic_id
+        - academicId
         - name
         - university
-        - obtained_at
+        - obtainedAt
         - kind
-        - country_code
+        - countryCode
       properties:
         id:
           type: string
           format: uuid
           description: UUID único generado automáticamente
           example: c3d4e5f6-a7b8-9012-cdef-123456789012
-        academic_id:
+        academicId:
           type: string
           format: uuid
           description: UUID del académico al que pertenece
@@ -588,14 +588,14 @@ components:
           minLength: 1
           maxLength: 255
           example: Universidad Católica de Temuco
-        obtained_at:
+        obtainedAt:
           type: string
           format: date
           description: Fecha de obtención del grado
           example: "2015-12-15"
         kind:
           $ref: "#/components/schemas/DegreeKind"
-        country_code:
+        countryCode:
           type: string
           description: Código ISO 3166-1 alpha-2 del país
           minLength: 2
@@ -606,14 +606,14 @@ components:
       description: Datos de entrada para crear un grado académico
       type: object
       required:
-        - academic_id
+        - academicId
         - name
         - university
-        - obtained_at
+        - obtainedAt
         - kind
-        - country_code
+        - countryCode
       properties:
-        academic_id:
+        academicId:
           type: string
           format: uuid
           description: UUID del académico
@@ -630,14 +630,14 @@ components:
           minLength: 1
           maxLength: 255
           example: Universidad Católica de Temuco
-        obtained_at:
+        obtainedAt:
           type: string
           format: date
           description: Fecha de obtención
           example: "2020-06-30"
         kind:
           $ref: "#/components/schemas/DegreeKind"
-        country_code:
+        countryCode:
           type: string
           description: Código ISO 3166-1 alpha-2 del país
           minLength: 2
@@ -657,19 +657,19 @@ components:
       required:
         - id
         - names
-        - paternal_surname
-        - maternal_surname
+        - paternalSurname
+        - maternalSurname
         - email
         - sex
-        - birth_date
-        - joined_at
+        - birthDate
+        - joinedAt
         - department
-        - uct_working_hours
+        - uctWorkingHours
         - category
         - planta
         - option
-        - acad_category_hours
-        - annual_discount_hours
+        - acadCategoryHours
+        - annualDiscountHours
         - nationality
         - city
       properties:
@@ -682,11 +682,11 @@ components:
           type: string
           description: Nombres del académico
           example: Juan Carlos
-        paternal_surname:
+        paternalSurname:
           type: string
           description: Apellido paterno
           example: López
-        maternal_surname:
+        maternalSurname:
           type: string
           description: Apellido materno
           example: Martínez
@@ -702,22 +702,22 @@ components:
           example: "0000-0002-1234-5678"
         sex:
           $ref: "#/components/schemas/Sex"
-        birth_date:
+        birthDate:
           type: string
           format: date
           description: Fecha de nacimiento
           example: "1980-03-15"
-        joined_at:
+        joinedAt:
           type: string
           format: date
           description: Fecha de ingreso a la universidad
           example: "2010-05-01"
-        work_position:
+        workPosition:
           type: string
           description: Nombre del cargo laboral
           nullable: true
           example: Docente
-        work_position_details:
+        workPositionDetails:
           type: string
           description: Detalles adicionales del cargo
           nullable: true
@@ -731,7 +731,7 @@ components:
           description: Nombre de la carrera asociada
           nullable: true
           example: Ingeniería Civil en Informática
-        uct_working_hours:
+        uctWorkingHours:
           type: number
           format: double
           description: Horas semanales de trabajo en la UCT
@@ -744,12 +744,12 @@ components:
           $ref: "#/components/schemas/AcademicPlanta"
         option:
           $ref: "#/components/schemas/AcademicOption"
-        acad_category_hours:
+        acadCategoryHours:
           type: number
           format: double
           description: Horas semanales dedicadas a la categoría académica
           example: 40.0
-        annual_discount_hours:
+        annualDiscountHours:
           type: number
           format: double
           description: Horas de descuento anuales
@@ -772,20 +772,19 @@ components:
       required:
         - rut
         - names
-        - paternal_surname
-        - maternal_surname
+        - paternalSurname
+        - maternalSurname
         - email
         - orcid
         - sex
-        - birth_date
-        - joined_at
-        - work_position_id
-        - department_id
-        - uct_working_hours
-        - acad_category_options_id
-        - acad_category_hours
-        - annual_discount_hours
-        - nationality_code
+        - birthDate
+        - joinedAt
+        - departmentId
+        - uctWorkingHours
+        - acadCategoryOptionsId
+        - acadCategoryHours
+        - annualDiscountHours
+        - nationalityCode
         - city
       properties:
         rut:
@@ -799,13 +798,13 @@ components:
           minLength: 1
           maxLength: 255
           example: Juan Carlos
-        paternal_surname:
+        paternalSurname:
           type: string
           description: Apellido paterno
           minLength: 1
           maxLength: 255
           example: López
-        maternal_surname:
+        maternalSurname:
           type: string
           description: Apellido materno
           minLength: 1
@@ -823,60 +822,66 @@ components:
           example: "0000-0002-1234-5678"
         sex:
           $ref: "#/components/schemas/Sex"
-        birth_date:
+        birthDate:
           type: string
           format: date
           description: "Fecha de nacimiento (no puede ser futura)"
           example: "1980-03-15"
-        joined_at:
+        joinedAt:
           type: string
           format: date
           description: >
             Fecha de ingreso a la universidad. No puede ser futura
             ni anterior a la fundación de la UCT (1959-09-08).
           example: "2010-05-01"
-        work_position_id:
+        workPositionId:
           type: string
           format: uuid
-          description: UUID del cargo laboral
+          description: UUID de un cargo laboral existente
+          nullable: true
           example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
-        work_position_details:
+        workPositionNew:
+          type: string
+          description: Nombre del nuevo cargo laboral (se crea automáticamente si no existe)
+          nullable: true
+          example: Docente
+        workPositionDetails:
           type: string
           description: Detalles adicionales del cargo
           nullable: true
           example: Jornada completa
-        department_id:
+        departmentId:
           type: string
           format: uuid
           description: UUID del departamento al que pertenece
           example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
-        career_id:
+        careerId:
           type: string
           format: uuid
           description: UUID de la carrera asociada (opcional)
           nullable: true
           example: c3d4e5f6-a7b8-9012-cdef-123456789012
-        uct_working_hours:
+        uctWorkingHours:
           type: number
           format: double
           description: Horas semanales de trabajo en la UCT
           example: 44.0
-        acad_category_options_id:
+        acadCategoryOptionsId:
           type: string
           format: uuid
           description: UUID de la opción de categoría académica
           example: b2c3d4e5-f6a7-8901-bcde-f12345678901
-        acad_category_hours:
+        acadCategoryHours:
           type: number
           format: double
           description: Horas semanales dedicadas a la categoría académica
           example: 40.0
-        annual_discount_hours:
+        annualDiscountHours:
           type: number
           format: double
           description: Horas de descuento anuales
           example: 120.0
-        nationality_code:
+        nationalityCode:
           type: string
           description: Código ISO 3166-1 alpha-2 del país de nacionalidad
           minLength: 2

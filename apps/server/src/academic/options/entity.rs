@@ -17,7 +17,8 @@ pub enum AcademicOption {
 
 pub type AcademicCategoryOptionId = Id<AcademicCategoryOption>;
 
-#[derive(Debug, Clone, Serialize, Deserialize, FromRow, Builder)]
+#[derive(Debug, Clone, Serialize, FromRow, Builder)]
+#[serde(rename_all = "camelCase")]
 pub struct AcademicCategoryOption {
     #[builder(default = AcademicCategoryOptionId::new())]
     pub id: AcademicCategoryOptionId,
