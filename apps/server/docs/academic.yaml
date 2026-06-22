@@ -413,6 +413,44 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /academics/import:
+    post:
+      tags:
+        - Académicos
+      summary: Importar académicos desde CSV
+      description: >
+        Importa académicos masivamente desde un archivo CSV.
+        Cada fila se procesa en una transacción independiente.
+        Los campos opcionales vacíos se rellenan con valores por defecto
+        (ORCID, país, fecha del grado, universidad, nombre del título).
+      operationId: importAcademics
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Archivo CSV con los datos de los académicos
+      responses:
+        "200":
+          description: Importación completada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportResult"
+        "400":
+          description: Error al procesar el archivo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
 components:
   securitySchemes:
     CookieAuth:
@@ -893,6 +931,45 @@ components:
           minLength: 1
           maxLength: 255
           example: Temuco
+
+    # ==========================================================================
+    # IMPORT RESULT
+    # ==========================================================================
+    ImportResult:
+      description: Resultado de la importación masiva de académicos
+      type: object
+      required:
+        - imported
+        - errors
+      properties:
+        imported:
+          type: integer
+          description: Cantidad de académicos importados exitosamente
+          example: 95
+        errors:
+          type: array
+          description: Errores ocurridos durante la importación
+          items:
+            $ref: "#/components/schemas/ImportRowError"
+
+    ImportRowError:
+      description: Error en una fila específica durante la importación CSV
+      type: object
+      required:
+        - row
+        - reasons
+      properties:
+        row:
+          type: integer
+          description: Número de fila en el CSV donde ocurrió el error
+          example: 45
+        reasons:
+          type: array
+          description: Lista de mensajes de error para la fila
+          items:
+            type: string
+          example:
+            - "Departamento 'Inexistente' no encontrado"
 
     # ==========================================================================
     # COMMON ERROR SCHEMAS

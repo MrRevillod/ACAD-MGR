@@ -37,6 +37,17 @@ impl CareersRepository {
         Ok(careers)
     }
 
+    pub async fn find_by_name(&self, name: &str) -> AppResult<Option<Career>> {
+        let item = sqlx::query_as::<_, Career>(
+            "SELECT id, name, department_id FROM careers WHERE name ILIKE $1",
+        )
+        .bind(name)
+        .fetch_optional(self.database.pool())
+        .await?;
+
+        Ok(item)
+    }
+
     pub async fn find_by_id(&self, id: &CareerId) -> AppResult<Option<Career>> {
         let item = sqlx::query_as::<_, Career>(
             "SELECT id, name, department_id FROM careers WHERE id = $1",

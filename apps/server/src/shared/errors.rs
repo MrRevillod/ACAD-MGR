@@ -31,6 +31,11 @@ pub enum AppError {
     #[error("IO error: {0}")]
     Io(#[from] IoError),
 
+    #[http(code = 500)]
+    #[tracing(error)]
+    #[error("CSV error: {0}")]
+    CsvError(#[from] csv::Error),
+
     #[http(code = 500, message = "Internal Server Error")]
     #[error("Internal Error")]
     InternalError,

@@ -28,7 +28,7 @@ pub struct Academic {
     pub paternal_surname: String,
     pub maternal_surname: String,
     pub email: String,
-    pub orcid: String,
+    pub orcid: Option<String>,
     pub sex: Sex,
     pub birth_date: NaiveDate,
     pub joined_at: NaiveDate,

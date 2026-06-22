@@ -36,6 +36,29 @@ impl AcademicCategoryOptionsRepository {
         Ok(items)
     }
 
+    pub async fn find_by_category(
+        &self,
+        category_name: &str,
+        planta: AcademicPlanta,
+        option: AcademicOption,
+    ) -> AppResult<Option<AcademicCategoryOptionId>> {
+        let item = sqlx::query_scalar::<_, AcademicCategoryOptionId>(
+            r#"
+            SELECT aco.id
+            FROM academic_category_options aco
+            JOIN academic_categories ac ON ac.id = aco.category_id
+            WHERE ac.name = $1 AND ac.planta = $2 AND aco.option = $3
+            "#,
+        )
+        .bind(category_name)
+        .bind(planta)
+        .bind(option)
+        .fetch_optional(self.database.pool())
+        .await?;
+
+        Ok(item)
+    }
+
     pub async fn find_by_id(
         &self,
         id: &AcademicCategoryOptionId,

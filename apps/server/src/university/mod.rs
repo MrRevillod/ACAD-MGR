@@ -1,10 +1,12 @@
 mod careers;
+mod countries;
 mod departments;
 mod errors;
 mod faculties;
 mod work_positions;
 
 pub use careers::*;
+pub use countries::*;
 pub use departments::*;
 pub use errors::*;
 pub use faculties::*;
@@ -34,5 +36,7 @@ impl Module for UniversityModule {
 
         components.register::<AcademicWorkPositionsService>();
         components.register::<AcademicWorkPositionsRepository>();
+
+        components.register::<CountriesRepository>();
     }
 }

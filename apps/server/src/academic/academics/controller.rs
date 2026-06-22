@@ -1,6 +1,8 @@
 use crate::academic::*;
 use crate::auth::SessionCheck;
+use crate::shared::AppError;
 
+use std::env::temp_dir;
 use std::sync::Arc;
 use sword::prelude::*;
 use sword::web::*;
@@ -8,6 +10,7 @@ use sword::web::*;
 #[controller(kind = ControllerKind::Web, path = "/academics")]
 pub struct AcademicsController {
     academics: Arc<AcademicsService>,
+    imports: Arc<ImportsService>,
 }
 
 impl AcademicsController {
@@ -34,5 +37,23 @@ impl AcademicsController {
         let academic = self.academics.create(input).await?;
 
         Ok(academic)
+    }
+
+    #[post("/import")]
+    pub async fn import_academics(&self, req: Request) -> WebResult<ImportResult> {
+        let mut multipart = req.multipart().await?;
+        let file_path = temp_dir().join(format!("upload_{}.csv", uuid::Uuid::new_v4()));
+
+        while let Some(field) = multipart.next_field().await? {
+            if field.name() == Some("file") {
+                tokio::fs::write(&file_path, field.bytes().await?)
+                    .await
+                    .map_err(AppError::from)?
+            }
+        }
+
+        let result = self.imports.process(file_path.to_str().unwrap()).await?;
+
+        Ok(result)
     }
 }

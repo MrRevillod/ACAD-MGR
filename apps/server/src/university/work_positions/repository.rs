@@ -56,6 +56,17 @@ impl AcademicWorkPositionsRepository {
         }
     }
 
+    pub async fn find_by_name(&self, name: &str) -> AppResult<Option<AcademicWorkPosition>> {
+        let item = sqlx::query_as::<_, AcademicWorkPosition>(
+            "SELECT id, name FROM academic_work_positions WHERE name = $1",
+        )
+        .bind(name)
+        .fetch_optional(self.database.pool())
+        .await?;
+
+        Ok(item)
+    }
+
     pub async fn find_by_id(
         &self,
         id: &AcademicWorkPositionId,

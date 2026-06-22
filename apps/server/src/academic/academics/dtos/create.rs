@@ -1,21 +1,12 @@
-use std::sync::LazyLock;
-
 use crate::academic::{Academic, AcademicCategoryOptionId, Sex};
 use crate::shared::AppResult;
 use crate::university::{AcademicWorkPositionId, CareerId, DepartmentId, UniversityError};
 
-use chrono::{NaiveDate, Utc};
-use regex::Regex;
+use super::{ORCID_ID_REGEX, RUT_REGEX};
+
+use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
 use validator::{Validate, ValidationError};
-
-static RUT_REGEX: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"^\d{7,8}-[\dkK]$").expect("regex inválida"));
-
-static ORCID_ID_REGEX: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"^\d{4}-\d{4}-\d{4}-\d{3}[\dX]$").expect("regex inválida"));
-
-static UCT_FOUNDATION_DATE: NaiveDate = NaiveDate::from_ymd_opt(1959, 9, 8).unwrap();
 
 #[derive(Debug, Clone, Serialize, Deserialize, Validate)]
 #[serde(rename_all = "camelCase")]
@@ -55,22 +46,37 @@ pub struct CreateAcademicDto {
 		path = *ORCID_ID_REGEX,
 		message = "El ORCID ID debe tener el formato XXXX-XXXX-XXXX-XXXX"
 	))]
-    pub orcid: String,
+    pub orcid: Option<String>,
     pub sex: Sex,
 
-    #[validate(custom(function = "validate_birth_date"))]
+    #[validate(custom(function = "super::validate_birth_date"))]
     pub birth_date: NaiveDate,
 
-    #[validate(custom(function = "validate_joined_at"))]
+    #[validate(custom(function = "super::validate_joined_at"))]
     pub joined_at: NaiveDate,
     pub work_position_id: Option<AcademicWorkPositionId>,
     pub work_position_new: Option<String>,
     pub work_position_details: Option<String>,
     pub department_id: DepartmentId,
     pub career_id: Option<CareerId>,
-    pub uct_working_hours: f64,
     pub acad_category_options_id: AcademicCategoryOptionId,
+
+    #[validate(range(
+        min = 0.0,
+        message = "Las horas de trabajo en la universidad no pueden ser negativas"
+    ))]
+    pub uct_working_hours: f64,
+
+    #[validate(range(
+        min = 0.0,
+        message = "Las horas de categoría académica no pueden ser negativas"
+    ))]
     pub acad_category_hours: f64,
+
+    #[validate(range(
+        min = 0.0,
+        message = "Las horas de descuento anual no pueden ser negativas"
+    ))]
     pub annual_discount_hours: f64,
 
     #[validate(length(
@@ -86,22 +92,6 @@ pub struct CreateAcademicDto {
         message = "La ciudad debe tener entre 1 y 255 caracteres"
     ))]
     pub city: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum AcademicSortField {
-    Names,
-    PaternalSurname,
-    MaternalSurname,
-    JoinedAt,
-    BirthDate,
-}
-
-#[derive(Debug, Serialize, Deserialize, Validate, Default)]
-pub struct GetAcademicsQuery {
-    pub search: Option<String>,
-    pub sort: Option<AcademicSortField>,
 }
 
 pub enum WorkPositionResult {
@@ -139,32 +129,6 @@ fn validate_create_academic_dto(dto: &CreateAcademicDto) -> Result<(), Validatio
     Ok(())
 }
 
-fn validate_birth_date(date: &NaiveDate) -> Result<(), ValidationError> {
-    validate_future_date(date)
-}
-
-fn validate_joined_at(joined_at: &NaiveDate) -> Result<(), ValidationError> {
-    validate_future_date(joined_at)?;
-
-    if *joined_at < UCT_FOUNDATION_DATE {
-        return Err(ValidationError::new(
-            "La fecha de ingreso no puede ser anterior al año de fundación de la universidad (1959)",
-        ));
-    };
-
-    Ok(())
-}
-
-fn validate_future_date(date: &NaiveDate) -> Result<(), ValidationError> {
-    if *date > Utc::now().naive_utc().date() {
-        Err(ValidationError::new(
-            "La fecha de nacimiento no puede ser en el futuro",
-        ))
-    } else {
-        Ok(())
-    }
-}
-
 impl From<CreateAcademicDto> for Academic {
     fn from(input: CreateAcademicDto) -> Self {
         Academic::builder()
@@ -173,7 +137,7 @@ impl From<CreateAcademicDto> for Academic {
             .paternal_surname(input.paternal_surname)
             .maternal_surname(input.maternal_surname)
             .email(input.email)
-            .orcid(input.orcid)
+            .maybe_orcid(input.orcid)
             .sex(input.sex)
             .birth_date(input.birth_date)
             .joined_at(input.joined_at)

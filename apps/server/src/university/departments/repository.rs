@@ -39,6 +39,17 @@ impl DepartmentsRepository {
         Ok(departments)
     }
 
+    pub async fn find_by_name(&self, name: &str) -> AppResult<Option<Department>> {
+        let item = sqlx::query_as::<_, Department>(
+            "SELECT id, name, faculty_id FROM departments WHERE name ILIKE $1",
+        )
+        .bind(name)
+        .fetch_optional(self.database.pool())
+        .await?;
+
+        Ok(item)
+    }
+
     pub async fn find_by_id(&self, id: &DepartmentId) -> AppResult<Option<Department>> {
         let item = sqlx::query_as::<_, Department>(
             "SELECT id, name, faculty_id FROM departments WHERE id = $1",

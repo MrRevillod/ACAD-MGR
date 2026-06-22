@@ -1,3 +1,7 @@
+mod imports;
+
+pub use imports::*;
+
 use crate::{academic::*, shared::AppResult, university::*};
 use std::sync::Arc;
 use sword::prelude::*;
@@ -35,11 +39,8 @@ impl AcademicsService {
             return Err(AcademicError::AcademicRutAlreadyExists)?;
         }
 
-        if self
-            .academics
-            .find_by_orcid(&academic.orcid)
-            .await?
-            .is_some()
+        if let Some(orcid) = &input.orcid
+            && self.academics.find_by_orcid(orcid).await?.is_some()
         {
             return Err(AcademicError::AcademicOrcidAlreadyExists)?;
         }

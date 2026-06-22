@@ -34,5 +34,7 @@ impl Module for AcademicModule {
 
         components.register::<AcademicsService>();
         components.register::<AcademicsRepository>();
+
+        components.register::<ImportsService>();
     }
 }
