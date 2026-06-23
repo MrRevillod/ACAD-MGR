@@ -140,17 +140,17 @@ paths:
           in: query
           description: Filtro por nombre (ILIKE)
           required: false
-            schema:
-              type: string
-              minLength: 1
-              maxLength: 255
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 255
         - name: faculty_id
           in: query
           description: UUID de la facultad para filtrar departamentos
           required: false
-            schema:
-              type: string
-              format: uuid
+          schema:
+            type: string
+            format: uuid
       responses:
         "200":
           description: Listado de departamentos obtenido exitosamente
@@ -236,17 +236,17 @@ paths:
           in: query
           description: Filtro por nombre (ILIKE)
           required: false
-            schema:
-              type: string
-              minLength: 1
-              maxLength: 255
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 255
         - name: department_id
           in: query
           description: UUID del departamento para filtrar carreras
           required: false
-            schema:
-              type: string
-              format: uuid
+          schema:
+            type: string
+            format: uuid
       responses:
         "200":
           description: Listado de carreras obtenido exitosamente
@@ -332,10 +332,10 @@ paths:
           in: query
           description: Filtro por nombre (ILIKE)
           required: false
-            schema:
-              type: string
-              minLength: 1
-              maxLength: 255
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 255
       responses:
         "200":
           description: Listado de cargos laborales obtenido exitosamente

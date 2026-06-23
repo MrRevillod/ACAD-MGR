@@ -1,1 +1,8 @@
 @import "tailwindcss";
+
+@theme {
+	--color-corp-white: #ffffff;
+	--color-corp-gray: #878787;
+	--color-corp-yellow: #edc500;
+	--color-corp-blue: #0075b4;
+}

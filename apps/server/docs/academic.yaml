@@ -49,9 +49,9 @@ paths:
           in: query
           description: Filtro por nombre (ILIKE)
           required: false
-            schema:
-              type: string
-              maxLength: 255
+          schema:
+            type: string
+            maxLength: 255
         - name: planta
           in: query
           description: Filtrar por planta
@@ -147,9 +147,9 @@ paths:
           in: query
           description: UUID de la categoría para filtrar opciones
           required: false
-            schema:
-              type: string
-              format: uuid
+          schema:
+            type: string
+            format: uuid
       responses:
         "200":
           description: Listado de opciones obtenido exitosamente
@@ -237,9 +237,9 @@ paths:
           in: query
           description: UUID del académico para filtrar grados
           required: false
-            schema:
-              type: string
-              format: uuid
+          schema:
+            type: string
+            format: uuid
       responses:
         "200":
           description: Listado de grados obtenido exitosamente
@@ -328,8 +328,8 @@ paths:
           description: >
             Búsqueda por RUT, nombres, apellidos o email (ILIKE).
           required: false
-            schema:
-              type: string
+          schema:
+            type: string
         - name: sort
           in: query
           description: Campo por el cual ordenar los resultados (ASC)
