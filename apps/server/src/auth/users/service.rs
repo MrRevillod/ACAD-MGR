@@ -23,6 +23,14 @@ impl UsersService {
         self.users.list(filter).await
     }
 
+    pub async fn find_by_id(&self, id: &UserId) -> AppResult<UserView> {
+        let Some(user) = self.users.find_by_id(id).await? else {
+            return Err(AuthError::UserNotFound)?;
+        };
+
+        Ok(UserView::from(user))
+    }
+
     pub async fn create(&self, dto: CreateUserDto) -> AppResult<UserView> {
         if self.users.find_by_email(&dto.email).await?.is_some() {
             return Err(AuthError::EmailAlreadyExists)?;
@@ -38,11 +46,6 @@ impl UsersService {
 
         let user = self.users.save(&user).await?;
 
-        Ok(UserView {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-        })
+        Ok(UserView::from(user))
     }
 }

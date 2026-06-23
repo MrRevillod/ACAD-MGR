@@ -8,7 +8,10 @@ pub struct AcademicCategoryOptionsService {
 }
 
 impl AcademicCategoryOptionsService {
-    pub async fn find(&self, query: GetCategoryOptionsQuery) -> AppResult<Vec<AcademicCategoryOption>> {
+    pub async fn find(
+        &self,
+        query: GetCategoryOptionsQuery,
+    ) -> AppResult<Vec<AcademicCategoryOption>> {
         let filter = AcademicCategoryOptionFilter {
             category_id: query.category_id,
         };
@@ -16,7 +19,10 @@ impl AcademicCategoryOptionsService {
         self.options.list(filter).await
     }
 
-    pub async fn find_by_id(&self, id: &AcademicCategoryOptionId) -> AppResult<AcademicCategoryOption> {
+    pub async fn find_by_id(
+        &self,
+        id: &AcademicCategoryOptionId,
+    ) -> AppResult<AcademicCategoryOption> {
         let Some(option) = self.options.find_by_id(id).await? else {
             return Err(AcademicError::CategoryOptionNotFound)?;
         };
@@ -24,7 +30,10 @@ impl AcademicCategoryOptionsService {
         Ok(option)
     }
 
-    pub async fn create(&self, input: CreateCategoryOptionDto) -> AppResult<AcademicCategoryOption> {
+    pub async fn create(
+        &self,
+        input: CreateCategoryOptionDto,
+    ) -> AppResult<AcademicCategoryOption> {
         let option = AcademicCategoryOption::builder()
             .category_id(input.category_id)
             .option(input.option)

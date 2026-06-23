@@ -5,6 +5,14 @@ mod id;
 mod jsonwebtoken;
 mod logger;
 
+mod value_objects {
+    mod cl_float;
+    pub use cl_float::CLf64;
+
+    mod country;
+    pub use country::Country;
+}
+
 use database::DatabaseConfig;
 use sword::prelude::*;
 
@@ -14,6 +22,8 @@ pub use extensions::*;
 pub use id::{Entity, Id};
 pub use jsonwebtoken::JsonWebTokenService;
 pub use logger::LoggerLayer;
+pub use value_objects::CLf64;
+pub use value_objects::Country;
 
 pub struct SharedModule;
 

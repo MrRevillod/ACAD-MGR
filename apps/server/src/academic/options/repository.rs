@@ -1,5 +1,5 @@
 use crate::academic::*;
-use crate::shared::{AppResult, Database, Tx};
+use crate::shared::{AppResult, Database};
 
 use sqlx::{Postgres, QueryBuilder};
 use std::sync::Arc;
@@ -44,8 +44,7 @@ impl AcademicCategoryOptionsRepository {
     ) -> AppResult<Option<AcademicCategoryOptionId>> {
         let item = sqlx::query_scalar::<_, AcademicCategoryOptionId>(
             r#"
-            SELECT aco.id
-            FROM academic_category_options aco
+            SELECT aco.id FROM academic_category_options aco
             JOIN academic_categories ac ON ac.id = aco.category_id
             WHERE ac.name = $1 AND ac.planta = $2 AND aco.option = $3
             "#,
@@ -78,22 +77,9 @@ impl AcademicCategoryOptionsRepository {
             "INSERT INTO academic_category_options (id, category_id, option) VALUES ($1, $2, $3)",
         )
         .bind(option.id)
-        .bind(&option.category_id)
+        .bind(option.category_id)
         .bind(option.option)
         .execute(self.database.pool())
-        .await?;
-
-        Ok(())
-    }
-
-    pub async fn save_tx(&self, tx: &mut Tx<'_>, option: &AcademicCategoryOption) -> AppResult<()> {
-        sqlx::query(
-            "INSERT INTO academic_category_options (id, category_id, option) VALUES ($1, $2, $3)",
-        )
-        .bind(option.id)
-        .bind(&option.category_id)
-        .bind(option.option)
-        .execute(&mut **tx)
         .await?;
 
         Ok(())

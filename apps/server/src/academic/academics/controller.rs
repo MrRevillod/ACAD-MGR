@@ -1,11 +1,11 @@
 use crate::academic::*;
 use crate::auth::SessionCheck;
-use crate::shared::AppError;
 
 use std::env::temp_dir;
 use std::sync::Arc;
 use sword::prelude::*;
 use sword::web::*;
+use uuid::Uuid;
 
 #[controller(kind = ControllerKind::Web, path = "/academics")]
 pub struct AcademicsController {
@@ -42,18 +42,15 @@ impl AcademicsController {
     #[post("/import")]
     pub async fn import_academics(&self, req: Request) -> WebResult<ImportResult> {
         let mut multipart = req.multipart().await?;
-        let file_path = temp_dir().join(format!("upload_{}.csv", uuid::Uuid::new_v4()));
+        let file_path = temp_dir().join(format!("upload_{}.csv", Uuid::new_v4()));
 
         while let Some(field) = multipart.next_field().await? {
             if field.name() == Some("file") {
-                tokio::fs::write(&file_path, field.bytes().await?)
-                    .await
-                    .map_err(AppError::from)?
+                let bytes = field.bytes().await?;
+                self.imports.save_temp_csv(&file_path, &bytes).await?;
             }
         }
 
-        let result = self.imports.process(file_path.to_str().unwrap()).await?;
-
-        Ok(result)
+        Ok(self.imports.process(file_path.to_str().unwrap()).await?)
     }
 }

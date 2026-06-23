@@ -1,21 +1,23 @@
 use crate::academic::*;
-use crate::shared::{AppError, AppResult, Database, Tx};
+use crate::shared::{AppError, AppResult, TransactionManager, Tx};
 use crate::university::*;
 
 use chrono::{NaiveDate, Utc};
+use std::path::PathBuf;
 use std::sync::Arc;
 use sword::prelude::*;
 use validator::Validate;
 
 #[injectable]
 pub struct ImportsService {
-    database: Arc<Database>,
+    tx: Arc<TransactionManager>,
     academics: Arc<AcademicsRepository>,
     degrees: Arc<DegreesRepository>,
     departments: Arc<DepartmentsRepository>,
     careers: Arc<CareersRepository>,
     work_positions: Arc<AcademicWorkPositionsRepository>,
     category_options: Arc<AcademicCategoryOptionsRepository>,
+    countries: Arc<CountriesRepository>,
 }
 
 impl ImportsService {
@@ -32,56 +34,43 @@ impl ImportsService {
         for (row_idx, result) in reader.records().enumerate() {
             let row_num = row_idx + 2;
 
-            let record = match result {
-                Ok(r) => r,
-                Err(e) => {
-                    errors.push(ImportRowError {
-                        row: row_num,
-                        reasons: vec![format!("Error de lectura en la fila: {e}")],
-                    });
-                    continue;
-                }
+            let Ok(record) = result else {
+                let err = result.err().unwrap();
+                let row_err = ImportRowError {
+                    row: row_num,
+                    reasons: vec![format!("Error de lectura en la fila: {err}")],
+                };
+
+                errors.push(row_err);
+
+                continue;
             };
 
-            if record.get(0).map_or(true, |v| v.trim().is_empty()) {
+            if record.get(0).is_none_or(|v| v.trim().is_empty()) {
                 continue;
             }
 
-            let input: AcademicImportRowDto = match record.deserialize(Some(&headers)) {
-                Ok(r) => r,
-                Err(e) => {
-                    errors.push(ImportRowError {
-                        row: row_num,
-                        reasons: vec![format!("Error de formato en la fila: {e}")],
-                    });
-                    continue;
-                }
+            let deserialization_result =
+                record.deserialize::<'_, AcademicImportRowDto>(Some(&headers));
+
+            let Ok(input) = deserialization_result else {
+                let err = deserialization_result.err().unwrap();
+                let row_err = ImportRowError {
+                    row: row_num,
+                    reasons: vec![format!("Error de formato en la fila: {err}")],
+                };
+
+                errors.push(row_err);
+
+                continue;
             };
 
             if let Err(validation_errors) = input.validate() {
-                let reasons: Vec<String> = validation_errors
-                    .field_errors()
-                    .iter()
-                    .flat_map(|(field, errs)| {
-                        errs.iter().map(move |e| {
-                            let msg = e
-                                .message
-                                .as_ref()
-                                .map(|m| m.to_string())
-                                .unwrap_or_default();
-                            format!("{}: {}", field, msg)
-                        })
-                    })
-                    .collect();
-
-                errors.push(ImportRowError {
-                    row: row_num,
-                    reasons,
-                });
+                errors.push(ImportRowError::from_validation(row_num, &validation_errors));
                 continue;
             }
 
-            let mut tx = self.database.tx().await?;
+            let mut tx = self.tx.begin().await?;
 
             match self.process_row(&input, &mut tx).await {
                 Ok(()) => {
@@ -102,82 +91,54 @@ impl ImportsService {
     }
 
     async fn process_row(&self, input: &AcademicImportRowDto, tx: &mut Tx<'_>) -> AppResult<()> {
-        let department = self
+        let Some(department) = self
             .departments
             .find_by_name(&input.department_name)
             .await?
-            .ok_or_else(|| {
-                let msg = format!("Departamento '{}' no encontrado", input.department_name);
-                AppError::from(std::io::Error::new(std::io::ErrorKind::NotFound, msg))
-            })?;
-
-        let career_id = if let Some(ref name) = input.career_name {
-            if !name.trim().is_empty() {
-                self.careers.find_by_name(name).await?.map(|c| c.id)
-            } else {
-                None
-            }
-        } else {
-            None
+        else {
+            return Err(UniversityError::DepartmentNotFound)?;
         };
 
-        let work_position = self
+        let career_id = match &input.career_name {
+            Some(name) if !name.trim().is_empty() => {
+                self.careers.find_by_name(name).await?.map(|c| c.id)
+            }
+            _ => None,
+        };
+
+        let work_position_id = match self
             .work_positions
             .find_by_name(&input.work_position_name)
-            .await?;
-
-        let work_position_id = match work_position {
-            Some(wp) => wp.id,
+            .await?
+            .map(|wp| wp.id)
+        {
+            Some(id) => id,
             None => self.work_positions.find_uknown().await?.id,
         };
 
-        let planta: AcademicPlanta = input.planta.clone().into();
-        let option: AcademicOption = input.option.clone().into();
+        let planta = AcademicPlanta::from(&input.planta);
+        let option = AcademicOption::from(&input.option);
 
-        let category_option_id = self
+        let Some(category_option_id) = self
             .category_options
             .find_by_category(&input.category_name, planta, option)
             .await?
-            .ok_or_else(|| {
-                let msg = format!(
-                    "Opción de categoría no encontrada para categoría '{}'",
-                    input.category_name
-                );
-                AppError::from(std::io::Error::new(std::io::ErrorKind::NotFound, msg))
-            })?;
+        else {
+            return Err(AcademicError::CategoryOptionNotFound)?;
+        };
 
-        let nationality_code = input
-            .nationality_country
-            .split(" - ")
-            .next()
-            .map(|s| s.trim().to_string())
-            .filter(|s| !s.is_empty())
-            .ok_or_else(|| {
-                let msg = format!("Código de país inválido: '{}'", input.nationality_country);
-                AppError::from(std::io::Error::new(std::io::ErrorKind::InvalidData, msg))
-            })?;
+        let nationality_code = input.nationality_country.code.clone();
+
+        let Some(_) = self.countries.find_by_code(&nationality_code).await? else {
+            return Err(UniversityError::CountryNotFound(nationality_code))?;
+        };
 
         let orcid = input
             .orcid
-            .as_ref()
-            .and_then(|o| {
-                let t = o.trim();
-                if t.is_empty() || t == "-" {
-                    None
-                } else {
-                    Some(t.to_string())
-                }
-            })
-            .unwrap_or_else(|| "0000-0000-0000-0000".to_string());
-
-        let uct_working_hours = parse_f64(&input.uct_working_hours)
-            .map_err(|e| AppError::from(std::io::Error::new(std::io::ErrorKind::InvalidData, e)))?;
-
-        let acad_category_hours = parse_f64(&input.acad_category_hours)
-            .map_err(|e| AppError::from(std::io::Error::new(std::io::ErrorKind::InvalidData, e)))?;
-
-        let annual_discount_hours = parse_f64(&input.annual_discount_hours)
-            .map_err(|e| AppError::from(std::io::Error::new(std::io::ErrorKind::InvalidData, e)))?;
+            .as_deref()
+            .filter(|o| !o.trim().is_empty() && *o != "-")
+            .unwrap_or("0000-0000-0000-0000")
+            .to_string();
 
         let academic = Academic::builder()
             .rut(input.rut.clone())
@@ -193,10 +154,10 @@ impl ImportsService {
             .maybe_work_position_details(input.work_position_details.clone())
             .department_id(department.id)
             .maybe_career_id(career_id)
-            .uct_working_hours(uct_working_hours)
+            .uct_working_hours(*input.uct_working_hours)
             .acad_category_options_id(category_option_id)
-            .acad_category_hours(acad_category_hours)
-            .annual_discount_hours(annual_discount_hours)
+            .acad_category_hours(*input.acad_category_hours)
+            .annual_discount_hours(*input.annual_discount_hours)
             .nationality_code(nationality_code)
             .city(input.city.clone())
             .build();
@@ -209,6 +170,7 @@ impl ImportsService {
             &input.degree_1_name,
             &input.degree_1_university,
             input.degree_1_date,
+            input.degree_1_country.as_deref(),
         )
         .await?;
 
@@ -218,6 +180,7 @@ impl ImportsService {
             &input.degree_2_name,
             &input.degree_2_university,
             input.degree_2_date,
+            input.degree_2_country.as_deref(),
         )
         .await?;
 
@@ -231,6 +194,7 @@ impl ImportsService {
         name: &Option<String>,
         university: &Option<String>,
         obtained_at: Option<NaiveDate>,
+        country_code: Option<&str>,
     ) -> AppResult<()> {
         let name = name.as_deref().unwrap_or("Desconocido").trim();
         if name.is_empty() {
@@ -244,6 +208,7 @@ impl ImportsService {
             .to_string();
 
         let obtained_at = obtained_at.unwrap_or_else(|| Utc::now().date_naive());
+        let country_code = country_code.unwrap_or("CL");
 
         let degree = Degree::builder()
             .academic_id(*academic_id)
@@ -251,22 +216,21 @@ impl ImportsService {
             .university(university)
             .obtained_at(obtained_at)
             .kind(DegreeKind::Base)
-            .country_code("CL".to_string())
+            .country_code(country_code.to_string())
             .build();
 
         self.degrees.save_tx(tx, &degree).await?;
 
         Ok(())
     }
-}
 
-fn parse_f64(s: &str) -> Result<f64, String> {
-    let s = s.trim().replace(",", ".");
+    pub async fn save_temp_csv(&self, path: &PathBuf, content: &[u8]) -> AppResult<()> {
+        tokio::fs::write(&path, content)
+            .await
+            .map_err(AppError::from)?;
 
-    if s.is_empty() {
-        return Err("valor numérico vacío".to_string());
+        tokio::fs::remove_file(&path).await.ok();
+
+        Ok(())
     }
-
-    s.parse::<f64>()
-        .map_err(|_| format!("valor numérico inválido: '{}'", s))
 }

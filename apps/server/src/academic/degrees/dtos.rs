@@ -9,16 +9,28 @@ use validator::Validate;
 pub struct CreateDegreeDto {
     pub academic_id: AcademicId,
 
-    #[validate(length(min = 1, max = 255, message = "El nombre debe tener entre 1 y 255 caracteres"))]
+    #[validate(length(
+        min = 1,
+        max = 255,
+        message = "El nombre debe tener entre 1 y 255 caracteres"
+    ))]
     pub name: String,
 
-    #[validate(length(min = 1, max = 255, message = "La universidad debe tener entre 1 y 255 caracteres"))]
+    #[validate(length(
+        min = 1,
+        max = 255,
+        message = "La universidad debe tener entre 1 y 255 caracteres"
+    ))]
     pub university: String,
 
     pub obtained_at: NaiveDate,
     pub kind: DegreeKind,
 
-    #[validate(length(min = 2, max = 2, message = "El código de país debe tener 2 caracteres"))]
+    #[validate(length(
+        min = 2,
+        max = 2,
+        message = "El código de país debe tener 2 caracteres"
+    ))]
     pub country_code: String,
 }
 

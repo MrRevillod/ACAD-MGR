@@ -1,9 +1,12 @@
+use super::*;
+use crate::{
+    academic::{AcademicOption, AcademicPlanta, Sex},
+    shared::{CLf64, Country},
+};
+
 use chrono::NaiveDate;
 use serde::Deserialize;
-use validator::Validate;
-
-use super::*;
-use crate::academic::{AcademicOption, AcademicPlanta, Sex};
+use validator::{Validate, ValidationErrors};
 
 #[derive(Debug, Clone, Deserialize, Validate)]
 pub struct AcademicImportRowDto {
@@ -79,16 +82,16 @@ pub struct AcademicImportRowDto {
     pub option: ImportedAcademicOption,
 
     #[serde(rename = "JORNADA UCT HORAS")]
-    pub uct_working_hours: String,
+    pub uct_working_hours: CLf64,
 
     #[serde(rename = "HRS DD CATEGORIA/OPCION")]
-    pub acad_category_hours: String,
+    pub acad_category_hours: CLf64,
 
     #[serde(rename = "HRS DD DESC PROM ANUAL")]
-    pub annual_discount_hours: String,
+    pub annual_discount_hours: CLf64,
 
     #[serde(rename = "PAÍS DE NACIONALIDAD")]
-    pub nationality_country: String,
+    pub nationality_country: Country,
 
     #[validate(length(
         min = 1,
@@ -110,6 +113,10 @@ pub struct AcademicImportRowDto {
     #[serde(default)]
     pub degree_1_date: Option<NaiveDate>,
 
+    #[serde(rename = "PAÍS (I)")]
+    #[serde(default)]
+    pub degree_1_country: Option<String>,
+
     #[serde(rename = "TITULO (II)")]
     #[serde(default)]
     pub degree_2_name: Option<String>,
@@ -121,6 +128,10 @@ pub struct AcademicImportRowDto {
     #[serde(rename = "FECHA (II)")]
     #[serde(default)]
     pub degree_2_date: Option<NaiveDate>,
+
+    #[serde(rename = "PAÍS (II)")]
+    #[serde(default)]
+    pub degree_2_country: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -151,8 +162,29 @@ pub struct ImportRowError {
     pub reasons: Vec<String>,
 }
 
-impl From<ImportedAcademicOption> for AcademicOption {
-    fn from(value: ImportedAcademicOption) -> Self {
+impl ImportRowError {
+    pub fn from_validation(row: usize, errors: &ValidationErrors) -> Self {
+        let reasons = errors
+            .field_errors()
+            .iter()
+            .flat_map(|(field, errs)| {
+                errs.iter().map(move |e| {
+                    let msg = e
+                        .message
+                        .as_ref()
+                        .map(|m| m.to_string())
+                        .unwrap_or_default();
+                    format!("{}: {}", field, msg)
+                })
+            })
+            .collect();
+
+        Self { row, reasons }
+    }
+}
+
+impl From<&ImportedAcademicOption> for AcademicOption {
+    fn from(value: &ImportedAcademicOption) -> Self {
         match value {
             ImportedAcademicOption::Teaching => AcademicOption::Teaching,
             ImportedAcademicOption::Research => AcademicOption::Research,
@@ -160,8 +192,8 @@ impl From<ImportedAcademicOption> for AcademicOption {
     }
 }
 
-impl From<ImportedAcademicPlanta> for AcademicPlanta {
-    fn from(value: ImportedAcademicPlanta) -> Self {
+impl From<&ImportedAcademicPlanta> for AcademicPlanta {
+    fn from(value: &ImportedAcademicPlanta) -> Self {
         match value {
             ImportedAcademicPlanta::Adjunta => AcademicPlanta::Adjunta,
             ImportedAcademicPlanta::Permanente => AcademicPlanta::Permanente,

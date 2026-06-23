@@ -1,4 +1,4 @@
-use crate::auth::{CreateUserDto, GetUsersQuery, SessionCheck, UserView, UsersService};
+use crate::auth::*;
 
 use std::sync::Arc;
 use sword::prelude::*;
@@ -17,6 +17,14 @@ impl UsersController {
         let users = self.users.find(query.unwrap_or_default()).await?;
 
         Ok(users)
+    }
+
+    #[get("/{id}")]
+    pub async fn get_user(&self, req: Request) -> WebResult<UserView> {
+        let id = req.param::<UserId>("id")?;
+        let user = self.users.find_by_id(&id).await?;
+
+        Ok(user)
     }
 
     #[post("/")]

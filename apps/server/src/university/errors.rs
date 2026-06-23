@@ -29,4 +29,9 @@ pub enum UniversityError {
     )]
     #[error("Either a new work position or an existing work position must be specified")]
     WorkPositionMissing,
+
+    // Country errors
+    #[http(code = 400, message = "El código de país no es válido")]
+    #[error("Country code '{0}' not found")]
+    CountryNotFound(String),
 }

@@ -1,5 +1,5 @@
 use crate::academic::{AcademicCategory, AcademicCategoryId, AcademicPlanta};
-use crate::shared::{AppResult, Database, Tx};
+use crate::shared::{AppResult, Database};
 
 use sqlx::QueryBuilder;
 use std::sync::Arc;
@@ -55,17 +55,6 @@ impl AcademicCategoriesRepository {
             .bind(&category.name)
             .bind(&category.planta)
             .execute(self.database.pool())
-            .await?;
-
-        Ok(())
-    }
-
-    pub async fn save_tx(&self, tx: &mut Tx<'_>, category: &AcademicCategory) -> AppResult<()> {
-        sqlx::query("INSERT INTO academic_categories (id, name, planta) VALUES ($1, $2, $3)")
-            .bind(category.id)
-            .bind(&category.name)
-            .bind(&category.planta)
-            .execute(&mut **tx)
             .await?;
 
         Ok(())

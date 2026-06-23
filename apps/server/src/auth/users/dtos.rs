@@ -1,14 +1,8 @@
 use crate::auth::{User, UserId, UserRole};
 
-use regex::Regex;
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
-use std::sync::LazyLock;
-use validator::Validate;
-
-static PASSWORD_REGEX: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$").expect("regex inválida")
-});
+use validator::{Validate, ValidationError};
 
 #[derive(Debug, Default, Validate, Deserialize)]
 pub struct GetUsersQuery {
@@ -32,15 +26,37 @@ pub struct CreateUserDto {
     #[validate(email(message = "El atributo 'email' debe ser un correo electrónico válido"))]
     pub email: String,
 
-    #[validate(regex(
-    	path = *PASSWORD_REGEX,
-     	message = "
-	      	La contraseña debe tener al menos 8 caracteres,
-	      	incluyendo una letra mayúscula, una letra minúscula, un número y un carácter especial
-       	"
-    ))]
+    #[validate(custom(function = "validate_password"))]
     pub password: String,
     pub role: UserRole,
+}
+
+fn validate_password(password: &str) -> Result<(), ValidationError> {
+    let mut missing = Vec::new();
+
+    if password.len() < 8 {
+        missing.push("al menos 8 caracteres");
+    }
+    if !password.chars().any(|c| c.is_ascii_lowercase()) {
+        missing.push("una letra minúscula");
+    }
+    if !password.chars().any(|c| c.is_ascii_uppercase()) {
+        missing.push("una letra mayúscula");
+    }
+    if !password.chars().any(|c| c.is_ascii_digit()) {
+        missing.push("un número");
+    }
+    if !password.chars().any(|c| !c.is_ascii_alphanumeric()) {
+        missing.push("un carácter especial");
+    }
+
+    if missing.is_empty() {
+        Ok(())
+    } else {
+        let mut err = ValidationError::new("password");
+        err.message = Some(format!("La contraseña debe tener {}", missing.join(", ")).into());
+        Err(err)
+    }
 }
 
 #[derive(Debug, Clone, Serialize, FromRow)]

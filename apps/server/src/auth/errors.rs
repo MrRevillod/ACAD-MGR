@@ -16,6 +16,10 @@ pub enum AuthError {
     #[error("Invalid credentials provided")]
     InvalidCredentials,
 
+    #[http(code = 404, message = "Usuario no encontrado")]
+    #[error("User not found")]
+    UserNotFound,
+
     #[http(code = 500, message = "Internal Server Error")]
     #[tracing(error)]
     #[error("Encryption error: {0}")]
