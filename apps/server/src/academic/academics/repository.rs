@@ -23,10 +23,10 @@ impl AcademicsRepository {
             SELECT
                 a.id, a.names, a.paternal_surname, a.maternal_surname,
                 a.email, a.orcid, a.sex, a.birth_date, a.joined_at,
-                wp.name AS work_position, a.work_position_details,
+                wp.name AS work_position,
                 d.name AS department,
                 c.name AS career,
-                a.uct_working_hours,
+                a.jce,
                 ac.name AS category,
                 ac.planta,
                 aco.option,
@@ -94,10 +94,10 @@ impl AcademicsRepository {
             SELECT
                 a.id, a.names, a.paternal_surname, a.maternal_surname,
                 a.email, a.orcid, a.sex, a.birth_date, a.joined_at,
-                wp.name AS work_position, a.work_position_details,
+                wp.name AS work_position,
                 d.name AS department,
                 c.name AS career,
-                a.uct_working_hours,
+                a.jce,
                 ac.name AS category,
                 ac.planta,
                 aco.option,
@@ -143,12 +143,12 @@ impl AcademicsRepository {
         let query = r#"
         INSERT INTO academics (
             id, rut, names, paternal_surname, maternal_surname, email, orcid, sex,
-            birth_date, joined_at, work_position_id, work_position_details,
-            department_id, career_id, uct_working_hours, acad_category_options_id,
+            birth_date, joined_at, work_position_id,
+            department_id, career_id, jce, acad_category_options_id,
             acad_category_hours, annual_discount_hours, nationality_code, city
         ) VALUES (
             $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-            $11, $12, $13, $14, $15, $16, $17, $18, $19, $20
+            $11, $12, $13, $14, $15, $16, $17, $18, $19
         )"#;
 
         sqlx::query(query)
@@ -163,10 +163,9 @@ impl AcademicsRepository {
             .bind(academic.birth_date)
             .bind(academic.joined_at)
             .bind(academic.work_position_id)
-            .bind(&academic.work_position_details)
             .bind(academic.department_id)
             .bind(academic.career_id)
-            .bind(academic.uct_working_hours)
+            .bind(academic.jce)
             .bind(academic.acad_category_options_id)
             .bind(academic.acad_category_hours)
             .bind(academic.annual_discount_hours)
@@ -182,12 +181,12 @@ impl AcademicsRepository {
         let query = r#"
         INSERT INTO academics (
             id, rut, names, paternal_surname, maternal_surname, email, orcid, sex,
-            birth_date, joined_at, work_position_id, work_position_details,
-            department_id, career_id, uct_working_hours, acad_category_options_id,
+            birth_date, joined_at, work_position_id,
+            department_id, career_id, jce, acad_category_options_id,
             acad_category_hours, annual_discount_hours, nationality_code, city
         ) VALUES (
             $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-            $11, $12, $13, $14, $15, $16, $17, $18, $19, $20
+            $11, $12, $13, $14, $15, $16, $17, $18, $19
         )"#;
 
         sqlx::query(query)
@@ -202,10 +201,9 @@ impl AcademicsRepository {
             .bind(academic.birth_date)
             .bind(academic.joined_at)
             .bind(academic.work_position_id)
-            .bind(&academic.work_position_details)
             .bind(academic.department_id)
             .bind(academic.career_id)
-            .bind(academic.uct_working_hours)
+            .bind(academic.jce)
             .bind(academic.acad_category_options_id)
             .bind(academic.acad_category_hours)
             .bind(academic.annual_discount_hours)

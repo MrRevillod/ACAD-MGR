@@ -52,18 +52,15 @@ pub struct AcademicImportRowDto {
     pub sex: Sex,
 
     #[validate(custom(function = "validate_birth_date"))]
-    #[serde(rename = "FECHA  DE NACIMIENTO")]
+    #[serde(rename = "FECHA DE NACIMIENTO")]
     pub birth_date: NaiveDate,
 
     #[validate(custom(function = "validate_joined_at"))]
     #[serde(rename = "FECHA DE INGRESO")]
     pub joined_at: NaiveDate,
 
-    #[serde(rename = "CARGO ACAD")]
+    #[serde(rename = "CARGO")]
     pub work_position_name: String,
-
-    #[serde(rename = "DETALLE DEL CARGO")]
-    pub work_position_details: Option<String>,
 
     #[serde(rename = "DEPARTAMENTO")]
     pub department_name: String,
@@ -81,8 +78,8 @@ pub struct AcademicImportRowDto {
     #[serde(rename = "OPCION")]
     pub option: ImportedAcademicOption,
 
-    #[serde(rename = "JORNADA UCT HORAS")]
-    pub uct_working_hours: CLf64,
+    #[serde(rename = "JCE")]
+    pub jce: CLf64,
 
     #[serde(rename = "HRS DD CATEGORIA/OPCION")]
     pub acad_category_hours: CLf64,
@@ -90,7 +87,7 @@ pub struct AcademicImportRowDto {
     #[serde(rename = "HRS DD DESC PROM ANUAL")]
     pub annual_discount_hours: CLf64,
 
-    #[serde(rename = "PAÍS DE NACIONALIDAD")]
+    #[serde(rename = "PAIS DE NACIONALIDAD")]
     pub nationality_country: Country,
 
     #[validate(length(
@@ -101,7 +98,7 @@ pub struct AcademicImportRowDto {
     #[serde(rename = "CIUDAD")]
     pub city: String,
 
-    #[serde(rename = "TITULO (I)")]
+    #[serde(rename = "TITULO")]
     #[serde(default)]
     pub degree_1_name: Option<String>,
 
@@ -113,11 +110,11 @@ pub struct AcademicImportRowDto {
     #[serde(default)]
     pub degree_1_date: Option<NaiveDate>,
 
-    #[serde(rename = "PAÍS (I)")]
+    #[serde(rename = "PAIS (I)")]
     #[serde(default)]
     pub degree_1_country: Option<String>,
 
-    #[serde(rename = "TITULO (II)")]
+    #[serde(rename = "GRADO ACADEMICO")]
     #[serde(default)]
     pub degree_2_name: Option<String>,
 
@@ -129,7 +126,7 @@ pub struct AcademicImportRowDto {
     #[serde(default)]
     pub degree_2_date: Option<NaiveDate>,
 
-    #[serde(rename = "PAÍS (II)")]
+    #[serde(rename = "PAIS (II)")]
     #[serde(default)]
     pub degree_2_country: Option<String>,
 }

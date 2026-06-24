@@ -34,10 +34,9 @@ pub struct Academic {
     pub joined_at: NaiveDate,
     #[builder(default = AcademicWorkPositionId::new())]
     pub work_position_id: AcademicWorkPositionId,
-    pub work_position_details: Option<String>,
     pub department_id: DepartmentId,
     pub career_id: Option<CareerId>,
-    pub uct_working_hours: f64,
+    pub jce: f64,
     pub acad_category_options_id: AcademicCategoryOptionId,
     pub acad_category_hours: f64,
     pub annual_discount_hours: f64,

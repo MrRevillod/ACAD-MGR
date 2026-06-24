@@ -697,7 +697,7 @@ components:
         - birthDate
         - joinedAt
         - department
-        - uctWorkingHours
+        - jce
         - category
         - planta
         - option
@@ -750,11 +750,6 @@ components:
           description: Nombre del cargo laboral
           nullable: true
           example: Docente
-        workPositionDetails:
-          type: string
-          description: Detalles adicionales del cargo
-          nullable: true
-          example: Jornada completa
         department:
           type: string
           description: Nombre del departamento al que pertenece
@@ -764,11 +759,13 @@ components:
           description: Nombre de la carrera asociada
           nullable: true
           example: Ingeniería Civil en Informática
-        uctWorkingHours:
+        jce:
           type: number
           format: double
-          description: Horas semanales de trabajo en la UCT
-          example: 44.0
+          description: Jornada de trabajo (0.0 a 1.0)
+          minimum: 0
+          maximum: 1
+          example: 0.5
         category:
           type: string
           description: Nombre de la categoría académica
@@ -813,7 +810,7 @@ components:
         - birthDate
         - joinedAt
         - departmentId
-        - uctWorkingHours
+        - jce
         - acadCategoryOptionsId
         - acadCategoryHours
         - annualDiscountHours
@@ -878,11 +875,6 @@ components:
           description: Nombre del nuevo cargo laboral (se crea automáticamente si no existe)
           nullable: true
           example: Docente
-        workPositionDetails:
-          type: string
-          description: Detalles adicionales del cargo
-          nullable: true
-          example: Jornada completa
         departmentId:
           type: string
           format: uuid
@@ -894,11 +886,13 @@ components:
           description: UUID de la carrera asociada (opcional)
           nullable: true
           example: c3d4e5f6-a7b8-9012-cdef-123456789012
-        uctWorkingHours:
+        jce:
           type: number
           format: double
-          description: Horas semanales de trabajo en la UCT
-          example: 44.0
+          description: Jornada de trabajo (0.0 a 1.0)
+          minimum: 0
+          maximum: 1
+          example: 0.5
         acadCategoryOptionsId:
           type: string
           format: uuid

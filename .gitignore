@@ -1,6 +1,6 @@
 target/
 .env
-**/node_modules
+**/node_modules/**
 dist/
 **/node-compile-cache
 data/
@@ -10,6 +10,8 @@ privatekey
 **/.svelte-kit
 .svelte-kit
 apps/client/.svelte-kit
+apps/client/node_modules
+**/dist/**
 
 .output
 .vercel
@@ -36,4 +38,4 @@ vite.config.ts.timestamp-*
 
 config/deployer/kubectl/*
 config/deployer/k8s/secrets/*
-apps/client/.pnpm-store/v11/files/00/0205aca1b6099c59396eb8c496ea85b702526bccd8b66721076178baaf1c0b9757420feb52746a3df0022c7858244870f6a3b2391cf5485872861f19ba1f98
+apps/client/.pnpm-store*

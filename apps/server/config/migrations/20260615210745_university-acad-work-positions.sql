@@ -13,4 +13,4 @@ INSERT INTO academic_work_positions (name) VALUES
 ('Vicedecano(a) - Decano(a) Interino(a)'),
 ('Jefe(a) de Carrera - CEDA'),
 ('Docente de Reemplazo'),
-('Director Magister');
+('Director(a) Magister');

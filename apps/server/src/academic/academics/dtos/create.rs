@@ -56,16 +56,16 @@ pub struct CreateAcademicDto {
     pub joined_at: NaiveDate,
     pub work_position_id: Option<AcademicWorkPositionId>,
     pub work_position_new: Option<String>,
-    pub work_position_details: Option<String>,
     pub department_id: DepartmentId,
     pub career_id: Option<CareerId>,
     pub acad_category_options_id: AcademicCategoryOptionId,
 
     #[validate(range(
         min = 0.0,
+        max = 1.0,
         message = "Las horas de trabajo en la universidad no pueden ser negativas"
     ))]
-    pub uct_working_hours: f64,
+    pub jce: f64,
 
     #[validate(range(
         min = 0.0,
@@ -139,12 +139,11 @@ impl From<CreateAcademicDto> for Academic {
             .email(input.email)
             .maybe_orcid(input.orcid)
             .sex(input.sex)
+            .jce(input.jce)
             .birth_date(input.birth_date)
             .joined_at(input.joined_at)
-            .maybe_work_position_details(input.work_position_details)
             .department_id(input.department_id)
             .maybe_career_id(input.career_id)
-            .uct_working_hours(input.uct_working_hours)
             .acad_category_options_id(input.acad_category_options_id)
             .acad_category_hours(input.acad_category_hours)
             .annual_discount_hours(input.annual_discount_hours)
