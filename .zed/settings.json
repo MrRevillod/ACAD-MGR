@@ -10,7 +10,8 @@
 		"**/target/**",
 		"**/routeTree.gen.ts",
 		"**/dist/**",
-		"**/build/**"
+		"**/build/**",
+		"**/.pnpm-store/**"
 	],
 	"languages": {
 		"YAML": {
@@ -31,6 +32,10 @@
 		},
 		"CSS": {
 			"formatter": "prettier",
+			"language_servers": [
+				"tailwindcss-intellisense-css",
+				"!vscode-css-language-server",
+			]
 		},
 		"HTML": {
 			"formatter": "prettier",
@@ -60,5 +65,18 @@
 				},
 			},
 		},
+		"tailwindcss-language-server": {
+			"settings": {
+				"classFunctions": [
+					"cva",
+					"cx"
+				],
+				"experimental": {
+					"classRegex": [
+						"[cls|className]\\s\\:\\=\\s\"([^\"]*)"
+					]
+				}
+			}
+		}
 	},
 }

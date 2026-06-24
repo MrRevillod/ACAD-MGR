@@ -21,7 +21,7 @@ export default defineConfig(
 		languageOptions: { globals: { ...globals.browser, ...globals.node } },
 		rules: {
 			"no-undef": "off",
-			"import/no-cycle": "error",
+			"import/no-cycle": ["error", { ignoreExternal: true }],
 			"import/no-extraneous-dependencies": "error",
 			"svelte/no-navigation-without-resolve": "off",
 			"@typescript-eslint/no-explicit-any": "error",

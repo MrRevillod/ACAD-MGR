@@ -1,8 +1,41 @@
 @import "tailwindcss";
 
+@font-face {
+	font-family: "Vista Sans";
+	src: url("/fonts/VistaSanLig.woff2") format("woff2");
+	font-weight: 300;
+	font-style: normal;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: "Vista Sans";
+	src: url("/fonts/VistaSanReg.woff2") format("woff2");
+	font-weight: 400;
+	font-style: normal;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: "Vista Sans";
+	src: url("/fonts/VistaSanMed.woff2") format("woff2");
+	font-weight: 500;
+	font-style: normal;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: "Vista Sans";
+	src: url("/fonts/VistaSanBol.woff2") format("woff2");
+	font-weight: 700;
+	font-style: normal;
+	font-display: swap;
+}
+
 @theme {
 	--color-corp-white: #ffffff;
 	--color-corp-gray: #878787;
 	--color-corp-yellow: #edc500;
 	--color-corp-blue: #0075b4;
+	--font-family-sans: "Vista Sans", system-ui, sans-serif;
 }
