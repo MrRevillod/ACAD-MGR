@@ -2,10 +2,22 @@ use crate::auth::UserView;
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use validator::Validate;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Validate)]
 pub struct LoginDto {
+    #[validate(length(
+        min = 1,
+        max = 255,
+        message = "El correo electrónico es obligatorio y debe tener entre 1 y 255 caracteres."
+    ))]
     pub email: String,
+
+    #[validate(length(
+        min = 1,
+        max = 255,
+        message = "La contraseña es obligatoria y debe tener entre 1 y 255 caracteres."
+    ))]
     pub password: String,
 }
 

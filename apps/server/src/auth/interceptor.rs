@@ -21,7 +21,7 @@ impl OnRequest for SessionCheck {
 
         let token = req
             .cookies()?
-            .get("RAMTUN_ACCESS_TOKEN")
+            .get("ACAD_MGR_ACCESS_TOKEN")
             .map(|c| c.value().to_string())
             .ok_or_else(|| {
 	            tracing::warn!(method = %method, path = %path, "SessionCheck rejected: missing Access token cookie");

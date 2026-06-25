@@ -1,7 +1,7 @@
 use crate::auth::*;
 use crate::shared::RequestExt;
 
-use chrono::Utc;
+use chrono::{Duration, Utc};
 use std::sync::Arc;
 use sword::prelude::*;
 use sword::web::*;
@@ -15,7 +15,7 @@ pub struct AuthController {
 impl AuthController {
     #[post("/login")]
     pub async fn login(&self, req: Request) -> WebResult {
-        let dto = req.body::<LoginDto>()?;
+        let dto = req.body_validator::<LoginDto>()?;
 
         let LoginResponse {
             user,
@@ -25,7 +25,7 @@ impl AuthController {
             refresh_token_exp,
         } = self.auth_service.login(&dto).await?;
 
-        tracing::info!("User login attempt for email: {}", dto.email);
+        tracing::debug!("User login attempt for email: {}", dto.email);
 
         let access_cookie = self
             .cookie_manager
@@ -43,7 +43,7 @@ impl AuthController {
 
     #[post("/refresh")]
     pub async fn refresh(&self, req: Request) -> WebResult {
-        let Some(refresh_cookie) = req.cookies()?.get("RAMTUN_REFRESH_TOKEN") else {
+        let Some(refresh_cookie) = req.cookies()?.get("ACAD_MGR_REFRESH_TOKEN") else {
             return Err(JsonResponse::Unauthorized());
         };
 
@@ -72,11 +72,11 @@ impl AuthController {
 
         let access_cookie = self
             .cookie_manager
-            .build_access_cookie("".into(), Utc::now())?;
+            .build_access_cookie(String::new(), Utc::now() - Duration::days(1))?;
 
         let refresh_cookie = self
             .cookie_manager
-            .build_refresh_cookie("".into(), Utc::now())?;
+            .build_refresh_cookie(String::new(), Utc::now() - Duration::days(1))?;
 
         req.cookies()?.remove(access_cookie);
         req.cookies()?.remove(refresh_cookie);

@@ -13,7 +13,7 @@ info:
       - **Académicos** (`/academics`)
 
     La vista detallada de académicos (`AcademicView`) resuelve automáticamente
-    las claves foráneas en nombres legibles (departamento, carrera, categoría,
+    las relaciones entre tablas en nombres legibles (departamento, carrera, categoría,
     opción, planta, nacionalidad, puesto de trabajo).
   version: "0.1.0"
 
@@ -383,7 +383,7 @@ paths:
       summary: Obtener académico por ID
       description: >
         Obtiene un académico específico con todos sus datos resueltos
-        mediante JOIN (departamento, carrera, categoría, etc.).
+        con sus datos asociados (departamento, carrera, categoría, etc.).
       operationId: getAcademic
       parameters:
         - name: id
@@ -415,7 +415,7 @@ paths:
       summary: Importar académicos desde CSV
       description: >
         Importa académicos masivamente desde un archivo CSV.
-        Cada fila se procesa en una transacción independiente.
+        Cada fila se procesa como una operación independiente.
         Los campos opcionales vacíos se rellenan con valores por defecto
         (ORCID, país, fecha del grado, universidad, nombre del título).
       operationId: importAcademics
@@ -568,6 +568,12 @@ components:
           example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
         option:
           $ref: "#/components/schemas/AcademicOption"
+        hours:
+          type: number
+          format: double
+          nullable: true
+          description: Horas asignadas a esta opción (puede estar vacío si no están definidas)
+          example: 12
 
     CreateCategoryOptionDto:
       description: Datos de entrada para crear una opción de categoría
@@ -583,6 +589,12 @@ components:
           example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
         option:
           $ref: "#/components/schemas/AcademicOption"
+        hours:
+          type: number
+          format: double
+          nullable: true
+          description: Horas asignadas a esta opción (opcional, se validarán contra los valores existentes si se proporcionan)
+          example: 12
 
     # ==========================================================================
     # DEGREE
@@ -683,7 +695,7 @@ components:
     AcademicView:
       description: >
         Vista detallada de un académico con todos los datos resueltos.
-        Las claves foráneas se presentan como nombres legibles
+        Los identificadores se presentan como nombres legibles
         (departamento, carrera, categoría, planta, opción,
         nacionalidad, puesto de trabajo).
       type: object
@@ -777,6 +789,7 @@ components:
         acadCategoryHours:
           type: number
           format: double
+          nullable: true
           description: Horas semanales dedicadas a la categoría académica
           example: 40.0
         annualDiscountHours:
@@ -812,7 +825,6 @@ components:
         - departmentId
         - jce
         - acadCategoryOptionsId
-        - acadCategoryHours
         - annualDiscountHours
         - nationalityCode
         - city
@@ -872,7 +884,7 @@ components:
           example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
         workPositionNew:
           type: string
-          description: Nombre del nuevo cargo laboral (se crea automáticamente si no existe)
+          description: Nombre del nuevo cargo laboral (se añade automáticamente si no existe)
           nullable: true
           example: Docente
         departmentId:
@@ -898,11 +910,6 @@ components:
           format: uuid
           description: UUID de la opción de categoría académica
           example: b2c3d4e5-f6a7-8901-bcde-f12345678901
-        acadCategoryHours:
-          type: number
-          format: double
-          description: Horas semanales dedicadas a la categoría académica
-          example: 40.0
         annualDiscountHours:
           type: number
           format: double

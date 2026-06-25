@@ -16,5 +16,5 @@ async fn main() {
         .with_layer(LoggerLayer())
         .build();
 
-    application.run().await
+    application.run().await;
 }

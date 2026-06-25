@@ -16,8 +16,7 @@ impl<'de> Deserialize<'de> for Country {
 
         if parts.len() != 2 {
             return Err(serde::de::Error::custom(format!(
-                "Invalid country format: '{}'. Expected format 'CODE - NAME'",
-                full_string
+                "Invalid country format: '{full_string}'. Expected format 'CODE - NAME'",
             )));
         }
 

@@ -20,6 +20,7 @@ impl UsersController {
     }
 
     #[get("/{id}")]
+    #[interceptor(SessionCheck)]
     pub async fn get_user(&self, req: Request) -> WebResult<UserView> {
         let id = req.param::<UserId>("id")?;
         let user = self.users.find_by_id(&id).await?;

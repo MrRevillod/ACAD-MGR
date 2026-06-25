@@ -15,14 +15,6 @@ impl AcademicWorkPositionsService {
         self.positions.list(filter).await
     }
 
-    pub async fn find_by_id(&self, id: &AcademicWorkPositionId) -> AppResult<AcademicWorkPosition> {
-        let Some(position) = self.positions.find_by_id(id).await? else {
-            return Err(UniversityError::WorkPositionNotFound)?;
-        };
-
-        Ok(position)
-    }
-
     pub async fn create(
         &self,
         input: CreateAcademicWorkPositionDto,

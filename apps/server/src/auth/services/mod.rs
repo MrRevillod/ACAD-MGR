@@ -142,6 +142,6 @@ impl AuthService {
 
     fn hash_token(token: &str) -> String {
         let result = Sha256::digest(token.as_bytes());
-        result.iter().map(|b| format!("{:02x}", b)).collect()
+        result.iter().map(|b| format!("{b:02x}")).collect()
     }
 }

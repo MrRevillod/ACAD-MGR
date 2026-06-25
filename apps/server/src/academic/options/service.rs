@@ -14,6 +14,7 @@ impl AcademicCategoryOptionsService {
     ) -> AppResult<Vec<AcademicCategoryOption>> {
         let filter = AcademicCategoryOptionFilter {
             category_id: query.category_id,
+            ..Default::default()
         };
 
         self.options.list(filter).await
@@ -37,6 +38,7 @@ impl AcademicCategoryOptionsService {
         let option = AcademicCategoryOption::builder()
             .category_id(input.category_id)
             .option(input.option)
+            .maybe_hours(input.hours)
             .build();
 
         self.options.save(&option).await?;

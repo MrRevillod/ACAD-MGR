@@ -50,6 +50,10 @@ fn validate_password(password: &str) -> Result<(), ValidationError> {
         missing.push("un carácter especial");
     }
 
+    if password.len() > 255 {
+        missing.push("no más de 255 caracteres");
+    }
+
     if missing.is_empty() {
         Ok(())
     } else {

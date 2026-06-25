@@ -4,7 +4,7 @@ use sqlx::{FromRow, Type};
 
 use crate::shared::{Entity, Id};
 
-#[derive(Debug, Clone, Type, Serialize, Deserialize)]
+#[derive(Debug, Clone, Type, Serialize, Deserialize, PartialEq, Eq)]
 #[sqlx(type_name = "academic_planta", rename_all = "lowercase")]
 #[serde(rename_all = "lowercase")]
 pub enum AcademicPlanta {

@@ -51,6 +51,10 @@ impl AcademicsController {
             }
         }
 
-        Ok(self.imports.process(file_path.to_str().unwrap()).await?)
+        let result = self.imports.process(&file_path).await?;
+
+        self.imports.delete_temp_csv(&file_path).await?;
+
+        Ok(result)
     }
 }

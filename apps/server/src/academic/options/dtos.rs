@@ -8,6 +8,7 @@ use validator::Validate;
 pub struct CreateCategoryOptionDto {
     pub category_id: AcademicCategoryId,
     pub option: AcademicOption,
+    pub hours: Option<f64>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Validate, Default)]

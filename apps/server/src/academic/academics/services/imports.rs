@@ -18,10 +18,11 @@ pub struct ImportsService {
     work_positions: Arc<AcademicWorkPositionsRepository>,
     category_options: Arc<AcademicCategoryOptionsRepository>,
     countries: Arc<CountriesRepository>,
+    categories: Arc<AcademicCategoriesRepository>,
 }
 
 impl ImportsService {
-    pub async fn process(&self, file_path: &str) -> AppResult<ImportResult> {
+    pub async fn process(&self, file_path: &PathBuf) -> AppResult<ImportResult> {
         let mut reader = csv::ReaderBuilder::new()
             .has_headers(true)
             .trim(csv::Trim::All)
@@ -106,27 +107,54 @@ impl ImportsService {
             _ => None,
         };
 
-        let work_position_id = match self
+        let Some(work_position_id) = self
             .work_positions
             .find_by_name(&input.work_position_name)
             .await?
             .map(|wp| wp.id)
-        {
-            Some(id) => id,
-            None => self.work_positions.find_uknown().await?.id,
+        else {
+            return Err(UniversityError::WorkPositionNotFound)?;
         };
 
-        let planta = AcademicPlanta::from(&input.planta);
         let option = AcademicOption::from(&input.option);
 
-        let Some(category_option_id) = self
+        let category_option_filter = AcademicCategoryOptionFilter {
+            category_name: Some(input.category_name.clone()),
+            option: Some(option),
+            ..Default::default()
+        };
+
+        let Some(category_option) = self
             .category_options
-            .find_by_category(&input.category_name, planta, option)
+            .find_one(category_option_filter)
             .await?
         else {
             return Err(AcademicError::CategoryOptionNotFound)?;
         };
 
+        if let Some(expected_hours) = category_option.hours
+            && expected_hours != *input.acad_category_hours
+        {
+            return Err(AcademicError::CategoryOptionHoursMismatch)?;
+        }
+
+        let Some(category) = self
+            .categories
+            .find_by_id(&category_option.category_id)
+            .await?
+        else {
+            return Err(AcademicError::CategoryNotFound)?;
+        };
+
+        if category.name != input.category_name {
+            return Err(AcademicError::CategoryOptionCategoryMismatch)?;
+        }
+
+        if category.planta != AcademicPlanta::from(&input.planta) {
+            return Err(AcademicError::CategoryPlantaMismatch)?;
+        }
+
+        let category_option_id = category_option.id;
         let nationality_code = input.nationality_country.code.clone();
 
         let Some(_) = self.countries.find_by_code(&nationality_code).await? else {
@@ -155,7 +183,6 @@ impl ImportsService {
             .maybe_career_id(career_id)
             .jce(*input.jce)
             .acad_category_options_id(category_option_id)
-            .acad_category_hours(*input.acad_category_hours)
             .annual_discount_hours(*input.annual_discount_hours)
             .nationality_code(nationality_code)
             .city(input.city.clone())
@@ -228,7 +255,13 @@ impl ImportsService {
             .await
             .map_err(AppError::from)?;
 
-        tokio::fs::remove_file(&path).await.ok();
+        Ok(())
+    }
+
+    pub async fn delete_temp_csv(&self, path: &PathBuf) -> AppResult<()> {
+        tokio::fs::remove_file(&path)
+            .await
+            .map_err(AppError::from)?;
 
         Ok(())
     }

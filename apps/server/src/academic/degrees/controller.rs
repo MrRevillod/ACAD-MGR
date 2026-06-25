@@ -11,20 +11,12 @@ pub struct DegreesController {
 }
 
 impl DegreesController {
-    #[get("/")]
+    #[get("/{academic_id}")]
     pub async fn get_degrees(&self, req: Request) -> WebResult<Vec<Degree>> {
-        let query = req.query_validator::<GetDegreesQuery>()?;
-        let degrees = self.degrees.find(query.unwrap_or_default()).await?;
+        let academic_id = req.param::<AcademicId>("academic_id")?;
+        let degrees = self.degrees.find(&academic_id).await?;
 
         Ok(degrees)
-    }
-
-    #[get("/{id}")]
-    pub async fn get_degree(&self, req: Request) -> WebResult<Degree> {
-        let id = req.param::<DegreeId>("id")?;
-        let degree = self.degrees.find_by_id(&id).await?;
-
-        Ok(degree)
     }
 
     #[post("/")]

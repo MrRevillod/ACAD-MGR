@@ -8,16 +8,8 @@ pub struct DegreesService {
 }
 
 impl DegreesService {
-    pub async fn find(&self, query: GetDegreesQuery) -> AppResult<Vec<Degree>> {
-        self.degrees.list(query.academic_id).await
-    }
-
-    pub async fn find_by_id(&self, id: &DegreeId) -> AppResult<Degree> {
-        let Some(degree) = self.degrees.find_by_id(id).await? else {
-            return Err(AcademicError::DegreeNotFound)?;
-        };
-
-        Ok(degree)
+    pub async fn find(&self, academic_id: &AcademicId) -> AppResult<Vec<Degree>> {
+        self.degrees.list(academic_id).await
     }
 
     pub async fn create(&self, input: CreateDegreeDto) -> AppResult<Degree> {

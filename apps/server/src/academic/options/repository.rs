@@ -5,11 +5,6 @@ use sqlx::{Postgres, QueryBuilder};
 use std::sync::Arc;
 use sword::prelude::*;
 
-#[derive(Debug)]
-pub struct AcademicCategoryOptionFilter {
-    pub category_id: Option<AcademicCategoryId>,
-}
-
 #[injectable]
 pub struct AcademicCategoryOptionsRepository {
     database: Arc<Database>,
@@ -21,7 +16,7 @@ impl AcademicCategoryOptionsRepository {
         filter: AcademicCategoryOptionFilter,
     ) -> AppResult<Vec<AcademicCategoryOption>> {
         let mut query = QueryBuilder::<Postgres>::new(
-            "SELECT id, category_id, option FROM academic_category_options WHERE 1=1",
+            "SELECT id, category_id, option, hours FROM academic_category_options WHERE 1=1",
         );
 
         if let Some(cid) = filter.category_id {
@@ -36,24 +31,38 @@ impl AcademicCategoryOptionsRepository {
         Ok(items)
     }
 
-    pub async fn find_by_category(
+    pub async fn find_one(
         &self,
-        category_name: &str,
-        planta: AcademicPlanta,
-        option: AcademicOption,
-    ) -> AppResult<Option<AcademicCategoryOptionId>> {
-        let item = sqlx::query_scalar::<_, AcademicCategoryOptionId>(
-            r#"
-            SELECT aco.id FROM academic_category_options aco
-            JOIN academic_categories ac ON ac.id = aco.category_id
-            WHERE ac.name = $1 AND ac.planta = $2 AND aco.option = $3
-            "#,
-        )
-        .bind(category_name)
-        .bind(planta)
-        .bind(option)
-        .fetch_optional(self.database.pool())
-        .await?;
+        filter: AcademicCategoryOptionFilter,
+    ) -> AppResult<Option<AcademicCategoryOption>> {
+        let base = if filter.category_name.is_some() {
+            "SELECT aco.id, aco.category_id, aco.option, aco.hours \
+             FROM academic_category_options aco \
+             JOIN academic_categories ac ON ac.id = aco.category_id \
+             WHERE 1=1"
+        } else {
+            "SELECT aco.id, aco.category_id, aco.option, aco.hours \
+             FROM academic_category_options aco WHERE 1=1"
+        };
+
+        let mut query = QueryBuilder::<Postgres>::new(base);
+
+        if let Some(cid) = filter.category_id {
+            query.push(" AND aco.category_id = ").push_bind(cid);
+        }
+
+        if let Some(option) = filter.option {
+            query.push(" AND aco.option = ").push_bind(option);
+        }
+
+        if let Some(name) = filter.category_name {
+            query.push(" AND ac.name = ").push_bind(name);
+        }
+
+        let item = query
+            .build_query_as::<AcademicCategoryOption>()
+            .fetch_optional(self.database.pool())
+            .await?;
 
         Ok(item)
     }
@@ -63,7 +72,7 @@ impl AcademicCategoryOptionsRepository {
         id: &AcademicCategoryOptionId,
     ) -> AppResult<Option<AcademicCategoryOption>> {
         let item = sqlx::query_as::<_, AcademicCategoryOption>(
-            "SELECT id, category_id, option FROM academic_category_options WHERE id = $1",
+            "SELECT id, category_id, option, hours FROM academic_category_options WHERE id = $1",
         )
         .bind(id)
         .fetch_optional(self.database.pool())
@@ -74,11 +83,12 @@ impl AcademicCategoryOptionsRepository {
 
     pub async fn save(&self, option: &AcademicCategoryOption) -> AppResult<()> {
         sqlx::query(
-            "INSERT INTO academic_category_options (id, category_id, option) VALUES ($1, $2, $3)",
+            "INSERT INTO academic_category_options (id, category_id, option, hours) VALUES ($1, $2, $3, $4)",
         )
         .bind(option.id)
         .bind(option.category_id)
         .bind(option.option)
+        .bind(option.hours)
         .execute(self.database.pool())
         .await?;
 

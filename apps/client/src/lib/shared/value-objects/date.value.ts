@@ -16,7 +16,9 @@ export class DateValue {
 	}
 
 	toDisplay(timeStyle: Intl.DateTimeFormatOptions["timeStyle"] = "short"): string {
-		const parsed = new Date(this.value!)
+		if (!this.value) return "Fecha no disponible"
+		const parsed = new Date(this.value)
+
 		if (Number.isNaN(parsed.getTime())) {
 			console.warn("[banks] invalid createdAt", { value: this.value })
 			return "Fecha no disponible"

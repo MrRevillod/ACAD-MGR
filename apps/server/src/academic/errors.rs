@@ -12,6 +12,35 @@ pub enum AcademicError {
     #[error("Category option not found")]
     CategoryOptionNotFound,
 
+    #[http(
+        code = 400,
+        message = "La opción de categoría no coincide con la planta académica"
+    )]
+    #[error("Category option does not match the academic planta")]
+    CategoryPlantaMismatch,
+
+    // Academic Option Mismatch errors
+    #[http(
+        code = 400,
+        message = "La opción de categoría no coincide con la categoría académica"
+    )]
+    #[error("Category option does not match the academic category")]
+    CategoryOptionCategoryMismatch,
+
+    #[http(
+        code = 400,
+        message = "La opción de categoría no coincide con la categoría académica"
+    )]
+    #[error("Category option does not match the academic category")]
+    CategoryOptionMismatch,
+
+    #[http(
+        code = 400,
+        message = "Las horas de la opción de categoría no coinciden con las horas proporcionadas"
+    )]
+    #[error("Category option hours do not match the provided hours")]
+    CategoryOptionHoursMismatch,
+
     // Degree errors
     #[http(code = 404, message = "Grado académico no encontrado")]
     #[error("Degree not found")]

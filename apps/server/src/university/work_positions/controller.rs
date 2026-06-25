@@ -19,14 +19,6 @@ impl WorkPositionsController {
         Ok(positions)
     }
 
-    #[get("/{id}")]
-    pub async fn get_position(&self, req: Request) -> WebResult<AcademicWorkPosition> {
-        let id = req.param::<AcademicWorkPositionId>("id")?;
-        let position = self.positions.find_by_id(&id).await?;
-
-        Ok(position)
-    }
-
     #[post("/")]
     #[interceptor(SessionCheck)]
     pub async fn create_position(&self, req: Request) -> WebResult<AcademicWorkPosition> {

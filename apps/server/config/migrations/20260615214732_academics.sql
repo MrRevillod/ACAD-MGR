@@ -11,12 +11,11 @@ CREATE TABLE academics (
 	sex sex NOT NULL,
 	birth_date DATE NOT NULL,
 	joined_at DATE NOT NULL DEFAULT CURRENT_DATE,
-	work_position_id UUID REFERENCES academic_work_positions(id),
+	work_position_id UUID NOT NULL REFERENCES academic_work_positions(id),
 	department_id UUID NOT NULL REFERENCES departments(id),
 	career_id UUID REFERENCES careers(id),
 	jce DOUBLE PRECISION NOT NULL,
 	acad_category_options_id UUID NOT NULL REFERENCES academic_category_options(id),
-	acad_category_hours DOUBLE PRECISION NOT NULL,
 	annual_discount_hours DOUBLE PRECISION NOT NULL,
 	nationality_code TEXT NOT NULL REFERENCES countries(code),
 	city TEXT NOT NULL

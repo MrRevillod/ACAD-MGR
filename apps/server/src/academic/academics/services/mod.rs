@@ -33,7 +33,7 @@ impl AcademicsService {
     }
 
     pub async fn create(&self, input: CreateAcademicDto) -> AppResult<AcademicView> {
-        let mut academic = Academic::from(input.clone());
+        let academic = Academic::from(input.clone());
 
         if self.academics.find_by_rut(&academic.rut).await?.is_some() {
             return Err(AcademicError::AcademicRutAlreadyExists)?;
@@ -59,25 +59,6 @@ impl AcademicsService {
         {
             return Err(UniversityError::CareerNotFound)?;
         }
-
-        let work_position_id = match &input.work_position()? {
-            WorkPositionResult::Id(id) => {
-                if self.work_positions.find_by_id(id).await?.is_none() {
-                    return Err(UniversityError::WorkPositionNotFound)?;
-                }
-
-                *id
-            }
-            WorkPositionResult::New(value) => {
-                let work_position = AcademicWorkPosition::new(value.clone());
-                match self.work_positions.save(&work_position).await {
-                    Ok(_) => work_position.id,
-                    Err(_) => self.work_positions.find_uknown().await?.id,
-                }
-            }
-        };
-
-        academic.work_position_id = work_position_id;
 
         self.academics.save(&academic).await?;
         self.find_view_by_id(&academic.id).await

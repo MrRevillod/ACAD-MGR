@@ -1,16 +1,13 @@
-use crate::academic::{Academic, AcademicCategoryOptionId, Sex};
-use crate::shared::AppResult;
-use crate::university::{AcademicWorkPositionId, CareerId, DepartmentId, UniversityError};
-
 use super::{ORCID_ID_REGEX, RUT_REGEX};
+use crate::academic::{Academic, AcademicCategoryOptionId, Sex};
+use crate::university::{AcademicWorkPositionId, CareerId, DepartmentId};
 
 use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
-use validator::{Validate, ValidationError};
+use validator::Validate;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Validate)]
 #[serde(rename_all = "camelCase")]
-#[validate(schema(function = "validate_create_academic_dto"))]
 pub struct CreateAcademicDto {
     #[validate(regex(
 		path = *RUT_REGEX,
@@ -54,8 +51,7 @@ pub struct CreateAcademicDto {
 
     #[validate(custom(function = "super::validate_joined_at"))]
     pub joined_at: NaiveDate,
-    pub work_position_id: Option<AcademicWorkPositionId>,
-    pub work_position_new: Option<String>,
+    pub work_position_id: AcademicWorkPositionId,
     pub department_id: DepartmentId,
     pub career_id: Option<CareerId>,
     pub acad_category_options_id: AcademicCategoryOptionId,
@@ -66,12 +62,6 @@ pub struct CreateAcademicDto {
         message = "Las horas de trabajo en la universidad no pueden ser negativas"
     ))]
     pub jce: f64,
-
-    #[validate(range(
-        min = 0.0,
-        message = "Las horas de categoría académica no pueden ser negativas"
-    ))]
-    pub acad_category_hours: f64,
 
     #[validate(range(
         min = 0.0,
@@ -94,41 +84,6 @@ pub struct CreateAcademicDto {
     pub city: String,
 }
 
-pub enum WorkPositionResult {
-    Id(AcademicWorkPositionId),
-    New(String),
-}
-
-impl CreateAcademicDto {
-    pub fn work_position(&self) -> AppResult<WorkPositionResult> {
-        if let Some(id) = self.work_position_id {
-            Ok(WorkPositionResult::Id(id))
-        } else if let Some(name) = &self.work_position_new {
-            Ok(WorkPositionResult::New(name.clone()))
-        } else {
-            Err(UniversityError::WorkPositionMissing)?
-        }
-    }
-}
-
-fn validate_create_academic_dto(dto: &CreateAcademicDto) -> Result<(), ValidationError> {
-    match (&dto.work_position_id, &dto.work_position_new) {
-        (Some(_), Some(_)) => {
-            return Err(ValidationError::new(
-                "No se puede proporcionar un work_position_id y un work_position_new al mismo tiempo",
-            ));
-        }
-        (None, None) => {
-            return Err(ValidationError::new(
-                "Se debe proporcionar un work_position_id o un work_position_new",
-            ));
-        }
-        _ => {}
-    }
-
-    Ok(())
-}
-
 impl From<CreateAcademicDto> for Academic {
     fn from(input: CreateAcademicDto) -> Self {
         Academic::builder()
@@ -142,10 +97,10 @@ impl From<CreateAcademicDto> for Academic {
             .jce(input.jce)
             .birth_date(input.birth_date)
             .joined_at(input.joined_at)
+            .work_position_id(input.work_position_id)
             .department_id(input.department_id)
             .maybe_career_id(input.career_id)
             .acad_category_options_id(input.acad_category_options_id)
-            .acad_category_hours(input.acad_category_hours)
             .annual_discount_hours(input.annual_discount_hours)
             .nationality_code(input.nationality_code)
             .city(input.city)

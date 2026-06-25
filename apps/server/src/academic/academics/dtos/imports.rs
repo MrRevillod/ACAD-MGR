@@ -169,9 +169,10 @@ impl ImportRowError {
                     let msg = e
                         .message
                         .as_ref()
-                        .map(|m| m.to_string())
+                        .map(ToString::to_string)
                         .unwrap_or_default();
-                    format!("{}: {}", field, msg)
+
+                    format!("{field}: {msg}")
                 })
             })
             .collect();

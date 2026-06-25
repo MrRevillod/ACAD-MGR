@@ -33,8 +33,3 @@ pub struct CreateDegreeDto {
     ))]
     pub country_code: String,
 }
-
-#[derive(Debug, Serialize, Deserialize, Validate, Default)]
-pub struct GetDegreesQuery {
-    pub academic_id: Option<AcademicId>,
-}

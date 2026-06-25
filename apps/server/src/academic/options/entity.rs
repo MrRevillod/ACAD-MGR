@@ -23,6 +23,7 @@ pub struct AcademicCategoryOption {
     #[builder(default = AcademicCategoryOptionId::new())]
     pub id: AcademicCategoryOptionId,
     pub category_id: AcademicCategoryId,
+    pub hours: Option<f64>,
     pub option: AcademicOption,
 }
 
@@ -30,4 +31,11 @@ impl Entity for AcademicCategoryOption {
     fn key_name() -> &'static str {
         "academic_category_option"
     }
+}
+
+#[derive(Debug, Default)]
+pub struct AcademicCategoryOptionFilter {
+    pub category_id: Option<AcademicCategoryId>,
+    pub option: Option<AcademicOption>,
+    pub category_name: Option<String>,
 }

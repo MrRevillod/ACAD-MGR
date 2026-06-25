@@ -1,5 +1,5 @@
 use crate::shared::{AppResult, Database};
-use crate::university::{AcademicWorkPosition, AcademicWorkPositionId, WorkPositionFilter};
+use crate::university::{AcademicWorkPosition, WorkPositionFilter};
 
 use sqlx::{Postgres, QueryBuilder};
 use std::sync::Arc;
@@ -32,49 +32,11 @@ impl AcademicWorkPositionsRepository {
         Ok(positions)
     }
 
-    pub async fn create_uknown(&self) -> AppResult<AcademicWorkPosition> {
-        let position = AcademicWorkPosition {
-            id: AcademicWorkPositionId::new(),
-            name: "Desconocido".to_string(),
-        };
-
-        self.save(&position).await?;
-
-        Ok(position)
-    }
-
-    pub async fn find_uknown(&self) -> AppResult<AcademicWorkPosition> {
-        let item = sqlx::query_as::<_, AcademicWorkPosition>(
-            "SELECT id, name FROM academic_work_positions WHERE name = 'Desconocido'",
-        )
-        .fetch_optional(self.database.pool())
-        .await?;
-
-        match item {
-            Some(position) => Ok(position),
-            None => self.create_uknown().await,
-        }
-    }
-
     pub async fn find_by_name(&self, name: &str) -> AppResult<Option<AcademicWorkPosition>> {
         let item = sqlx::query_as::<_, AcademicWorkPosition>(
             "SELECT id, name FROM academic_work_positions WHERE name = $1",
         )
         .bind(name)
-        .fetch_optional(self.database.pool())
-        .await?;
-
-        Ok(item)
-    }
-
-    pub async fn find_by_id(
-        &self,
-        id: &AcademicWorkPositionId,
-    ) -> AppResult<Option<AcademicWorkPosition>> {
-        let item = sqlx::query_as::<_, AcademicWorkPosition>(
-            "SELECT id, name FROM academic_work_positions WHERE id = $1",
-        )
-        .bind(id)
         .fetch_optional(self.database.pool())
         .await?;
 

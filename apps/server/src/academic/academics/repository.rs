@@ -19,7 +19,7 @@ pub struct AcademicsRepository {
 impl AcademicsRepository {
     pub async fn list(&self, filter: AcademicListFilter) -> AppResult<Vec<AcademicView>> {
         let mut query = QueryBuilder::new(
-            r#"
+            r"
             SELECT
                 a.id, a.names, a.paternal_surname, a.maternal_surname,
                 a.email, a.orcid, a.sex, a.birth_date, a.joined_at,
@@ -30,7 +30,7 @@ impl AcademicsRepository {
                 ac.name AS category,
                 ac.planta,
                 aco.option,
-                a.acad_category_hours, a.annual_discount_hours,
+                aco.hours AS acad_category_hours, a.annual_discount_hours,
                 co.name AS nationality,
                 a.city
             FROM academics a
@@ -41,7 +41,7 @@ impl AcademicsRepository {
             JOIN academic_categories ac ON aco.category_id = ac.id
             JOIN countries co ON a.nationality_code = co.code
             WHERE 1=1
-            "#,
+            ",
         );
 
         if let Some(q) = filter.search {
@@ -63,9 +63,6 @@ impl AcademicsRepository {
             Some(AcademicSortField::Names) => {
                 query.push(" ORDER BY a.names ASC");
             }
-            Some(AcademicSortField::PaternalSurname) => {
-                query.push(" ORDER BY a.paternal_surname, a.maternal_surname, a.names ASC");
-            }
             Some(AcademicSortField::MaternalSurname) => {
                 query.push(" ORDER BY a.maternal_surname, a.paternal_surname, a.names ASC");
             }
@@ -75,7 +72,7 @@ impl AcademicsRepository {
             Some(AcademicSortField::BirthDate) => {
                 query.push(" ORDER BY a.birth_date ASC");
             }
-            None => {
+            Some(AcademicSortField::PaternalSurname) | None => {
                 query.push(" ORDER BY a.paternal_surname, a.maternal_surname, a.names ASC");
             }
         }
@@ -90,7 +87,7 @@ impl AcademicsRepository {
 
     pub async fn find_view_by_id(&self, id: &AcademicId) -> AppResult<Option<AcademicView>> {
         let item = sqlx::query_as::<_, AcademicView>(
-            r#"
+            r"
             SELECT
                 a.id, a.names, a.paternal_surname, a.maternal_surname,
                 a.email, a.orcid, a.sex, a.birth_date, a.joined_at,
@@ -101,7 +98,7 @@ impl AcademicsRepository {
                 ac.name AS category,
                 ac.planta,
                 aco.option,
-                a.acad_category_hours, a.annual_discount_hours,
+                aco.hours AS acad_category_hours, a.annual_discount_hours,
                 co.name AS nationality,
                 a.city
             FROM academics a
@@ -112,7 +109,7 @@ impl AcademicsRepository {
             JOIN academic_categories ac ON aco.category_id = ac.id
             JOIN countries co ON a.nationality_code = co.code
             WHERE a.id = $1
-            "#,
+            ",
         )
         .bind(id)
         .fetch_optional(self.database.pool())
@@ -140,16 +137,16 @@ impl AcademicsRepository {
     }
 
     pub async fn save(&self, academic: &Academic) -> AppResult<()> {
-        let query = r#"
+        let query = r"
         INSERT INTO academics (
             id, rut, names, paternal_surname, maternal_surname, email, orcid, sex,
             birth_date, joined_at, work_position_id,
             department_id, career_id, jce, acad_category_options_id,
-            acad_category_hours, annual_discount_hours, nationality_code, city
+            annual_discount_hours, nationality_code, city
         ) VALUES (
             $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-            $11, $12, $13, $14, $15, $16, $17, $18, $19
-        )"#;
+            $11, $12, $13, $14, $15, $16, $17, $18
+        )";
 
         sqlx::query(query)
             .bind(academic.id)
@@ -167,7 +164,6 @@ impl AcademicsRepository {
             .bind(academic.career_id)
             .bind(academic.jce)
             .bind(academic.acad_category_options_id)
-            .bind(academic.acad_category_hours)
             .bind(academic.annual_discount_hours)
             .bind(&academic.nationality_code)
             .bind(&academic.city)
@@ -178,16 +174,15 @@ impl AcademicsRepository {
     }
 
     pub async fn save_tx(&self, tx: &mut Tx<'_>, academic: &Academic) -> AppResult<()> {
-        let query = r#"
+        let query = r"
         INSERT INTO academics (
             id, rut, names, paternal_surname, maternal_surname, email, orcid, sex,
             birth_date, joined_at, work_position_id,
             department_id, career_id, jce, acad_category_options_id,
-            acad_category_hours, annual_discount_hours, nationality_code, city
+            annual_discount_hours, nationality_code, city
         ) VALUES (
-            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-            $11, $12, $13, $14, $15, $16, $17, $18, $19
-        )"#;
+            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18
+        )";
 
         sqlx::query(query)
             .bind(academic.id)
@@ -205,7 +200,6 @@ impl AcademicsRepository {
             .bind(academic.career_id)
             .bind(academic.jce)
             .bind(academic.acad_category_options_id)
-            .bind(academic.acad_category_hours)
             .bind(academic.annual_discount_hours)
             .bind(&academic.nationality_code)
             .bind(&academic.city)
