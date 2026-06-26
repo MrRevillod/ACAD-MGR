@@ -3,7 +3,7 @@
 	import { goto } from "$app/navigation"
 	import { resolve } from "$app/paths"
 	import { Search, Loader2, AlertCircle } from "@lucide/svelte"
-	import type { ColumnDef } from "@tanstack/svelte-table"
+	import { createColumnHelper, type TableFeatures } from "@tanstack/svelte-table"
 	import { academicsService } from "$lib/services/academics.service"
 	import DataTable from "$lib/components/ui/data-table.svelte"
 	import type { AcademicView, AcademicOption } from "$lib/types"
@@ -24,21 +24,20 @@
 		}
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	const columns: ColumnDef<any, AcademicView, unknown>[] = [
-		{
+	const helper = createColumnHelper<TableFeatures, AcademicView>()
+
+	const columns = [
+		helper.accessor((row) => `${row.names} ${row.paternalSurname} ${row.maternalSurname}`, {
 			id: "name",
 			header: "Nombre",
-			accessorFn: (row) => `${row.names} ${row.paternalSurname} ${row.maternalSurname}`,
-		},
-		{ id: "email", header: "Email", accessorKey: "email" },
-		{ id: "department", header: "Departamento", accessorKey: "department" },
-		{ id: "category", header: "Categoría", accessorKey: "category" },
-		{
+		}),
+		helper.accessor("email", { header: "Email" }),
+		helper.accessor("department", { header: "Departamento" }),
+		helper.accessor("category", { header: "Categoría" }),
+		helper.accessor((row) => optionLabel(row.option), {
 			id: "option",
 			header: "Opción",
-			accessorFn: (row) => optionLabel(row.option),
-		},
+		}),
 	]
 </script>
 

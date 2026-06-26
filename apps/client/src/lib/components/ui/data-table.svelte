@@ -8,9 +8,7 @@
 		createPaginatedRowModel,
 		createSortedRowModel,
 		type ColumnDef,
-		type PaginationState,
 		type RowData,
-		type SortingState,
 	} from "@tanstack/svelte-table"
 	import {
 		ChevronUp,
@@ -22,47 +20,40 @@
 	} from "@lucide/svelte"
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	type FlexColumnDef<T> = ColumnDef<any, T, unknown>
+	type FlexColumnDef<T extends RowData> = ColumnDef<any, T, any>
 
-	let {
-		columns = [] as FlexColumnDef<TData>[],
-		data = [] as TData[],
-		onRowClick = undefined as ((row: TData) => void) | undefined,
-		search = $bindable(""),
-		searchFields = [] as string[],
-		pageSize = 15,
-		class: className = "",
-	}: {
-		columns: FlexColumnDef<TData>[]
-		data: TData[]
-		onRowClick?: (row: TData) => void
+	interface DataTableProps<T extends RowData> {
+		columns: FlexColumnDef<T>[]
+		data: T[]
+		onRowClick?: (row: T) => void
 		search?: string
 		searchFields?: string[]
 		pageSize?: number
 		class?: string
-	} = $props()
+	}
 
-	let pagination = $state<PaginationState>({ pageIndex: 0, pageSize: 15 })
-	let sorting = $state<SortingState>([])
+	let {
+		columns,
+		data,
+		onRowClick,
+		search = $bindable(""),
+		searchFields = [] as string[],
+		pageSize = 10,
+		class: className = "",
+	}: DataTableProps<TData> = $props()
 
-	$effect(() => {
-		if (pagination.pageSize !== pageSize) {
-			pagination = { pageIndex: 0, pageSize }
-		}
+	const filtered = $derived.by(() => {
+		if (!search || searchFields.length === 0) return data
+
+		return data.filter((row) =>
+			searchFields.some((field) => {
+				const val = row[field as keyof TData]
+				return String(val ?? "")
+					.toLowerCase()
+					.includes(search.toLowerCase())
+			}),
+		)
 	})
-
-	const filtered = $derived(
-		search && searchFields.length > 0
-			? data.filter((row) =>
-					searchFields.some((field) => {
-						const val = row[field as keyof TData]
-						return String(val ?? "")
-							.toLowerCase()
-							.includes(search.toLowerCase())
-					}),
-				)
-			: data,
-	)
 
 	const features = tableFeatures({
 		rowPaginationFeature,
@@ -71,34 +62,26 @@
 		sortedRowModel: createSortedRowModel(),
 	})
 
-	const table = createTable({
-		features,
-		columns,
-		get data() {
-			return filtered
-		},
-		state: {
-			get pagination() {
-				return pagination
-			},
-			get sorting() {
-				return sorting
+	const table = createTable(
+		{
+			features,
+			// eslint-disable-next-line svelte/no-unused-svelte-ignore
+			// svelte-ignore state_referenced_locally
+			columns,
+			get data() {
+				return filtered
 			},
 		},
-		onPaginationChange: (updater) => {
-			pagination = typeof updater === "function" ? updater(pagination) : updater
-		},
-		onSortingChange: (updater) => {
-			sorting = typeof updater === "function" ? updater(sorting) : updater
-		},
-	})
+		(state) => ({ pagination: state.pagination, sorting: state.sorting }),
+	)
 
 	$effect(() => {
-		const totalPages = Math.max(1, Math.ceil(filtered.length / pagination.pageSize))
-		if (pagination.pageIndex >= totalPages) {
-			pagination.pageIndex = Math.max(0, totalPages - 1)
+		if (pageSize !== table.state.pagination.pageSize) {
+			table.setPageSize(pageSize)
 		}
 	})
+
+	const pagination = $derived(table.state.pagination)
 </script>
 
 <div class="w-full overflow-auto rounded-xl border border-corp-gray/20 bg-white {className}">
@@ -136,12 +119,6 @@
 					role={onRowClick ? "button" : undefined}
 					tabindex={onRowClick ? 0 : undefined}
 					onclick={() => onRowClick?.(row.original)}
-					onkeydown={(e) => {
-						if (onRowClick && (e.key === "Enter" || e.key === " ")) {
-							e.preventDefault()
-							onRowClick(row.original)
-						}
-					}}
 				>
 					{#each row.getAllCells() as cell (cell.id)}
 						<td class="px-4 py-3 text-[#1A1A1A]">

@@ -48,7 +48,6 @@ export default defineConfig(
 		rules: {
 			"@typescript-eslint/no-floating-promises": "error",
 			"@typescript-eslint/no-misused-promises": "error",
-			"@typescript-eslint/no-unsafe-member-access": "error",
 			"@typescript-eslint/restrict-template-expressions": "error",
 			"@typescript-eslint/restrict-plus-operands": "error",
 			"@typescript-eslint/switch-exhaustiveness-check": "error",

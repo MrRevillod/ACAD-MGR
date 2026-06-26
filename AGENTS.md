@@ -43,6 +43,7 @@ make machete           # cargo machete (unused deps)
 - **Formatter**: Prettier with tabs, no semicolons, single quotes false, trailing commas
 - **TanStack Query v6** (`@tanstack/svelte-query`): `createQuery` uses Svelte 5 runes internally (`$state.raw` Proxy), **not** Svelte stores — never use `$query` prefix. Access properties directly: `query.data`, `query.isPending`, `query.error`.
 - **TanStack Table v9 beta** (`@tanstack/svelte-table`): `ColumnDef` requires 2-3 type args in v9. Use `ColumnDef<any, TData, unknown>[]` in generic components. `createTable` with `tableFeatures()` — use `getAllCells()` instead of `getVisibleCells()` unless column visibility feature is registered.
+- **TanStack Table v9 state**: Do NOT use external `$state` for pagination/sorting with `state` getters + `onPaginationChange`. Instead, pass a selector to `createTable(options, (state) => ({ pagination: state.pagination, sorting: state.sorting }))` and read from `table.state.pagination`. Navigation methods (`nextPage()`, `setPageIndex()`) update internal atoms directly.
 
 ## Database
 
