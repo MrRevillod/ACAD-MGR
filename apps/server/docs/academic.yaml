@@ -332,6 +332,39 @@ paths:
           required: false
           schema:
             $ref: "#/components/schemas/AcademicSortField"
+        - name: department_id
+          in: query
+          description: Filtrar por departamento (UUID)
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: career_id
+          in: query
+          description: Filtrar por carrera (UUID)
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: category_id
+          in: query
+          description: Filtrar por categoría académica (UUID)
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: planta
+          in: query
+          description: Filtrar por tipo de planta
+          required: false
+          schema:
+            $ref: "#/components/schemas/AcademicPlanta"
+        - name: option
+          in: query
+          description: Filtrar por opción académica
+          required: false
+          schema:
+            $ref: "#/components/schemas/AcademicOption"
       responses:
         "200":
           description: Listado de académicos obtenido exitosamente

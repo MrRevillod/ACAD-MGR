@@ -1,0 +1,70 @@
+<script lang="ts">
+	import { authStore } from "$lib/auth/auth.store.svelte"
+	import { authService } from "$lib/auth/auth.service"
+	import { goto } from "$app/navigation"
+	import { resolve } from "$app/paths"
+	import { Users, Settings, LogOut, LogIn } from "@lucide/svelte"
+	import { createMutation } from "@tanstack/svelte-query"
+
+	const logoutMutation = createMutation(() => ({
+		mutationFn: () => authService.logout(),
+		onSuccess: () => {
+			authStore.clearSession()
+			void goto(resolve("/"))
+		},
+	}))
+
+	function handleLogout() {
+		logoutMutation.mutate()
+	}
+</script>
+
+<header class="sticky top-0 z-30 border-b border-corp-gray/20 bg-white/95 backdrop-blur-sm">
+	<div class="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+		<a href="/" class="text-sm font-bold tracking-wider text-corp-blue select-none">
+			ACAD MGR <span class="text-corp-gray/40 font-normal">V1</span>
+		</a>
+
+		<nav class="flex items-center gap-1">
+			<a
+				href="/academics"
+				class="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-corp-gray transition-colors hover:bg-corp-gray/5 hover:text-[#1A1A1A]"
+			>
+				<Users class="size-4" />
+				<span class="hidden sm:inline">Académicos</span>
+			</a>
+
+			{#if authStore.isAuthenticated()}
+				<a
+					href="/admin"
+					class="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-corp-gray transition-colors hover:bg-corp-gray/5 hover:text-[#1A1A1A]"
+				>
+					<Settings class="size-4" />
+					<span class="hidden sm:inline">Administración</span>
+				</a>
+
+				<span class="mx-2 h-5 w-px bg-corp-gray/20"></span>
+
+				<span class="text-xs text-corp-gray truncate max-w-28 hidden sm:inline">
+					{authStore.user?.name}
+				</span>
+
+				<button
+					class="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-corp-gray transition-colors hover:bg-corp-gray/5 hover:text-red-600"
+					onclick={handleLogout}
+					disabled={logoutMutation.isPending}
+				>
+					<LogOut class="size-4" />
+				</button>
+			{:else}
+				<a
+					href="/login"
+					class="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-corp-blue transition-colors hover:bg-corp-blue/5"
+				>
+					<LogIn class="size-4" />
+					<span class="hidden sm:inline">Ingresar</span>
+				</a>
+			{/if}
+		</nav>
+	</div>
+</header>

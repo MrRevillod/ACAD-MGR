@@ -39,3 +39,21 @@
 	--color-corp-blue: #0075b4;
 	--font-family-sans: "Vista Sans", system-ui, sans-serif;
 }
+
+body {
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	font-variant-numeric: tabular-nums;
+}
+
+h1,
+h2,
+h3,
+h4 {
+	text-wrap: balance;
+}
+
+p,
+li {
+	text-wrap: pretty;
+}

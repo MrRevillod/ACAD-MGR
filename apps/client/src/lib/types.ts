@@ -10,6 +10,15 @@ export type AcademicOption = (typeof ACADEMIC_OPTION)[number]
 export const DEGREE_KIND = ["base", "advanced"] as const
 export type DegreeKind = (typeof DEGREE_KIND)[number]
 
+export const ACADEMIC_SORT_FIELD = [
+	"names",
+	"paternal_surname",
+	"maternal_surname",
+	"joined_at",
+	"birth_date",
+] as const
+export type AcademicSortField = (typeof ACADEMIC_SORT_FIELD)[number]
+
 export interface AcademicView {
 	id: string
 	names: string
@@ -20,18 +29,30 @@ export interface AcademicView {
 	sex: Sex
 	birthDate: string
 	joinedAt: string
-	workPosition: string
-	workPositionDetails: string | null
+	workPosition: string | null
 	department: string
 	career: string | null
-	uctWorkingHours: number
+	jce: number
 	category: string
 	planta: AcademicPlanta
 	option: AcademicOption
-	acadCategoryHours: number
+	acadCategoryHours: number | null
 	annualDiscountHours: number
 	nationality: string
 	city: string
+}
+
+export interface AcademicCategory {
+	id: string
+	name: string
+	planta: AcademicPlanta
+}
+
+export interface AcademicCategoryOption {
+	id: string
+	categoryId: string
+	option: AcademicOption
+	hours: number | null
 }
 
 export interface Degree {
@@ -42,4 +63,19 @@ export interface Degree {
 	obtainedAt: string
 	kind: DegreeKind
 	countryCode: string
+}
+
+export interface AcademicWorkPosition {
+	id: string
+	name: string
+}
+
+export interface ImportResult {
+	imported: number
+	errors: ImportRowError[]
+}
+
+export interface ImportRowError {
+	row: number
+	reasons: string[]
 }

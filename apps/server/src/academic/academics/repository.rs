@@ -1,15 +1,9 @@
-use crate::academic::{Academic, AcademicId, AcademicSortField, AcademicView};
+use crate::academic::{Academic, AcademicId, AcademicListFilter, AcademicSortField, AcademicView};
 use crate::shared::{AppResult, Database, Tx};
 
 use sqlx::QueryBuilder;
 use std::sync::Arc;
 use sword::prelude::*;
-
-#[derive(Debug)]
-pub struct AcademicListFilter {
-    pub search: Option<String>,
-    pub sort: Option<AcademicSortField>,
-}
 
 #[injectable]
 pub struct AcademicsRepository {
@@ -57,6 +51,26 @@ impl AcademicsRepository {
                 .push(" OR a.email ILIKE ")
                 .push_bind(pattern)
                 .push(")");
+        }
+
+        if let Some(id) = filter.department_id {
+            query.push(" AND a.department_id = ").push_bind(id);
+        }
+
+        if let Some(id) = filter.career_id {
+            query.push(" AND a.career_id = ").push_bind(id);
+        }
+
+        if let Some(id) = filter.category_id {
+            query.push(" AND aco.category_id = ").push_bind(id);
+        }
+
+        if let Some(planta) = filter.planta {
+            query.push(" AND ac.planta = ").push_bind(planta);
+        }
+
+        if let Some(option) = filter.option {
+            query.push(" AND aco.option = ").push_bind(option);
         }
 
         match filter.sort {

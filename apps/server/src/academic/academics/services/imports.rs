@@ -157,6 +157,8 @@ impl ImportsService {
         let category_option_id = category_option.id;
         let nationality_code = input.nationality_country.code.clone();
 
+        tracing::info!("Processing nationality code: {}", nationality_code);
+
         let Some(_) = self.countries.find_by_code(&nationality_code).await? else {
             return Err(UniversityError::CountryNotFound(nationality_code))?;
         };
@@ -190,13 +192,16 @@ impl ImportsService {
 
         self.academics.save_tx(tx, &academic).await?;
 
+        let degree_1_country_code = input.degree_1_country.as_ref().map(|c| c.code.as_str());
+        let degree_2_country_code = input.degree_2_country.as_ref().map(|c| c.code.as_str());
+
         self.save_degree(
             tx,
             &academic.id,
             &input.degree_1_name,
             &input.degree_1_university,
             input.degree_1_date,
-            input.degree_1_country.as_deref(),
+            degree_1_country_code,
         )
         .await?;
 
@@ -206,7 +211,7 @@ impl ImportsService {
             &input.degree_2_name,
             &input.degree_2_university,
             input.degree_2_date,
-            input.degree_2_country.as_deref(),
+            degree_2_country_code,
         )
         .await?;
 

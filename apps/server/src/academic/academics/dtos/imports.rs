@@ -112,7 +112,7 @@ pub struct AcademicImportRowDto {
 
     #[serde(rename = "PAIS (I)")]
     #[serde(default)]
-    pub degree_1_country: Option<String>,
+    pub degree_1_country: Option<Country>,
 
     #[serde(rename = "GRADO ACADEMICO")]
     #[serde(default)]
@@ -128,7 +128,7 @@ pub struct AcademicImportRowDto {
 
     #[serde(rename = "PAIS (II)")]
     #[serde(default)]
-    pub degree_2_country: Option<String>,
+    pub degree_2_country: Option<Country>,
 }
 
 #[derive(Debug, Clone, Deserialize)]

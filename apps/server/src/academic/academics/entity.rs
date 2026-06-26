@@ -1,6 +1,8 @@
 use bon::Builder;
 
-use crate::academic::AcademicCategoryOptionId;
+use crate::academic::{
+    AcademicCategoryId, AcademicCategoryOptionId, AcademicOption, AcademicPlanta, AcademicSortField,
+};
 use crate::shared::{Entity, Id};
 use crate::university::{AcademicWorkPositionId, CareerId, DepartmentId};
 
@@ -40,6 +42,17 @@ pub struct Academic {
     pub annual_discount_hours: f64,
     pub nationality_code: String,
     pub city: String,
+}
+
+#[derive(Debug)]
+pub struct AcademicListFilter {
+    pub search: Option<String>,
+    pub sort: Option<AcademicSortField>,
+    pub career_id: Option<CareerId>,
+    pub department_id: Option<DepartmentId>,
+    pub category_id: Option<AcademicCategoryId>,
+    pub planta: Option<AcademicPlanta>,
+    pub option: Option<AcademicOption>,
 }
 
 impl Entity for Academic {

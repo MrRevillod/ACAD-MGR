@@ -41,6 +41,8 @@ make machete           # cargo machete (unused deps)
 - **Tailwind v4** with `@theme` variables in `layout.css`
 - **Design tokens** in `DESIGN.md`: primary `#0075B4`, font "Vista Sans" at `static/fonts/`
 - **Formatter**: Prettier with tabs, no semicolons, single quotes false, trailing commas
+- **TanStack Query v6** (`@tanstack/svelte-query`): `createQuery` uses Svelte 5 runes internally (`$state.raw` Proxy), **not** Svelte stores — never use `$query` prefix. Access properties directly: `query.data`, `query.isPending`, `query.error`.
+- **TanStack Table v9 beta** (`@tanstack/svelte-table`): `ColumnDef` requires 2-3 type args in v9. Use `ColumnDef<any, TData, unknown>[]` in generic components. `createTable` with `tableFeatures()` — use `getAllCells()` instead of `getVisibleCells()` unless column visibility feature is registered.
 
 ## Database
 

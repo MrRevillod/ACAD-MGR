@@ -4,6 +4,11 @@ mod imports;
 pub use create::*;
 pub use imports::*;
 
+use crate::{
+    academic::{AcademicCategoryId, AcademicOption, AcademicPlanta},
+    university::{CareerId, DepartmentId},
+};
+
 use chrono::{NaiveDate, Utc};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
@@ -37,6 +42,11 @@ pub struct GetAcademicsQuery {
     ))]
     pub search: Option<String>,
     pub sort: Option<AcademicSortField>,
+    pub career_id: Option<CareerId>,
+    pub department_id: Option<DepartmentId>,
+    pub category_id: Option<AcademicCategoryId>,
+    pub planta: Option<AcademicPlanta>,
+    pub option: Option<AcademicOption>,
 }
 
 fn validate_birth_date(date: &NaiveDate) -> Result<(), ValidationError> {

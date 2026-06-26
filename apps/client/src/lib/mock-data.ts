@@ -1,7 +1,5 @@
 import type { AcademicView, Degree } from "./types"
 
-export const mockRut = "13.035.072-0"
-
 export const mockAcademic: AcademicView = {
 	id: "e5f6a7b8-c9d0-1234-ef56-789012345678",
 	names: "Rodrigo Antonio",
@@ -13,10 +11,9 @@ export const mockAcademic: AcademicView = {
 	birthDate: "1976-01-15",
 	joinedAt: "2024-03-04",
 	workPosition: "Docente",
-	workPositionDetails: null,
 	department: "Ciencias Matemáticas y Físicas",
 	career: "Ingeniería Civil en Informática",
-	uctWorkingHours: 42.5,
+	jce: 0.5,
 	category: "Profesor Asistente",
 	planta: "permanente",
 	option: "teaching",

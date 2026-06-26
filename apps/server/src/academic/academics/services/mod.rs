@@ -19,6 +19,11 @@ impl AcademicsService {
         let filter = AcademicListFilter {
             search: query.search,
             sort: query.sort,
+            career_id: query.career_id,
+            category_id: query.category_id,
+            department_id: query.department_id,
+            option: query.option,
+            planta: query.planta,
         };
 
         self.academics.list(filter).await
