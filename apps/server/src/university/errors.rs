@@ -34,4 +34,12 @@ pub enum UniversityError {
     #[http(code = 400, message = "El código de país no es válido")]
     #[error("Country code '{0}' not found")]
     CountryNotFound(String),
+
+    // Career — Department mismatch
+    #[http(
+        code = 400,
+        message = "La carrera no pertenece al departamento especificado"
+    )]
+    #[error("Career does not belong to the specified department")]
+    CareerDepartmentMismatch,
 }

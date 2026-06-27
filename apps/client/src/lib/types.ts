@@ -77,6 +77,20 @@ export interface Degree {
 	countryCode: string
 }
 
+export interface UpdateAcademicDto {
+	names?: string
+	paternalSurname?: string
+	maternalSurname?: string
+	email?: string
+	orcid?: string | null
+	sex?: Sex
+	birthDate?: string
+	city?: string
+	nationalityCode?: string
+	jce?: number
+	annualDiscountHours?: number
+}
+
 export interface AcademicWorkPosition {
 	id: string
 	name: string

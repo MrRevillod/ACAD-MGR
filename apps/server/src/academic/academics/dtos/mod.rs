@@ -1,8 +1,10 @@
 mod create;
 mod imports;
+mod update;
 
 pub use create::*;
 pub use imports::*;
+pub use update::*;
 
 use crate::{
     academic::{AcademicCategoryId, AcademicOption, AcademicPlanta},

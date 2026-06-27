@@ -1,4 +1,6 @@
+use std::cmp::Ordering;
 use std::fmt;
+use std::hash::{Hash, Hasher};
 use std::marker::PhantomData;
 use std::ops::Deref;
 use std::str::FromStr;
@@ -15,10 +17,36 @@ pub trait Entity {
     fn key_name() -> &'static str;
 }
 
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[derive(Debug, Default)]
 pub struct Id<T: Entity> {
     value: Uuid,
     _marker: PhantomData<T>,
+}
+
+impl<T: Entity> PartialEq for Id<T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.value == other.value
+    }
+}
+
+impl<T: Entity> Eq for Id<T> {}
+
+impl<T: Entity> PartialOrd for Id<T> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl<T: Entity> Ord for Id<T> {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.value.cmp(&other.value)
+    }
+}
+
+impl<T: Entity> Hash for Id<T> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.value.hash(state);
+    }
 }
 
 impl<T: Entity> Clone for Id<T> {

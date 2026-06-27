@@ -1,5 +1,5 @@
 use crate::shared::{AppResult, Database};
-use crate::university::{AcademicWorkPosition, WorkPositionFilter};
+use crate::university::{AcademicWorkPosition, AcademicWorkPositionId, WorkPositionFilter};
 
 use sqlx::{Postgres, QueryBuilder};
 use std::sync::Arc;
@@ -30,6 +30,20 @@ impl AcademicWorkPositionsRepository {
             .await?;
 
         Ok(positions)
+    }
+
+    pub async fn find_by_id(
+        &self,
+        id: &AcademicWorkPositionId,
+    ) -> AppResult<Option<AcademicWorkPosition>> {
+        let item = sqlx::query_as::<_, AcademicWorkPosition>(
+            "SELECT id, name FROM academic_work_positions WHERE id = $1",
+        )
+        .bind(id)
+        .fetch_optional(self.database.pool())
+        .await?;
+
+        Ok(item)
     }
 
     pub async fn find_by_name(&self, name: &str) -> AppResult<Option<AcademicWorkPosition>> {

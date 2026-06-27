@@ -44,6 +44,24 @@ make machete           # cargo machete (unused deps)
 - **TanStack Query v6** (`@tanstack/svelte-query`): `createQuery` uses Svelte 5 runes internally (`$state.raw` Proxy), **not** Svelte stores — never use `$query` prefix. Access properties directly: `query.data`, `query.isPending`, `query.error`.
 - **TanStack Table v9 beta** (`@tanstack/svelte-table`): `ColumnDef` requires 2-3 type args in v9. Use `ColumnDef<any, TData, unknown>[]` in generic components. `createTable` with `tableFeatures()` — use `getAllCells()` instead of `getVisibleCells()` unless column visibility feature is registered.
 - **TanStack Table v9 state**: Do NOT use external `$state` for pagination/sorting with `state` getters + `onPaginationChange`. Instead, pass a selector to `createTable(options, (state) => ({ pagination: state.pagination, sorting: state.sorting }))` and read from `table.state.pagination`. Navigation methods (`nextPage()`, `setPageIndex()`) update internal atoms directly.
+- **Forms (create/update)**: Use `valibot` + `@formisch/svelte`. Todo form que crea o actualiza datos debe:
+  1. Definir un schema valibot — `import * as v from "valibot"` con `v.object({ ... })`, usar `v.pipe()` para cadenas de validación.
+  2. Extraer el tipo TS del schema — `type FormData = v.InferInput<typeof schema>`.
+  3. Crear el store del form con `createForm({ schema, initialInput? })`.
+  4. Envolver en `<Form of={form}>` + `<Field of={form} path={['campo']}>` usando snippets de Svelte 5:
+     ```svelte
+     <Field of={form} path={['email']}>
+       {#snippet children(field)}
+         <input {...field.props} value={field.input} />
+         {#if field.errors}<p>{field.errors[0]}</p>{/if}
+       {/snippet}
+     </Field>
+     ```
+  5. Manejar submit asíncrono en `onsubmit={(output) => mutation.mutate(output)}`.
+  6. Para submit programático (ej. botón fuera del `<Form>`), usar `handleSubmit(form, callback)`.
+  Search bars, filtros e inputs inline-read-only están exentos.
+- **Value objects**: Encapsular valores de dominio con semántica propia en tipos dedicados en lugar de usar `string`, `number` o funciones inline tipo `formatSex(sex)`. Esto даёт type safety, validación centralizada y self-documenting code. Ejemplos actuales: `Country` (сódigo ISO + nombre), `CLf64` (formato chileno de float), `Id<T>` (ID tipado sin `T` bounds). Buscar refactorizar: enums de texto (`Sex`, `AcademicCategory`, estados), strings formateados (rut, phone), monedas, fechas con timezone, identificadores compuestos.
+- **Thin pages**: Route files are skeletons — only TanStack Query calls, `$derived` state, and rendering of domain components. No inline forms, no large template blocks, no business logic in `+page.svelte`. Everything is delegated to its domain component.
 
 ## Database
 

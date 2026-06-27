@@ -30,6 +30,16 @@ impl AcademicsController {
         Ok(academic)
     }
 
+    #[patch("/{id}")]
+    #[interceptor(SessionCheck)]
+    pub async fn update_academic(&self, req: Request) -> WebResult<AcademicView> {
+        let id = req.param::<AcademicId>("id")?;
+        let input = req.body_validator::<UpdateAcademicDto>()?;
+        let academic = self.academics.update(&id, input).await?;
+
+        Ok(academic)
+    }
+
     #[post("/")]
     #[interceptor(SessionCheck)]
     pub async fn create_academic(&self, req: Request) -> WebResult<AcademicView> {

@@ -1,9 +1,8 @@
-use std::sync::Arc;
-
 use crate::shared::{AppResult, Database};
-use crate::university::departments::Department;
-use crate::university::{DepartmentFilter, DepartmentId};
+use crate::university::{Department, DepartmentFilter, DepartmentId};
+
 use sqlx::{Postgres, QueryBuilder};
+use std::sync::Arc;
 use sword::prelude::*;
 
 #[injectable]
@@ -15,8 +14,6 @@ impl DepartmentsRepository {
     pub async fn list(&self, filter: DepartmentFilter) -> AppResult<Vec<Department>> {
         let mut query =
             QueryBuilder::<Postgres>::new("SELECT id, name, faculty_id FROM departments WHERE 1=1");
-
-        tracing::info!("Building query with filter: {:?}", filter);
 
         if let Some(n) = filter.name {
             let pattern = format!("%{}%", n.trim());

@@ -1,5 +1,11 @@
 import { request } from "$lib/shared/http/request"
-import type { AcademicView, AcademicSortField, AcademicPlanta, AcademicOption } from "$lib/types"
+import type {
+	AcademicView,
+	AcademicSortField,
+	AcademicPlanta,
+	AcademicOption,
+	UpdateAcademicDto,
+} from "$lib/types"
 
 export interface GetAcademicsParams {
 	search?: string
@@ -18,6 +24,10 @@ export const academicsService = {
 
 	get(id: string): Promise<AcademicView> {
 		return request<AcademicView>({ method: "GET", url: `/academics/${id}` })
+	},
+
+	update(id: string, data: UpdateAcademicDto): Promise<AcademicView> {
+		return request<AcademicView>({ method: "PATCH", url: `/academics/${id}`, data })
 	},
 
 	async import(file: File): Promise<void> {

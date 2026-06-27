@@ -132,6 +132,25 @@ impl AcademicsRepository {
         Ok(item)
     }
 
+    pub async fn find_by_id(&self, id: &AcademicId) -> AppResult<Option<Academic>> {
+        let item = sqlx::query_as::<_, Academic>("SELECT * FROM academics WHERE id = $1")
+            .bind(id)
+            .fetch_optional(self.database.pool())
+            .await?;
+
+        Ok(item)
+    }
+
+    #[allow(dead_code)]
+    pub async fn find_by_email(&self, email: &str) -> AppResult<Option<Academic>> {
+        let item = sqlx::query_as::<_, Academic>("SELECT * FROM academics WHERE email = $1")
+            .bind(email)
+            .fetch_optional(self.database.pool())
+            .await?;
+
+        Ok(item)
+    }
+
     pub async fn find_by_rut(&self, rut: &str) -> AppResult<Option<Academic>> {
         let item = sqlx::query_as::<_, Academic>("SELECT * FROM academics WHERE rut = $1")
             .bind(rut)
@@ -160,7 +179,25 @@ impl AcademicsRepository {
         ) VALUES (
             $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
             $11, $12, $13, $14, $15, $16, $17, $18
-        )";
+        )
+        ON CONFLICT (id) DO UPDATE SET
+            names = EXCLUDED.names,
+            paternal_surname = EXCLUDED.paternal_surname,
+            maternal_surname = EXCLUDED.maternal_surname,
+            email = EXCLUDED.email,
+            orcid = EXCLUDED.orcid,
+            sex = EXCLUDED.sex,
+            birth_date = EXCLUDED.birth_date,
+            joined_at = EXCLUDED.joined_at,
+            work_position_id = EXCLUDED.work_position_id,
+            department_id = EXCLUDED.department_id,
+            career_id = EXCLUDED.career_id,
+            jce = EXCLUDED.jce,
+            acad_category_options_id = EXCLUDED.acad_category_options_id,
+            annual_discount_hours = EXCLUDED.annual_discount_hours,
+            nationality_code = EXCLUDED.nationality_code,
+            city = EXCLUDED.city
+        ";
 
         sqlx::query(query)
             .bind(academic.id)

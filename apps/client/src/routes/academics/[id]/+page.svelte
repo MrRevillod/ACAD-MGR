@@ -32,6 +32,7 @@
 		type Sex,
 		type AcademicPlanta,
 		type AcademicOption,
+		type UpdateAcademicDto,
 	} from "$lib/types"
 
 	const id = $derived($page.params.id ?? "")
@@ -162,6 +163,66 @@
 			createDeg.mutate()
 		}
 	}
+
+	let showEditAcademicDialog = $state(false)
+	let editNames = $state("")
+	let editPaternalSurname = $state("")
+	let editMaternalSurname = $state("")
+	let editEmail = $state("")
+	let editOrcid = $state("")
+	let editSex = $state<Sex>("H")
+	let editBirthDate = $state("")
+	let editCity = $state("")
+	let editNationalityCode = $state("CL")
+	let editJce = $state("")
+	let editAnnualDiscountHours = $state("")
+
+	function openEditAcademic() {
+		if (!academic) return
+		editNames = academic.names
+		editPaternalSurname = academic.paternalSurname
+		editMaternalSurname = academic.maternalSurname
+		editEmail = academic.email
+		editOrcid = academic.orcid ?? ""
+		editSex = academic.sex
+		editBirthDate = academic.birthDate
+		editCity = academic.city
+		const matched = countryItems.find((i) => i.label.includes(academic.nationality))
+		editNationalityCode = matched?.value ?? "CL"
+		editJce = String(academic.jce)
+		editAnnualDiscountHours = String(academic.annualDiscountHours)
+		showEditAcademicDialog = true
+	}
+
+	const updateAcademic = createMutation(() => ({
+		mutationFn: () => {
+			const payload: UpdateAcademicDto = {}
+			if (editNames !== academic?.names) payload.names = editNames
+			if (editPaternalSurname !== academic?.paternalSurname)
+				payload.paternalSurname = editPaternalSurname
+			if (editMaternalSurname !== academic?.maternalSurname)
+				payload.maternalSurname = editMaternalSurname
+			if (editEmail !== academic?.email) payload.email = editEmail
+			if (editOrcid !== (academic?.orcid ?? "")) payload.orcid = editOrcid || null
+			if (editSex !== academic?.sex) payload.sex = editSex
+			if (editBirthDate !== academic?.birthDate) payload.birthDate = editBirthDate
+			if (editCity !== academic?.city) payload.city = editCity
+			const currentNatCode =
+				countryItems.find((i) => i.label.includes(academic?.nationality ?? ""))?.value ?? "CL"
+			if (editNationalityCode !== currentNatCode) payload.nationalityCode = editNationalityCode
+			if (+editJce !== academic?.jce && editJce !== "") payload.jce = +editJce
+			if (
+				+editAnnualDiscountHours !== academic?.annualDiscountHours &&
+				editAnnualDiscountHours !== ""
+			)
+				payload.annualDiscountHours = +editAnnualDiscountHours
+			return academicsService.update(id, payload)
+		},
+		onSuccess: () => {
+			void queryClient.invalidateQueries({ queryKey: ["academic", id] })
+			showEditAcademicDialog = false
+		},
+	}))
 </script>
 
 <div class="h-full overflow-y-auto">
@@ -187,6 +248,12 @@
 					>
 						<ChevronLeft class="size-4" />
 					</a>
+					<button
+						class="absolute right-3 top-3 z-10 flex size-8 items-center justify-center rounded-full bg-white text-corp-blue shadow-sm active:scale-95"
+						onclick={openEditAcademic}
+					>
+						<Pencil class="size-4" />
+					</button>
 					<div class="p-6 pb-4 text-center">
 						<div
 							class="mx-auto mb-4 flex size-24 items-center justify-center rounded-full bg-white/10 text-2xl font-bold tracking-widest text-white ring-2 ring-white/15"
@@ -215,12 +282,6 @@
 							</div>
 						</div>
 					</div>
-
-					<div class="border-t border-white/10 px-6 py-3">
-						<p class="text-xs text-white/50">
-							Ingreso {DateValue.formatDate(academic.joinedAt)}
-						</p>
-					</div>
 				</aside>
 
 				<div class="space-y-6">
@@ -231,7 +292,7 @@
 							<Briefcase class="size-4 text-corp-blue" />
 							Información Laboral
 						</div>
-						<div class="grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
+						<div class="grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-3">
 							<div>
 								<p class="text-xs font-medium tracking-wide uppercase text-corp-gray">
 									Departamento
@@ -241,6 +302,12 @@
 							<div>
 								<p class="text-xs font-medium tracking-wide uppercase text-corp-gray">Carrera</p>
 								<p class="mt-1 text-[15px] font-medium text-[#1a1a1a]">{academic.career ?? "—"}</p>
+							</div>
+							<div>
+								<p class="text-xs font-medium tracking-wide uppercase text-corp-gray">Ingreso</p>
+								<p class="mt-1 text-[15px] font-medium text-[#1a1a1a]">
+									{DateValue.formatDate(academic.joinedAt)}
+								</p>
 							</div>
 							<div>
 								<p class="text-xs font-medium tracking-wide uppercase text-corp-gray">Cargo</p>
@@ -426,6 +493,90 @@
 					!countryCode}
 			>
 				{createDeg.isPending || updateDeg.isPending ? "Guardando..." : "Guardar"}
+			</Button>
+		</div>
+	</form>
+</Dialog>
+
+<Dialog bind:open={showEditAcademicDialog} title="Editar académico">
+	<form
+		class="grid gap-4"
+		onsubmit={(e) => {
+			e.preventDefault()
+			updateAcademic.mutate()
+		}}
+	>
+		<div class="grid grid-cols-2 gap-4">
+			<label class="grid gap-1.5">
+				<span class="text-xs font-medium tracking-wide uppercase text-corp-gray">Nombres</span>
+				<Input bind:value={editNames} />
+			</label>
+			<label class="grid gap-1.5">
+				<span class="text-xs font-medium tracking-wide uppercase text-corp-gray"
+					>Apellido paterno</span
+				>
+				<Input bind:value={editPaternalSurname} />
+			</label>
+			<label class="grid gap-1.5">
+				<span class="text-xs font-medium tracking-wide uppercase text-corp-gray"
+					>Apellido materno</span
+				>
+				<Input bind:value={editMaternalSurname} />
+			</label>
+			<label class="grid gap-1.5">
+				<span class="text-xs font-medium tracking-wide uppercase text-corp-gray">Email</span>
+				<Input type="email" bind:value={editEmail} />
+			</label>
+			<label class="grid gap-1.5">
+				<span class="text-xs font-medium tracking-wide uppercase text-corp-gray">ORCID</span>
+				<Input bind:value={editOrcid} placeholder="0000-0000-0000-0000" />
+			</label>
+			<label class="grid gap-1.5">
+				<span class="text-xs font-medium tracking-wide uppercase text-corp-gray">Sexo</span>
+				<Select
+					bind:value={editSex}
+					items={[
+						{ value: "H", label: "Masculino" },
+						{ value: "M", label: "Femenino" },
+						{ value: "O", label: "Otro" },
+					]}
+				/>
+			</label>
+			<label class="grid gap-1.5">
+				<span class="text-xs font-medium tracking-wide uppercase text-corp-gray"
+					>Fecha de nacimiento</span
+				>
+				<Input type="date" bind:value={editBirthDate} />
+			</label>
+			<label class="grid gap-1.5">
+				<span class="text-xs font-medium tracking-wide uppercase text-corp-gray">Ciudad</span>
+				<Input bind:value={editCity} />
+			</label>
+			<label class="grid gap-1.5">
+				<span class="text-xs font-medium tracking-wide uppercase text-corp-gray">Nacionalidad</span>
+				<Select
+					items={countryItems}
+					bind:value={editNationalityCode}
+					placeholder="Seleccionar país..."
+				/>
+			</label>
+			<label class="grid gap-1.5">
+				<span class="text-xs font-medium tracking-wide uppercase text-corp-gray">JCE</span>
+				<Input type="number" step="0.01" min="0" max="1" bind:value={editJce} />
+			</label>
+			<label class="grid gap-1.5">
+				<span class="text-xs font-medium tracking-wide uppercase text-corp-gray"
+					>Horas descuento anual</span
+				>
+				<Input type="number" step="0.5" min="0" bind:value={editAnnualDiscountHours} />
+			</label>
+		</div>
+		<div class="mt-2 flex justify-end gap-2">
+			<Button variant="secondary" type="button" onclick={() => (showEditAcademicDialog = false)}
+				>Cancelar</Button
+			>
+			<Button type="submit" disabled={updateAcademic.isPending}>
+				{updateAcademic.isPending ? "Guardando..." : "Guardar"}
 			</Button>
 		</div>
 	</form>
