@@ -84,7 +84,7 @@
 	const pagination = $derived(table.state.pagination)
 </script>
 
-<div class="w-full overflow-auto rounded-xl border border-corp-gray/20 bg-white {className}">
+<div class="w-full rounded-xl border border-corp-gray/20 bg-white {className}">
 	<table class="w-full caption-bottom text-sm">
 		<thead>
 			{#each table.getHeaderGroups() as headerGroup (headerGroup.id)}

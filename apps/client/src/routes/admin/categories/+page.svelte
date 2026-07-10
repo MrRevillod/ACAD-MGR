@@ -1,16 +1,13 @@
 <script lang="ts">
-	import {
-		createQuery,
-		createMutation as createTanMutation,
-		useQueryClient,
-	} from "@tanstack/svelte-query"
+	import { createQuery } from "@tanstack/svelte-query"
+	import { renderSnippet, createColumnHelper, type TableFeatures } from "@tanstack/svelte-table"
 	import { categoryService } from "$lib/academic/categories/service"
 	import CategoryDialog from "$lib/academic/categories/components/category-dialog.svelte"
 	import Button from "$lib/shared/components/ui/button.svelte"
 	import Badge from "$lib/shared/components/ui/badge.svelte"
-	import { Plus, Loader2, Trash2 } from "@lucide/svelte"
-
-	const queryClient = useQueryClient()
+	import DataTable from "$lib/shared/components/ui/data-table.svelte"
+	import { Plus, Loader2, Pencil, Trash2 } from "@lucide/svelte"
+	import type { AcademicCategory } from "$lib/academic/categories/dtos"
 
 	const query = createQuery(() => ({
 		queryKey: ["admin", "categories"],
@@ -19,12 +16,20 @@
 
 	let showCreate = $state(false)
 
-	const deleteCat = createTanMutation(() => ({
-		mutationFn: (_id: string) => Promise.resolve(),
-		onSuccess: () => {
-			void queryClient.invalidateQueries({ queryKey: ["admin", "categories"] })
-		},
-	}))
+	const helper = createColumnHelper<TableFeatures, AcademicCategory>()
+
+	const columns = [
+		helper.accessor("name", { header: "Nombre" }),
+		helper.accessor("planta", {
+			header: "Planta",
+			cell: (info) => renderSnippet(plantaBadge, { value: info.getValue() }),
+		}),
+		helper.display({
+			id: "actions",
+			header: "Acciones",
+			cell: () => renderSnippet(actionsCell, {}),
+		}),
+	]
 </script>
 
 <div>
@@ -44,47 +49,29 @@
 			<Loader2 class="size-6 animate-spin text-corp-gray" />
 		</div>
 	{:else}
-		<div class="rounded-xl border border-corp-gray/20 bg-white">
-			<table class="w-full text-sm">
-				<thead>
-					<tr class="border-b border-corp-gray/10 bg-gray-100">
-						<th
-							class="px-4 py-3 text-left text-xs font-medium tracking-wide uppercase text-corp-gray"
-							>Nombre</th
-						>
-						<th
-							class="px-4 py-3 text-left text-xs font-medium tracking-wide uppercase text-corp-gray"
-							>Planta</th
-						>
-						<th class="px-4 py-3 w-16"></th>
-					</tr>
-				</thead>
-				<tbody>
-					{#each query.data ?? [] as cat (cat.id)}
-						<tr class="border-b border-corp-gray/10 even:bg-gray-50 last:border-0">
-							<td class="px-4 py-3 text-[#1A1A1A]">{cat.name}</td>
-							<td class="px-4 py-3">
-								<Badge variant={cat.planta === "permanente" ? "advanced" : "base"}>
-									{cat.planta === "permanente" ? "Permanente" : "Adjunta"}
-								</Badge>
-							</td>
-							<td class="px-4 py-3">
-								<button
-									class="flex size-8 items-center justify-center rounded-lg text-corp-gray transition-colors hover:bg-red-50 hover:text-red-600"
-									onclick={() => deleteCat.mutate(cat.id)}
-								>
-									<Trash2 class="size-4" />
-								</button>
-							</td>
-						</tr>
-					{/each}
-				</tbody>
-			</table>
-			{#if (query.data ?? []).length === 0}
-				<p class="px-4 py-8 text-center text-sm text-corp-gray">No hay categorías registradas.</p>
-			{/if}
-		</div>
+		<DataTable data={query.data ?? []} {columns} pageSize={10} />
 	{/if}
 </div>
+
+{#snippet plantaBadge(params: { value: string })}
+	<Badge variant={params.value === "permanente" ? "advanced" : "base"}>
+		{params.value === "permanente" ? "Permanente" : "Adjunta"}
+	</Badge>
+{/snippet}
+
+{#snippet actionsCell(_: Record<string, never>)}
+	<div class="flex items-center gap-1">
+		<button
+			class="flex size-8 items-center justify-center rounded-lg text-corp-gray transition-colors hover:bg-corp-gray/5 hover:text-[#1A1A1A]"
+		>
+			<Pencil class="size-4" />
+		</button>
+		<button
+			class="flex size-8 items-center justify-center rounded-lg text-corp-gray transition-colors hover:bg-red-50 hover:text-red-600"
+		>
+			<Trash2 class="size-4" />
+		</button>
+	</div>
+{/snippet}
 
 <CategoryDialog bind:open={showCreate} onClose={() => (showCreate = false)} />

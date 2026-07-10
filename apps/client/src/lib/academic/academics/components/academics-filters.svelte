@@ -67,7 +67,7 @@
 </script>
 
 <aside
-	class="hidden w-72 shrink-0 overflow-y-auto rounded-xl border border-corp-gray/20 bg-white p-4 lg:block"
+	class="hidden w-72 shrink-0 self-start overflow-y-auto rounded-xl border border-corp-gray/20 bg-white p-4 lg:block"
 >
 	<h1 class="text-lg font-semibold text-[#1A1A1A]">Académicos</h1>
 	<p class="mt-1 text-sm text-corp-gray">Facultad de Ingeniería</p>

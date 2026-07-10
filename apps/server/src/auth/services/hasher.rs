@@ -20,13 +20,21 @@ impl Hasher {
     }
 
     pub fn hash(&self, password: &str) -> AppResult<String> {
-        let hash = bcrypt::hash(password, self.cost).map_err(AuthError::from)?;
+        let hash = bcrypt::hash(password, self.cost)
+        	.inspect_err(|e| eprintln!("{e}"))
+        	.map_err(AuthError::from)?;
 
         Ok(hash)
     }
 
     pub fn verify(&self, password: &str, hash: &str) -> AppResult<bool> {
-        let is_valid = bcrypt::verify(password, hash).map_err(AuthError::from)?;
+
+    	tracing::info!("Password: {}", password);
+    	tracing::info!("Password HASH: {}", hash);
+
+        let is_valid = bcrypt::verify(password, hash)
+        	.inspect_err(|e| eprintln!("{e}"))
+        	.map_err(AuthError::from)?;
 
         Ok(is_valid)
     }

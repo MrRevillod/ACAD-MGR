@@ -1,9 +1,12 @@
 <script lang="ts">
 	import { createQuery } from "@tanstack/svelte-query"
+	import { renderSnippet, createColumnHelper, type TableFeatures } from "@tanstack/svelte-table"
 	import { positionService } from "$lib/university/work-positions/service"
 	import PositionDialog from "$lib/university/work-positions/components/position-dialog.svelte"
 	import Button from "$lib/shared/components/ui/button.svelte"
-	import { Plus, Loader2, Trash2 } from "@lucide/svelte"
+	import DataTable from "$lib/shared/components/ui/data-table.svelte"
+	import { Plus, Loader2, Pencil, Trash2 } from "@lucide/svelte"
+	import type { AcademicWorkPosition } from "$lib/university/work-positions/dtos"
 
 	const query = createQuery(() => ({
 		queryKey: ["admin", "positions"],
@@ -11,6 +14,17 @@
 	}))
 
 	let showCreate = $state(false)
+
+	const helper = createColumnHelper<TableFeatures, AcademicWorkPosition>()
+
+	const columns = [
+		helper.accessor("name", { header: "Nombre" }),
+		helper.display({
+			id: "actions",
+			header: "Acciones",
+			cell: () => renderSnippet(actionsCell, {}),
+		}),
+	]
 </script>
 
 <div>
@@ -30,37 +44,23 @@
 			<Loader2 class="size-6 animate-spin text-corp-gray" />
 		</div>
 	{:else}
-		<div class="rounded-xl border border-corp-gray/20 bg-white">
-			<table class="w-full text-sm">
-				<thead>
-					<tr class="border-b border-corp-gray/10 bg-gray-100">
-						<th
-							class="px-4 py-3 text-left text-xs font-medium tracking-wide uppercase text-corp-gray"
-							>Nombre</th
-						>
-						<th class="px-4 py-3 w-16"></th>
-					</tr>
-				</thead>
-				<tbody>
-					{#each query.data ?? [] as pos (pos.id)}
-						<tr class="border-b border-corp-gray/10 even:bg-gray-50 last:border-0">
-							<td class="px-4 py-3 text-[#1A1A1A]">{pos.name}</td>
-							<td class="px-4 py-3">
-								<button
-									class="flex size-8 items-center justify-center rounded-lg text-corp-gray transition-colors hover:bg-red-50 hover:text-red-600"
-								>
-									<Trash2 class="size-4" />
-								</button>
-							</td>
-						</tr>
-					{/each}
-				</tbody>
-			</table>
-			{#if (query.data ?? []).length === 0}
-				<p class="px-4 py-8 text-center text-sm text-corp-gray">No hay cargos registrados.</p>
-			{/if}
-		</div>
+		<DataTable data={query.data ?? []} {columns} pageSize={10} />
 	{/if}
 </div>
+
+{#snippet actionsCell(_: Record<string, never>)}
+	<div class="flex items-center gap-1">
+		<button
+			class="flex size-8 items-center justify-center rounded-lg text-corp-gray transition-colors hover:bg-corp-gray/5 hover:text-[#1A1A1A]"
+		>
+			<Pencil class="size-4" />
+		</button>
+		<button
+			class="flex size-8 items-center justify-center rounded-lg text-corp-gray transition-colors hover:bg-red-50 hover:text-red-600"
+		>
+			<Trash2 class="size-4" />
+		</button>
+	</div>
+{/snippet}
 
 <PositionDialog bind:open={showCreate} onClose={() => (showCreate = false)} />
