@@ -40,7 +40,7 @@ export interface GetAcademicsParams {
 	sort?: AcademicSortField
 }
 
-const ORCID_REGEX = /^\d{4}-\d{4}-\d{4}-\d{3}[\dX]$/
+const ORCID_REGEX = /^(https?:\/\/orcid\.org\/)?\d{4}-\d{4}-\d{4}-\d{3}[\dX]$/
 const RUT_REGEX = /^\d{7,8}-[\dkK]$/
 
 const normalizeDecimal = (v: unknown) => (typeof v === "string" ? v.replace(",", ".") : v)

@@ -1,10 +1,11 @@
 <script lang="ts">
 	import { createQuery } from "@tanstack/svelte-query"
-	import { page } from "$app/state"
 	import { goto } from "$app/navigation"
 	import { resolve } from "$app/paths"
 	import { Loader2, AlertCircle } from "@lucide/svelte"
 	import { createColumnHelper, type TableFeatures } from "@tanstack/svelte-table"
+	import { useSearchParams } from "runed/kit"
+	import * as v from "valibot"
 	import { academicService } from "$lib/academic/academics/service"
 	import { departmentService } from "$lib/university/departments/service"
 	import { careerService } from "$lib/university/careers/service"
@@ -16,12 +17,19 @@
 	import { PLANTA_LABELS, ACADEMIC_OPTION_LABELS } from "$lib/academic/academics/enums"
 	import { FullName } from "$lib/shared/value-objects/full-name.value"
 
-	let searchInput = $state(page.url.searchParams.get("search") ?? "")
-	let deptFilter = $state(page.url.searchParams.get("department_id") ?? "")
-	let careerFilter = $state(page.url.searchParams.get("career_id") ?? "")
-	let catFilter = $state(page.url.searchParams.get("category_id") ?? "")
-	let plantaFilter = $state(page.url.searchParams.get("planta") ?? "")
-	let optionFilter = $state(page.url.searchParams.get("option") ?? "")
+	const searchParamsSchema = v.object({
+		search: v.optional(v.fallback(v.string(), ""), ""),
+		department_id: v.optional(v.fallback(v.string(), ""), ""),
+		career_id: v.optional(v.fallback(v.string(), ""), ""),
+		category_id: v.optional(v.fallback(v.string(), ""), ""),
+		planta: v.optional(v.fallback(v.string(), ""), ""),
+		option: v.optional(v.fallback(v.string(), ""), ""),
+	})
+
+	const params = useSearchParams(searchParamsSchema, {
+		debounce: 300,
+		pushHistory: false,
+	})
 
 	const departmentsQuery = createQuery(() => ({
 		queryKey: ["departments"],
@@ -29,8 +37,11 @@
 	}))
 
 	const careersQuery = createQuery(() => ({
-		queryKey: ["careers", deptFilter],
-		queryFn: () => careerService.list(deptFilter ? { department_id: deptFilter } : undefined),
+		queryKey: ["careers", params.department_id],
+		queryFn: () =>
+			careerService.list(
+				params.department_id ? { department_id: params.department_id } : undefined,
+			),
 	}))
 
 	const categoriesQuery = createQuery(() => ({
@@ -38,60 +49,19 @@
 		queryFn: () => categoryService.list(),
 	}))
 
-	$effect(() => {
-		const sp = page.url.searchParams
-		const urlSearch = sp.get("search") ?? ""
-		if (urlSearch !== searchInput) searchInput = urlSearch
-		deptFilter = sp.get("department_id") ?? ""
-		careerFilter = sp.get("career_id") ?? ""
-		catFilter = sp.get("category_id") ?? ""
-		plantaFilter = sp.get("planta") ?? ""
-		optionFilter = sp.get("option") ?? ""
-	})
-
-	$effect(() => {
-		const value = searchInput
-		const timer = setTimeout(() => {
-			const url = new URL(page.url)
-			if (value) url.searchParams.set("search", value)
-			else url.searchParams.delete("search")
-			if (url.href !== page.url.href) {
-				void goto(url, { replaceState: true, noScroll: true })
-			}
-		}, 300)
-		return () => clearTimeout(timer)
-	})
-
-	$effect(() => {
-		const url = new URL(page.url)
-		if (deptFilter) url.searchParams.set("department_id", deptFilter)
-		else url.searchParams.delete("department_id")
-		if (careerFilter) url.searchParams.set("career_id", careerFilter)
-		else url.searchParams.delete("career_id")
-		if (catFilter) url.searchParams.set("category_id", catFilter)
-		else url.searchParams.delete("category_id")
-		if (plantaFilter) url.searchParams.set("planta", plantaFilter)
-		else url.searchParams.delete("planta")
-		if (optionFilter) url.searchParams.set("option", optionFilter)
-		else url.searchParams.delete("option")
-		if (url.href !== page.url.href) {
-			void goto(url, { replaceState: true, noScroll: true })
-		}
-	})
-
 	let filters = $derived<GetAcademicsParams>({
-		...(searchInput && { search: searchInput }),
-		...(deptFilter && { department_id: deptFilter }),
-		...(careerFilter && { career_id: careerFilter }),
-		...(catFilter && { category_id: catFilter }),
-		...(plantaFilter && { planta: plantaFilter as GetAcademicsParams["planta"] }),
-		...(optionFilter && { option: optionFilter as GetAcademicsParams["option"] }),
+		...(params.search && { search: params.search }),
+		...(params.department_id && { department_id: params.department_id }),
+		...(params.career_id && { career_id: params.career_id }),
+		...(params.category_id && { category_id: params.category_id }),
+		...(params.planta && { planta: params.planta as GetAcademicsParams["planta"] }),
+		...(params.option && { option: params.option as GetAcademicsParams["option"] }),
 	})
 
 	let showCreateDialog = $state(false)
 
 	function clearFilters() {
-		void goto(resolve("/academics"), { replaceState: true, noScroll: true })
+		params.reset()
 	}
 
 	const query = createQuery(() => ({
@@ -126,12 +96,12 @@
 <div class="mx-auto flex h-full max-w-[1600px] flex-col px-4 py-8 sm:px-6 lg:px-8">
 	<div class="flex min-h-0 flex-1 gap-8">
 		<AcademicsFilters
-			bind:search={searchInput}
-			bind:deptFilter
-			bind:careerFilter
-			bind:catFilter
-			bind:plantaFilter
-			bind:optionFilter
+			bind:search={params.search}
+			bind:deptFilter={params.department_id}
+			bind:careerFilter={params.career_id}
+			bind:catFilter={params.category_id}
+			bind:plantaFilter={params.planta}
+			bind:optionFilter={params.option}
 			departments={departmentsQuery.data}
 			careers={careersQuery.data}
 			categories={categoriesQuery.data}

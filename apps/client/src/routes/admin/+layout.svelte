@@ -2,6 +2,7 @@
 	import type { Snippet } from "svelte"
 	import { page } from "$app/stores"
 	import {
+		BookOpen,
 		Tags,
 		ListOrdered,
 		Briefcase,
@@ -18,6 +19,7 @@
 		{ href: "/admin/options", label: "Opciones", icon: ListOrdered },
 		{ href: "/admin/positions", label: "Cargos", icon: Briefcase },
 		{ href: "/academics", label: "Académicos", icon: GraduationCap },
+		{ href: "/works", label: "Publicaciones", icon: BookOpen },
 		{ href: "/admin/users", label: "Usuarios", icon: Users },
 	] as const
 </script>

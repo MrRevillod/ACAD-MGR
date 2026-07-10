@@ -3,6 +3,14 @@ name = "orcid-acad-mgr-server"
 version = "0.1.0"
 edition = "2024"
 
+[[bin]]
+name = "orcid-acad-mgr-server"
+path = "src/main.rs"
+
+[[bin]]
+name = "openalex-seeder"
+path = "bin/openalex-seeder/main.rs"
+
 [dependencies]
 orcid = "0.2.3"
 tokio = { version = "1.52.3", features = ["full"] }
@@ -35,8 +43,10 @@ uuid = { version = "1.19.0", features = ["serde", "v4"] }
 chrono = { version = "0.4.42", features = ["serde"] }
 jsonwebtoken = { version = "10.2.0", features = ["rust_crypto"] }
 serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.149"
 validator = { version = "0.20.0", features = ["derive"] }
 bcrypt = "0.19.2"
 bon = "3.9.3"
 sha2 = "0.11.0"
 regex = "1.12.4"
+papers-openalex = "0.3.1"

@@ -20,8 +20,18 @@ use validator::{Validate, ValidationError};
 static RUT_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"^\d{7,8}-[\dkK]$").expect("regex inválida"));
 
-static ORCID_ID_REGEX: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"^\d{4}-\d{4}-\d{4}-\d{3}[\dX]$").expect("regex inválida"));
+static ORCID_ID_REGEX: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"^(https?://orcid\.org/)?\d{4}-\d{4}-\d{4}-\d{3}[\dX]$").expect("regex inválida")
+});
+
+pub fn normalize_orcid(raw: &str) -> String {
+    let trimmed = raw.trim().trim_end_matches('/');
+    if trimmed.starts_with("http") {
+        trimmed.to_string()
+    } else {
+        format!("https://orcid.org/{trimmed}")
+    }
+}
 
 static UCT_FOUNDATION_DATE: NaiveDate = NaiveDate::from_ymd_opt(1959, 9, 8).unwrap();
 

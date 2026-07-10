@@ -1,3 +1,4 @@
+use super::super::normalize_orcid;
 use crate::academic::*;
 use crate::shared::{AppError, AppResult, TransactionManager, Tx};
 use crate::university::*;
@@ -167,8 +168,7 @@ impl ImportsService {
             .orcid
             .as_deref()
             .filter(|o| !o.trim().is_empty() && *o != "-")
-            .unwrap_or("0000-0000-0000-0000")
-            .to_string();
+            .map(normalize_orcid);
 
         let academic = Academic::builder()
             .rut(input.rut.clone())
@@ -176,7 +176,7 @@ impl ImportsService {
             .paternal_surname(input.paternal_surname.clone())
             .maternal_surname(input.maternal_surname.clone())
             .email(input.email.clone())
-            .orcid(orcid)
+            .maybe_orcid(orcid)
             .sex(input.sex)
             .birth_date(input.birth_date)
             .joined_at(input.joined_at)

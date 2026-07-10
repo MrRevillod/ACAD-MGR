@@ -11,18 +11,32 @@
 		items = [],
 		placeholder = "Seleccionar...",
 		value = $bindable(""),
+		disabled = false,
+		id,
 		class: className = "",
+		onValueChange,
 	}: {
 		items: Item[]
 		placeholder?: string
 		value?: string
+		disabled?: boolean
+		id?: string
 		class?: string
+		onValueChange?: (value: string) => void
 	} = $props()
+
+	function handleValueChange(v: string) {
+		if (v !== value) {
+			value = v
+			onValueChange?.(v)
+		}
+	}
 </script>
 
-<SelectPrimitive.Root type="single" bind:value {items}>
+<SelectPrimitive.Root type="single" {value} onValueChange={handleValueChange} {disabled} {items}>
 	<SelectPrimitive.Trigger
-		class="inline-flex h-10 w-full touch-none select-none items-center rounded-lg border border-corp-gray/20 bg-white px-3 text-sm text-[#1A1A1A] outline-none transition-colors placeholder:text-corp-gray/50 focus:border-corp-blue/50 focus:ring-2 focus:ring-corp-blue/10 data-placeholder:text-corp-gray/50 {className}"
+		{id}
+		class="inline-flex h-10 w-full touch-none select-none items-center rounded-lg border border-corp-gray/20 bg-white px-3 text-sm text-[#1A1A1A] outline-none transition-colors placeholder:text-corp-gray/50 data-disabled:cursor-not-allowed data-disabled:opacity-50 focus:border-corp-blue/50 focus:ring-2 focus:ring-corp-blue/10 data-placeholder:text-corp-gray/50 {className}"
 	>
 		<SelectPrimitive.Value {placeholder} />
 		<ChevronDown class="ml-auto size-4 shrink-0 text-corp-gray/60" />

@@ -2,6 +2,7 @@ mod imports;
 
 pub use imports::*;
 
+use super::normalize_orcid;
 use crate::{academic::*, shared::AppResult, university::*};
 use std::sync::Arc;
 use sword::prelude::*;
@@ -46,7 +47,8 @@ impl AcademicsService {
             return Err(AcademicError::AcademicRutAlreadyExists)?;
         }
 
-        if let Some(orcid) = &input.orcid
+        let normalized_orcid = input.orcid.as_deref().map(normalize_orcid);
+        if let Some(ref orcid) = normalized_orcid
             && self.academics.find_by_orcid(orcid).await?.is_some()
         {
             return Err(AcademicError::AcademicOrcidAlreadyExists)?;
@@ -91,11 +93,14 @@ impl AcademicsService {
             academic.maternal_surname = maternal_surname.clone();
         }
 
-        if let Some(orcid) = &input.orcid
-            && self.academics.find_by_orcid(orcid).await?.is_some()
-            && Some(orcid) != academic.orcid.as_ref()
-        {
-            return Err(AcademicError::AcademicOrcidAlreadyExists)?;
+        let normalized_orcid = input.orcid.as_deref().map(normalize_orcid);
+        if let Some(ref orcid) = normalized_orcid {
+            if self.academics.find_by_orcid(orcid).await?.is_some()
+                && Some(orcid.as_str()) != academic.orcid.as_deref()
+            {
+                return Err(AcademicError::AcademicOrcidAlreadyExists)?;
+            }
+            academic.orcid = Some(orcid.clone());
         }
 
         if let Some(sex) = input.sex {
