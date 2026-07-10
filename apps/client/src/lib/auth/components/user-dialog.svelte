@@ -18,6 +18,7 @@
 
 	let { user = null, open = $bindable(), onClose, onDelete }: Props = $props()
 
+	// svelte-ignore state_referenced_locally
 	const schema = user ? updateUserSchema : createUserSchema
 	const form = createForm({ schema })
 
@@ -83,7 +84,11 @@
 </script>
 
 <Dialog bind:open title={user ? "Editar usuario" : "Nuevo usuario"} class="max-w-xl">
-	<Form of={form} onsubmit={(output) => (user ? handleUpdate(output) : handleCreate(output))}>
+	<Form
+		of={form}
+		onsubmit={(output) =>
+			user ? handleUpdate(output as UpdateUserDto) : handleCreate(output as CreateUserDto)}
+	>
 		<div class="grid gap-4">
 			<Field of={form} path={["name"]}>
 				{#snippet children(field)}

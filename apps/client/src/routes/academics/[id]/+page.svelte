@@ -43,11 +43,16 @@
 
 	const academic = $derived(academicQuery.data)
 	const degreeSlots = $derived.by<
-		Array<Degree | { kind: (typeof DEGREE_KIND)[number]; isPlaceholder: true }>
+		Array<
+			| (Degree & { isPlaceholder: false })
+			| { kind: (typeof DEGREE_KIND)[number]; isPlaceholder: true }
+		>
 	>(() =>
 		DEGREE_KIND.map((kind) => {
 			const found = (degreesQuery.data ?? []).find((d) => d.kind === kind)
-			return found ?? { kind, isPlaceholder: true as const }
+			return found
+				? { ...found, isPlaceholder: false as const }
+				: { kind, isPlaceholder: true as const }
 		}),
 	)
 
@@ -352,13 +357,14 @@
 															Agregar
 														</button>
 													{:else}
-														<p class="text-[15px] font-medium text-[#1a1a1a]">{slot.name}</p>
+														{@const degree = slot as Degree}
+														<p class="text-[15px] font-medium text-[#1a1a1a]">{degree.name}</p>
 														<p class="mt-1 text-sm text-corp-gray">
-															{slot.university}
+															{degree.university}
 															<span class="mx-1.5 text-corp-gray/40">·</span>
-															{CountryValue.format(slot.countryCode)}
+															{CountryValue.format(degree.countryCode)}
 															<span class="mx-1.5 text-corp-gray/40">·</span>
-															{DateValue.formatDate(slot.obtainedAt)}
+															{DateValue.formatDate(degree.obtainedAt)}
 														</p>
 													{/if}
 												</div>

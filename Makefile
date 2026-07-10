@@ -41,7 +41,7 @@ fmt:
 
 lint:
 	cargo clippy --workspace --all-targets --all-features -- -D warnings
-	cd $(CLIENT) && pnpm run lint
+	cd $(CLIENT) && pnpm run lint && pnpm run check
 	pnpm dlx @google/design.md lint DESIGN.md
 
 migration:

@@ -6,7 +6,7 @@
 	import { categoryService } from "$lib/academic/categories/service"
 	import { toast } from "svelte-sonner"
 	import { ACADEMIC_PLANTA, PLANTA_LABELS } from "$lib/academic/academics/enums"
-	import { createCategorySchema } from "../dtos"
+	import { createCategorySchema, type CreateCategoryDto } from "../dtos"
 
 	interface Props {
 		open: boolean
@@ -24,7 +24,7 @@
 	const queryClient = useQueryClient()
 
 	const createCat = createMutation(() => ({
-		mutationFn: (output: { name: string; planta: string }) => categoryService.create(output),
+		mutationFn: (output: CreateCategoryDto) => categoryService.create(output),
 		onSuccess: () => {
 			void queryClient.invalidateQueries({ queryKey: ["admin", "categories"] })
 			toast.success("Categoría creada")

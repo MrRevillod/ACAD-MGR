@@ -6,7 +6,7 @@
 	import { optionService } from "$lib/academic/options/service"
 	import { categoryService } from "$lib/academic/categories/service"
 	import { toast } from "svelte-sonner"
-	import { createOptionSchema } from "../dtos"
+	import { createOptionSchema, type CreateOptionDto } from "../dtos"
 
 	interface Props {
 		open: boolean
@@ -24,8 +24,7 @@
 	const queryClient = useQueryClient()
 
 	const createOpt = createMutation(() => ({
-		mutationFn: (output: { categoryId: string; option: string; hours?: number | null }) =>
-			optionService.create(output),
+		mutationFn: (output: CreateOptionDto) => optionService.create(output),
 		onSuccess: () => {
 			void queryClient.invalidateQueries({ queryKey: ["admin", "options"] })
 			toast.success("Opción creada")
