@@ -61,11 +61,11 @@
 			<p class="text-sm text-[#1A1A1A]">No hay publicaciones sincronizadas.</p>
 			<p class="mt-1 max-w-sm text-xs text-corp-gray">
 				{#if academic.orcid}
-					Usa el botón "Sincronizar desde OpenAlex" para importar las publicaciones de este
-					académico.
+					Usa el botón "Sincronizar desde OpenAlex" para importar las publicaciones de
+					este académico.
 				{:else}
-					Este académico no tiene ORCID asociado, por lo que no se pueden importar publicaciones
-					automáticamente.
+					Este académico no tiene ORCID asociado, por lo que no se pueden importar
+					publicaciones automáticamente.
 				{/if}
 			</p>
 		</div>

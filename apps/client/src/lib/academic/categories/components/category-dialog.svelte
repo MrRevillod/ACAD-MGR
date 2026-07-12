@@ -45,7 +45,9 @@
 			<Field of={form} path={["name"]}>
 				{#snippet children(field)}
 					<label class="grid gap-1.5">
-						<span class="text-xs font-medium tracking-wide uppercase text-corp-gray">Nombre</span>
+						<span class="text-xs font-medium tracking-wide uppercase text-corp-gray"
+							>Nombre</span
+						>
 						<input
 							{...field.props}
 							value={field.input}
@@ -61,7 +63,9 @@
 			<Field of={form} path={["planta"]}>
 				{#snippet children(field)}
 					<label class="grid gap-1.5">
-						<span class="text-xs font-medium tracking-wide uppercase text-corp-gray">Planta</span>
+						<span class="text-xs font-medium tracking-wide uppercase text-corp-gray"
+							>Planta</span
+						>
 						<select
 							{...field.props}
 							value={field.input}

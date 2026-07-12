@@ -6,28 +6,28 @@ use sqlx::{FromRow, Type};
 #[serde(rename_all = "lowercase")]
 #[sqlx(type_name = "user_role", rename_all = "lowercase")]
 pub enum UserRole {
-    Admin,
+	Admin,
 }
 
 pub type UserId = Id<User>;
 
 #[derive(Debug, Clone, FromRow, Serialize)]
 pub struct User {
-    pub id: UserId,
-    pub name: String,
-    pub email: String,
-    pub role: UserRole,
-    pub password_hash: String,
+	pub id: UserId,
+	pub name: String,
+	pub email: String,
+	pub role: UserRole,
+	pub password_hash: String,
 }
 
 #[derive(Debug)]
 pub struct UserFilter {
-    pub search: Option<String>,
-    pub role: Option<UserRole>,
+	pub search: Option<String>,
+	pub role: Option<UserRole>,
 }
 
 impl Entity for User {
-    fn key_name() -> &'static str {
-        "user"
-    }
+	fn key_name() -> &'static str {
+		"user"
+	}
 }

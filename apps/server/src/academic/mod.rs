@@ -14,26 +14,26 @@ use sword::prelude::*;
 pub struct AcademicModule;
 
 impl Module for AcademicModule {
-    fn register_controllers(controllers: &ControllerRegistry) {
-        controllers.register::<AcademicCategoriesController>();
-        controllers.register::<AcademicCategoryOptionsController>();
-        controllers.register::<DegreesController>();
-        controllers.register::<AcademicsController>();
-    }
+	fn register_controllers(controllers: &ControllerRegistry) {
+		controllers.register::<AcademicCategoriesController>();
+		controllers.register::<AcademicCategoryOptionsController>();
+		controllers.register::<DegreesController>();
+		controllers.register::<AcademicsController>();
+	}
 
-    fn register_components(components: &ComponentRegistry) {
-        components.register::<AcademicCategoriesService>();
-        components.register::<AcademicCategoriesRepository>();
+	fn register_components(components: &ComponentRegistry) {
+		components.register::<AcademicCategoriesService>();
+		components.register::<AcademicCategoriesRepository>();
 
-        components.register::<AcademicCategoryOptionsService>();
-        components.register::<AcademicCategoryOptionsRepository>();
+		components.register::<AcademicCategoryOptionsService>();
+		components.register::<AcademicCategoryOptionsRepository>();
 
-        components.register::<DegreesService>();
-        components.register::<DegreesRepository>();
+		components.register::<DegreesService>();
+		components.register::<DegreesRepository>();
 
-        components.register::<AcademicsService>();
-        components.register::<AcademicsRepository>();
+		components.register::<AcademicsService>();
+		components.register::<AcademicsRepository>();
 
-        components.register::<ImportsService>();
-    }
+		components.register::<ImportsService>();
+	}
 }

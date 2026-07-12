@@ -7,17 +7,17 @@ pub type FacultyId = Id<Faculty>;
 
 #[derive(Debug, Clone, Serialize, FromRow, Builder)]
 pub struct Faculty {
-    #[builder(default = FacultyId::new())]
-    pub id: FacultyId,
-    pub name: String,
+	#[builder(default = FacultyId::new())]
+	pub id: FacultyId,
+	pub name: String,
 }
 
 pub struct FacultyFilter {
-    pub name: Option<String>,
+	pub name: Option<String>,
 }
 
 impl Entity for Faculty {
-    fn key_name() -> &'static str {
-        "faculty"
-    }
+	fn key_name() -> &'static str {
+		"faculty"
+	}
 }

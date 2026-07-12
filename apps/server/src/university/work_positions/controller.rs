@@ -7,24 +7,24 @@ use sword::web::*;
 
 #[controller(kind = ControllerKind::Web, path = "/work-positions")]
 pub struct WorkPositionsController {
-    positions: Arc<AcademicWorkPositionsService>,
+	positions: Arc<AcademicWorkPositionsService>,
 }
 
 impl WorkPositionsController {
-    #[get("/")]
-    pub async fn get_positions(&self, req: Request) -> WebResult<Vec<AcademicWorkPosition>> {
-        let query = req.query_validator::<GetWorkPositionsQuery>()?;
-        let positions = self.positions.find(query.unwrap_or_default()).await?;
+	#[get("/")]
+	pub async fn get_positions(&self, req: Request) -> WebResult<Vec<AcademicWorkPosition>> {
+		let query = req.query_validator::<GetWorkPositionsQuery>()?;
+		let positions = self.positions.find(query.unwrap_or_default()).await?;
 
-        Ok(positions)
-    }
+		Ok(positions)
+	}
 
-    #[post("/")]
-    #[interceptor(SessionCheck)]
-    pub async fn create_position(&self, req: Request) -> WebResult<AcademicWorkPosition> {
-        let input = req.body_validator::<CreateAcademicWorkPositionDto>()?;
-        let position = self.positions.create(input).await?;
+	#[post("/")]
+	#[interceptor(SessionCheck)]
+	pub async fn create_position(&self, req: Request) -> WebResult<AcademicWorkPosition> {
+		let input = req.body_validator::<CreateAcademicWorkPositionDto>()?;
+		let position = self.positions.create(input).await?;
 
-        Ok(position)
-    }
+		Ok(position)
+	}
 }

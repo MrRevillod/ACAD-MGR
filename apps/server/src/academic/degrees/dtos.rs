@@ -7,55 +7,55 @@ use validator::Validate;
 #[derive(Debug, Serialize, Deserialize, Validate)]
 #[serde(rename_all = "camelCase")]
 pub struct CreateDegreeDto {
-    pub academic_id: AcademicId,
+	pub academic_id: AcademicId,
 
-    #[validate(length(
-        min = 1,
-        max = 255,
-        message = "El nombre debe tener entre 1 y 255 caracteres"
-    ))]
-    pub name: String,
+	#[validate(length(
+		min = 1,
+		max = 255,
+		message = "El nombre debe tener entre 1 y 255 caracteres"
+	))]
+	pub name: String,
 
-    #[validate(length(
-        min = 1,
-        max = 255,
-        message = "La universidad debe tener entre 1 y 255 caracteres"
-    ))]
-    pub university: String,
+	#[validate(length(
+		min = 1,
+		max = 255,
+		message = "La universidad debe tener entre 1 y 255 caracteres"
+	))]
+	pub university: String,
 
-    pub obtained_at: NaiveDate,
-    pub kind: DegreeKind,
+	pub obtained_at: NaiveDate,
+	pub kind: DegreeKind,
 
-    #[validate(length(
-        min = 2,
-        max = 2,
-        message = "El código de país debe tener 2 caracteres"
-    ))]
-    pub country_code: String,
+	#[validate(length(
+		min = 2,
+		max = 2,
+		message = "El código de país debe tener 2 caracteres"
+	))]
+	pub country_code: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, Validate)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateDegreeDto {
-    #[validate(length(
-        min = 1,
-        max = 255,
-        message = "El nombre debe tener entre 1 y 255 caracteres"
-    ))]
-    pub name: Option<String>,
+	#[validate(length(
+		min = 1,
+		max = 255,
+		message = "El nombre debe tener entre 1 y 255 caracteres"
+	))]
+	pub name: Option<String>,
 
-    #[validate(length(
-        min = 1,
-        max = 255,
-        message = "La universidad debe tener entre 1 y 255 caracteres"
-    ))]
-    pub university: Option<String>,
-    pub obtained_at: Option<NaiveDate>,
+	#[validate(length(
+		min = 1,
+		max = 255,
+		message = "La universidad debe tener entre 1 y 255 caracteres"
+	))]
+	pub university: Option<String>,
+	pub obtained_at: Option<NaiveDate>,
 
-    #[validate(length(
-        min = 2,
-        max = 2,
-        message = "El código de país debe tener 2 caracteres"
-    ))]
-    pub country_code: Option<String>,
+	#[validate(length(
+		min = 2,
+		max = 2,
+		message = "El código de país debe tener 2 caracteres"
+	))]
+	pub country_code: Option<String>,
 }

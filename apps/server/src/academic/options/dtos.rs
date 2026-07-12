@@ -6,12 +6,12 @@ use validator::Validate;
 #[derive(Debug, Serialize, Deserialize, Validate)]
 #[serde(rename_all = "camelCase")]
 pub struct CreateCategoryOptionDto {
-    pub category_id: AcademicCategoryId,
-    pub option: AcademicOption,
-    pub hours: Option<f64>,
+	pub category_id: AcademicCategoryId,
+	pub option: AcademicOption,
+	pub hours: Option<f64>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Validate, Default)]
 pub struct GetCategoryOptionsQuery {
-    pub category_id: Option<AcademicCategoryId>,
+	pub category_id: Option<AcademicCategoryId>,
 }

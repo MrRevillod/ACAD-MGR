@@ -17,26 +17,26 @@ use sword::prelude::*;
 pub struct UniversityModule;
 
 impl Module for UniversityModule {
-    fn register_controllers(controllers: &ControllerRegistry) {
-        controllers.register::<CareersController>();
-        controllers.register::<DepartmentsController>();
-        controllers.register::<FacultiesController>();
-        controllers.register::<WorkPositionsController>();
-    }
+	fn register_controllers(controllers: &ControllerRegistry) {
+		controllers.register::<CareersController>();
+		controllers.register::<DepartmentsController>();
+		controllers.register::<FacultiesController>();
+		controllers.register::<WorkPositionsController>();
+	}
 
-    fn register_components(components: &ComponentRegistry) {
-        components.register::<FacultiesService>();
-        components.register::<FacultiesRepository>();
+	fn register_components(components: &ComponentRegistry) {
+		components.register::<FacultiesService>();
+		components.register::<FacultiesRepository>();
 
-        components.register::<DepartmentsService>();
-        components.register::<DepartmentsRepository>();
+		components.register::<DepartmentsService>();
+		components.register::<DepartmentsRepository>();
 
-        components.register::<CareersService>();
-        components.register::<CareersRepository>();
+		components.register::<CareersService>();
+		components.register::<CareersRepository>();
 
-        components.register::<AcademicWorkPositionsService>();
-        components.register::<AcademicWorkPositionsRepository>();
+		components.register::<AcademicWorkPositionsService>();
+		components.register::<AcademicWorkPositionsRepository>();
 
-        components.register::<CountriesRepository>();
-    }
+		components.register::<CountriesRepository>();
+	}
 }

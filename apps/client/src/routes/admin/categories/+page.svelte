@@ -36,7 +36,9 @@
 	<div class="mb-6 flex items-center justify-between">
 		<div>
 			<h1 class="text-lg font-semibold text-[#1A1A1A]">Categorías Académicas</h1>
-			<p class="mt-1 text-sm text-corp-gray">Gestiona las categorías académicas por planta.</p>
+			<p class="mt-1 text-sm text-corp-gray">
+				Gestiona las categorías académicas por planta.
+			</p>
 		</div>
 		<Button onclick={() => (showCreate = true)}>
 			<Plus class="size-4" />

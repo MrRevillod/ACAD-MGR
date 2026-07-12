@@ -58,7 +58,8 @@
 				<Field of={form} path={["names"]}>
 					{#snippet children(field)}
 						<label class="grid gap-1.5">
-							<span class="text-xs font-medium tracking-wide uppercase text-corp-gray">Nombres</span
+							<span class="text-xs font-medium tracking-wide uppercase text-corp-gray"
+								>Nombres</span
 							>
 							<input
 								{...field.props}
@@ -99,7 +100,9 @@
 				<Field of={form} path={["email"]}>
 					{#snippet children(field)}
 						<label class="grid gap-1.5">
-							<span class="text-xs font-medium tracking-wide uppercase text-corp-gray">Email</span>
+							<span class="text-xs font-medium tracking-wide uppercase text-corp-gray"
+								>Email</span
+							>
 							<input
 								{...field.props}
 								value={field.input ?? ""}
@@ -115,7 +118,9 @@
 				<Field of={form} path={["orcid"]}>
 					{#snippet children(field)}
 						<label class="grid gap-1.5">
-							<span class="text-xs font-medium tracking-wide uppercase text-corp-gray">ORCID</span>
+							<span class="text-xs font-medium tracking-wide uppercase text-corp-gray"
+								>ORCID</span
+							>
 							<input
 								{...field.props}
 								value={field.input ?? ""}
@@ -128,7 +133,9 @@
 				<Field of={form} path={["sex"]}>
 					{#snippet children(field)}
 						<label class="grid gap-1.5">
-							<span class="text-xs font-medium tracking-wide uppercase text-corp-gray">Sexo</span>
+							<span class="text-xs font-medium tracking-wide uppercase text-corp-gray"
+								>Sexo</span
+							>
 							<select
 								{...field.props}
 								value={field.input ?? ""}
@@ -159,7 +166,9 @@
 				<Field of={form} path={["city"]}>
 					{#snippet children(field)}
 						<label class="grid gap-1.5">
-							<span class="text-xs font-medium tracking-wide uppercase text-corp-gray">Ciudad</span>
+							<span class="text-xs font-medium tracking-wide uppercase text-corp-gray"
+								>Ciudad</span
+							>
 							<input
 								{...field.props}
 								value={field.input ?? ""}
@@ -193,7 +202,9 @@
 				<Field of={form} path={["jce"]}>
 					{#snippet children(field)}
 						<label class="grid gap-1.5">
-							<span class="text-xs font-medium tracking-wide uppercase text-corp-gray">JCE</span>
+							<span class="text-xs font-medium tracking-wide uppercase text-corp-gray"
+								>JCE</span
+							>
 							<input
 								{...field.props}
 								value={field.input ?? ""}

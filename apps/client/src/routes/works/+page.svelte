@@ -50,12 +50,15 @@
 				</div>
 			{:else if !worksQuery.data || worksQuery.data.length === 0}
 				<div class="flex flex-col items-center justify-center py-16 text-center">
-					<div class="mb-3 flex size-12 items-center justify-center rounded-full bg-corp-blue/5">
+					<div
+						class="mb-3 flex size-12 items-center justify-center rounded-full bg-corp-blue/5"
+					>
 						<BookOpen class="size-5 text-corp-blue/60" />
 					</div>
 					<p class="text-sm text-[#1A1A1A]">No se encontraron publicaciones.</p>
 					<p class="mt-1 max-w-sm text-xs text-corp-gray">
-						Ajusta los filtros o sincroniza publicaciones desde la página de un académico con ORCID.
+						Ajusta los filtros o sincroniza publicaciones desde la página de un
+						académico con ORCID.
 					</p>
 				</div>
 			{:else}

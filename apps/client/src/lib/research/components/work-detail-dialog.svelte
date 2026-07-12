@@ -52,7 +52,9 @@
 					{#if work.publicationYear}
 						<span class="text-sm text-corp-gray">
 							<span class="tabular-nums">{work.publicationYear}</span>
-							{#if work.publicationDate}· {DateValue.formatDate(work.publicationDate)}{/if}
+							{#if work.publicationDate}· {DateValue.formatDate(
+									work.publicationDate,
+								)}{/if}
 						</span>
 					{/if}
 					{#if work.isAccepted}
@@ -71,7 +73,9 @@
 					{/if}
 				</div>
 				<h2 class="mt-2 text-lg font-semibold text-[#1A1A1A]">{work.title}</h2>
-				<div class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-corp-gray">
+				<div
+					class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-corp-gray"
+				>
 					{#if work.doi}
 						<a
 							href={work.doi}
@@ -101,7 +105,9 @@
 					<h3 class="mb-2 text-xs font-semibold tracking-widest uppercase text-corp-blue">
 						Abstract
 					</h3>
-					<p class="text-pretty text-sm leading-relaxed text-[#1A1A1A]">{work.abstract}</p>
+					<p class="text-pretty text-sm leading-relaxed text-[#1A1A1A]">
+						{work.abstract}
+					</p>
 				</div>
 			{/if}
 
@@ -166,7 +172,9 @@
 								{#if auth.affiliations.length > 0}
 									<ul class="mt-2 space-y-1">
 										{#each auth.affiliations as aff, i (i)}
-											<li class="flex items-start gap-1.5 text-xs text-corp-gray">
+											<li
+												class="flex items-start gap-1.5 text-xs text-corp-gray"
+											>
 												<Building2 class="mt-0.5 size-3 shrink-0" />
 												<span>{aff}</span>
 											</li>

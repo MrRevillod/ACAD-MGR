@@ -125,7 +125,9 @@
 				<Field of={form} path={["rut"]}>
 					{#snippet children(field)}
 						<label class="grid gap-1.5">
-							<span class="text-xs font-medium tracking-wide uppercase text-corp-gray">RUT</span>
+							<span class="text-xs font-medium tracking-wide uppercase text-corp-gray"
+								>RUT</span
+							>
 							<input
 								{...field.props}
 								value={field.input}
@@ -141,7 +143,9 @@
 				<Field of={form} path={["email"]}>
 					{#snippet children(field)}
 						<label class="grid gap-1.5">
-							<span class="text-xs font-medium tracking-wide uppercase text-corp-gray">Email</span>
+							<span class="text-xs font-medium tracking-wide uppercase text-corp-gray"
+								>Email</span
+							>
 							<input
 								{...field.props}
 								value={field.input}
@@ -160,7 +164,8 @@
 				<Field of={form} path={["names"]}>
 					{#snippet children(field)}
 						<label class="grid gap-1.5">
-							<span class="text-xs font-medium tracking-wide uppercase text-corp-gray">Nombres</span
+							<span class="text-xs font-medium tracking-wide uppercase text-corp-gray"
+								>Nombres</span
 							>
 							<input
 								{...field.props}
@@ -213,7 +218,9 @@
 				<Field of={form} path={["sex"]}>
 					{#snippet children(field)}
 						<label class="grid gap-1.5">
-							<span class="text-xs font-medium tracking-wide uppercase text-corp-gray">Sexo</span>
+							<span class="text-xs font-medium tracking-wide uppercase text-corp-gray"
+								>Sexo</span
+							>
 							<select
 								{...field.props}
 								value={field.input}
@@ -232,7 +239,9 @@
 				<Field of={form} path={["orcid"]}>
 					{#snippet children(field)}
 						<label class="grid gap-1.5">
-							<span class="text-xs font-medium tracking-wide uppercase text-corp-gray">ORCID</span>
+							<span class="text-xs font-medium tracking-wide uppercase text-corp-gray"
+								>ORCID</span
+							>
 							<input
 								{...field.props}
 								value={field.input ?? ""}
@@ -316,7 +325,9 @@
 				<Field of={form} path={["workPositionId"]}>
 					{#snippet children(field)}
 						<label class="grid gap-1.5">
-							<span class="text-xs font-medium tracking-wide uppercase text-corp-gray">Cargo</span>
+							<span class="text-xs font-medium tracking-wide uppercase text-corp-gray"
+								>Cargo</span
+							>
 							<select
 								{...field.props}
 								value={field.input}
@@ -339,7 +350,8 @@
 				<Field of={form} path={["careerId"]}>
 					{#snippet children(field)}
 						<label class="grid gap-1.5">
-							<span class="text-xs font-medium tracking-wide uppercase text-corp-gray">Carrera</span
+							<span class="text-xs font-medium tracking-wide uppercase text-corp-gray"
+								>Carrera</span
 							>
 							<select
 								{...field.props}
@@ -380,7 +392,9 @@
 
 			<div class="grid grid-cols-2 gap-4">
 				<div class="grid gap-1.5">
-					<span class="text-xs font-medium tracking-wide uppercase text-corp-gray">Categoría</span>
+					<span class="text-xs font-medium tracking-wide uppercase text-corp-gray"
+						>Categoría</span
+					>
 					<select
 						bind:value={selectedCategoryId}
 						class="h-10 w-full rounded-lg border {selectedCategoryError
@@ -399,7 +413,9 @@
 				<Field of={form} path={["acadCategoryOptionsId"]}>
 					{#snippet children(field)}
 						<label class="grid gap-1.5">
-							<span class="text-xs font-medium tracking-wide uppercase text-corp-gray">Opción</span>
+							<span class="text-xs font-medium tracking-wide uppercase text-corp-gray"
+								>Opción</span
+							>
 							<select
 								{...field.props}
 								value={field.input}
@@ -413,9 +429,11 @@
 								</option>
 								{#each options as o (o.id)}
 									{@const catLabel =
-										categories.find((c) => c.id === o.categoryId)?.name ?? o.categoryId}
+										categories.find((c) => c.id === o.categoryId)?.name ??
+										o.categoryId}
 									<option value={o.id}>
-										{catLabel} · {ACADEMIC_OPTION_LABELS[o.option]}{o.hours != null
+										{catLabel} · {ACADEMIC_OPTION_LABELS[o.option]}{o.hours !=
+										null
 											? ` · ${o.hours} hrs`
 											: ""}
 									</option>
@@ -433,7 +451,9 @@
 				<Field of={form} path={["jce"]}>
 					{#snippet children(field)}
 						<label class="grid gap-1.5">
-							<span class="text-xs font-medium tracking-wide uppercase text-corp-gray">JCE</span>
+							<span class="text-xs font-medium tracking-wide uppercase text-corp-gray"
+								>JCE</span
+							>
 							<input
 								{...field.props}
 								value={field.input ?? ""}
@@ -474,7 +494,9 @@
 			<Field of={form} path={["city"]}>
 				{#snippet children(field)}
 					<label class="grid gap-1.5">
-						<span class="text-xs font-medium tracking-wide uppercase text-corp-gray">Ciudad</span>
+						<span class="text-xs font-medium tracking-wide uppercase text-corp-gray"
+							>Ciudad</span
+						>
 						<input
 							{...field.props}
 							value={field.input}

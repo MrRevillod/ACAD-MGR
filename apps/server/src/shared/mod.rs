@@ -7,11 +7,11 @@ mod logger;
 mod seeder;
 
 mod value_objects {
-    mod cl_float;
-    pub use cl_float::CLf64;
+	mod cl_float;
+	pub use cl_float::CLf64;
 
-    mod country;
-    pub use country::Country;
+	mod country;
+	pub use country::Country;
 }
 
 use std::sync::Arc;
@@ -34,20 +34,20 @@ use crate::shared::seeder::SeederData;
 pub struct SharedModule;
 
 impl Module for SharedModule {
-    async fn register_providers(config: &Config, providers: &ProviderRegistry) {
-        let db_config = config.expect::<DatabaseConfig>();
-        let database = Database::new(db_config).await;
+	async fn register_providers(config: &Config, providers: &ProviderRegistry) {
+		let db_config = config.expect::<DatabaseConfig>();
+		let database = Database::new(db_config).await;
 
-        let seeder_data = config.expect::<SeederData>();
-        let seeder = DatabaseSeeder::new(Arc::new(database.clone()), seeder_data);
+		let seeder_data = config.expect::<SeederData>();
+		let seeder = DatabaseSeeder::new(Arc::new(database.clone()), seeder_data);
 
-        seeder.seed().await;
+		seeder.seed().await;
 
-        providers.register(database);
-    }
+		providers.register(database);
+	}
 
-    fn register_components(components: &ComponentRegistry) {
-        components.register::<TransactionManager>();
-        components.register::<JsonWebTokenService>();
-    }
+	fn register_components(components: &ComponentRegistry) {
+		components.register::<TransactionManager>();
+		components.register::<JsonWebTokenService>();
+	}
 }

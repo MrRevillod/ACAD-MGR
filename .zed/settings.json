@@ -42,6 +42,7 @@
 		},
 		"JSON": {
 			"formatter": "prettier",
+			"tab_size": 4
 		},
 		"TOML": {
 			"formatter": "language_server",

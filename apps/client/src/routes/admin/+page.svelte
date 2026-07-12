@@ -44,7 +44,9 @@
 			>
 				<Tags class="size-5" />
 			</div>
-			<p class="mt-3 text-lg font-semibold text-[#1A1A1A]">{categoriesQuery.data?.length ?? "—"}</p>
+			<p class="mt-3 text-lg font-semibold text-[#1A1A1A]">
+				{categoriesQuery.data?.length ?? "—"}
+			</p>
 			<p class="text-xs font-medium tracking-wide uppercase text-corp-gray">Categorías</p>
 		</a>
 
@@ -57,7 +59,9 @@
 			>
 				<ListOrdered class="size-5" />
 			</div>
-			<p class="mt-3 text-lg font-semibold text-[#1A1A1A]">{optionsQuery.data?.length ?? "—"}</p>
+			<p class="mt-3 text-lg font-semibold text-[#1A1A1A]">
+				{optionsQuery.data?.length ?? "—"}
+			</p>
 			<p class="text-xs font-medium tracking-wide uppercase text-corp-gray">Opciones</p>
 		</a>
 
@@ -70,7 +74,9 @@
 			>
 				<Briefcase class="size-5" />
 			</div>
-			<p class="mt-3 text-lg font-semibold text-[#1A1A1A]">{positionsQuery.data?.length ?? "—"}</p>
+			<p class="mt-3 text-lg font-semibold text-[#1A1A1A]">
+				{positionsQuery.data?.length ?? "—"}
+			</p>
 			<p class="text-xs font-medium tracking-wide uppercase text-corp-gray">Cargos</p>
 		</a>
 
@@ -83,7 +89,9 @@
 			>
 				<GraduationCap class="size-5" />
 			</div>
-			<p class="mt-3 text-lg font-semibold text-[#1A1A1A]">{academicsQuery.data?.length ?? "—"}</p>
+			<p class="mt-3 text-lg font-semibold text-[#1A1A1A]">
+				{academicsQuery.data?.length ?? "—"}
+			</p>
 			<p class="text-xs font-medium tracking-wide uppercase text-corp-gray">Académicos</p>
 		</a>
 
@@ -96,7 +104,9 @@
 			>
 				<Users class="size-5" />
 			</div>
-			<p class="mt-3 text-lg font-semibold text-[#1A1A1A]">{usersQuery.data?.length ?? "—"}</p>
+			<p class="mt-3 text-lg font-semibold text-[#1A1A1A]">
+				{usersQuery.data?.length ?? "—"}
+			</p>
 			<p class="text-xs font-medium tracking-wide uppercase text-corp-gray">Usuarios</p>
 		</a>
 	</div>

@@ -11,271 +11,271 @@ use validator::Validate;
 
 #[injectable]
 pub struct ImportsService {
-    tx: Arc<TransactionManager>,
-    academics: Arc<AcademicsRepository>,
-    degrees: Arc<DegreesRepository>,
-    departments: Arc<DepartmentsRepository>,
-    careers: Arc<CareersRepository>,
-    work_positions: Arc<AcademicWorkPositionsRepository>,
-    category_options: Arc<AcademicCategoryOptionsRepository>,
-    countries: Arc<CountriesRepository>,
-    categories: Arc<AcademicCategoriesRepository>,
+	tx: Arc<TransactionManager>,
+	academics: Arc<AcademicsRepository>,
+	degrees: Arc<DegreesRepository>,
+	departments: Arc<DepartmentsRepository>,
+	careers: Arc<CareersRepository>,
+	work_positions: Arc<AcademicWorkPositionsRepository>,
+	category_options: Arc<AcademicCategoryOptionsRepository>,
+	countries: Arc<CountriesRepository>,
+	categories: Arc<AcademicCategoriesRepository>,
 }
 
 impl ImportsService {
-    pub async fn process(&self, file_path: &PathBuf) -> AppResult<ImportResult> {
-        let mut reader = csv::ReaderBuilder::new()
-            .has_headers(true)
-            .trim(csv::Trim::All)
-            .from_path(file_path)?;
+	pub async fn process(&self, file_path: &PathBuf) -> AppResult<ImportResult> {
+		let mut reader = csv::ReaderBuilder::new()
+			.has_headers(true)
+			.trim(csv::Trim::All)
+			.from_path(file_path)?;
 
-        let headers = reader.headers()?.clone();
-        let mut imported = 0usize;
-        let mut errors = Vec::new();
+		let headers = reader.headers()?.clone();
+		let mut imported = 0usize;
+		let mut errors = Vec::new();
 
-        for (row_idx, result) in reader.records().enumerate() {
-            let row_num = row_idx + 2;
+		for (row_idx, result) in reader.records().enumerate() {
+			let row_num = row_idx + 2;
 
-            let Ok(record) = result else {
-                let err = result.err().unwrap();
-                let row_err = ImportRowError {
-                    row: row_num,
-                    reasons: vec![format!("Error de lectura en la fila: {err}")],
-                };
+			let Ok(record) = result else {
+				let err = result.err().unwrap();
+				let row_err = ImportRowError {
+					row: row_num,
+					reasons: vec![format!("Error de lectura en la fila: {err}")],
+				};
 
-                errors.push(row_err);
+				errors.push(row_err);
 
-                continue;
-            };
+				continue;
+			};
 
-            if record.get(0).is_none_or(|v| v.trim().is_empty()) {
-                continue;
-            }
+			if record.get(0).is_none_or(|v| v.trim().is_empty()) {
+				continue;
+			}
 
-            let deserialization_result =
-                record.deserialize::<'_, AcademicImportRowDto>(Some(&headers));
+			let deserialization_result =
+				record.deserialize::<'_, AcademicImportRowDto>(Some(&headers));
 
-            let Ok(input) = deserialization_result else {
-                let err = deserialization_result.err().unwrap();
-                let row_err = ImportRowError {
-                    row: row_num,
-                    reasons: vec![format!("Error de formato en la fila: {err}")],
-                };
+			let Ok(input) = deserialization_result else {
+				let err = deserialization_result.err().unwrap();
+				let row_err = ImportRowError {
+					row: row_num,
+					reasons: vec![format!("Error de formato en la fila: {err}")],
+				};
 
-                errors.push(row_err);
+				errors.push(row_err);
 
-                continue;
-            };
+				continue;
+			};
 
-            if let Err(validation_errors) = input.validate() {
-                errors.push(ImportRowError::from_validation(row_num, &validation_errors));
-                continue;
-            }
+			if let Err(validation_errors) = input.validate() {
+				errors.push(ImportRowError::from_validation(row_num, &validation_errors));
+				continue;
+			}
 
-            let mut tx = self.tx.begin().await?;
+			let mut tx = self.tx.begin().await?;
 
-            match self.process_row(&input, &mut tx).await {
-                Ok(()) => {
-                    tx.commit().await?;
-                    imported += 1;
-                }
-                Err(e) => {
-                    tx.rollback().await?;
-                    errors.push(ImportRowError {
-                        row: row_num,
-                        reasons: vec![e.to_string()],
-                    });
-                }
-            }
-        }
+			match self.process_row(&input, &mut tx).await {
+				Ok(()) => {
+					tx.commit().await?;
+					imported += 1;
+				}
+				Err(e) => {
+					tx.rollback().await?;
+					errors.push(ImportRowError {
+						row: row_num,
+						reasons: vec![e.to_string()],
+					});
+				}
+			}
+		}
 
-        Ok(ImportResult { imported, errors })
-    }
+		Ok(ImportResult { imported, errors })
+	}
 
-    async fn process_row(&self, input: &AcademicImportRowDto, tx: &mut Tx<'_>) -> AppResult<()> {
-        let Some(department) = self
-            .departments
-            .find_by_name(&input.department_name)
-            .await?
-        else {
-            return Err(UniversityError::DepartmentNotFound)?;
-        };
+	async fn process_row(&self, input: &AcademicImportRowDto, tx: &mut Tx<'_>) -> AppResult<()> {
+		let Some(department) = self
+			.departments
+			.find_by_name(&input.department_name)
+			.await?
+		else {
+			return Err(UniversityError::DepartmentNotFound)?;
+		};
 
-        let career_id = match &input.career_name {
-            Some(name) if !name.trim().is_empty() => {
-                self.careers.find_by_name(name).await?.map(|c| c.id)
-            }
-            _ => None,
-        };
+		let career_id = match &input.career_name {
+			Some(name) if !name.trim().is_empty() => {
+				self.careers.find_by_name(name).await?.map(|c| c.id)
+			}
+			_ => None,
+		};
 
-        let Some(work_position_id) = self
-            .work_positions
-            .find_by_name(&input.work_position_name)
-            .await?
-            .map(|wp| wp.id)
-        else {
-            return Err(UniversityError::WorkPositionNotFound)?;
-        };
+		let Some(work_position_id) = self
+			.work_positions
+			.find_by_name(&input.work_position_name)
+			.await?
+			.map(|wp| wp.id)
+		else {
+			return Err(UniversityError::WorkPositionNotFound)?;
+		};
 
-        let option = AcademicOption::from(&input.option);
+		let option = AcademicOption::from(&input.option);
 
-        let category_option_filter = AcademicCategoryOptionFilter {
-            category_name: Some(input.category_name.clone()),
-            option: Some(option),
-            ..Default::default()
-        };
+		let category_option_filter = AcademicCategoryOptionFilter {
+			category_name: Some(input.category_name.clone()),
+			option: Some(option),
+			..Default::default()
+		};
 
-        let Some(category_option) = self
-            .category_options
-            .find_one(category_option_filter)
-            .await?
-        else {
-            return Err(AcademicError::CategoryOptionNotFound)?;
-        };
+		let Some(category_option) = self
+			.category_options
+			.find_one(category_option_filter)
+			.await?
+		else {
+			return Err(AcademicError::CategoryOptionNotFound)?;
+		};
 
-        if let Some(expected_hours) = category_option.hours
-            && expected_hours != *input.acad_category_hours
-        {
-            return Err(AcademicError::CategoryOptionHoursMismatch)?;
-        }
+		if let Some(expected_hours) = category_option.hours
+			&& expected_hours != *input.acad_category_hours
+		{
+			return Err(AcademicError::CategoryOptionHoursMismatch)?;
+		}
 
-        let Some(category) = self
-            .categories
-            .find_by_id(&category_option.category_id)
-            .await?
-        else {
-            return Err(AcademicError::CategoryNotFound)?;
-        };
+		let Some(category) = self
+			.categories
+			.find_by_id(&category_option.category_id)
+			.await?
+		else {
+			return Err(AcademicError::CategoryNotFound)?;
+		};
 
-        if category.name != input.category_name {
-            return Err(AcademicError::CategoryOptionCategoryMismatch)?;
-        }
+		if category.name != input.category_name {
+			return Err(AcademicError::CategoryOptionCategoryMismatch)?;
+		}
 
-        if category.planta != AcademicPlanta::from(&input.planta) {
-            return Err(AcademicError::CategoryPlantaMismatch)?;
-        }
+		if category.planta != AcademicPlanta::from(&input.planta) {
+			return Err(AcademicError::CategoryPlantaMismatch)?;
+		}
 
-        let category_option_id = category_option.id;
-        let nationality_code = input.nationality_country.code.clone();
+		let category_option_id = category_option.id;
+		let nationality_code = input.nationality_country.code.clone();
 
-        tracing::info!("Processing nationality code: {}", nationality_code);
+		tracing::info!("Processing nationality code: {}", nationality_code);
 
-        let Some(_) = self.countries.find_by_code(&nationality_code).await? else {
-            return Err(UniversityError::CountryNotFound(nationality_code))?;
-        };
+		let Some(_) = self.countries.find_by_code(&nationality_code).await? else {
+			return Err(UniversityError::CountryNotFound(nationality_code))?;
+		};
 
-        let orcid = input
-            .orcid
-            .as_deref()
-            .filter(|o| !o.trim().is_empty() && *o != "-")
-            .map(normalize_orcid);
+		let orcid = input
+			.orcid
+			.as_deref()
+			.filter(|o| !o.trim().is_empty() && *o != "-")
+			.map(normalize_orcid);
 
-        let academic = Academic::builder()
-            .rut(input.rut.clone())
-            .names(input.names.clone())
-            .paternal_surname(input.paternal_surname.clone())
-            .maternal_surname(input.maternal_surname.clone())
-            .email(input.email.clone())
-            .maybe_orcid(orcid)
-            .sex(input.sex)
-            .birth_date(input.birth_date)
-            .joined_at(input.joined_at)
-            .work_position_id(work_position_id)
-            .department_id(department.id)
-            .maybe_career_id(career_id)
-            .jce(*input.jce)
-            .acad_category_options_id(category_option_id)
-            .annual_discount_hours(*input.annual_discount_hours)
-            .nationality_code(nationality_code)
-            .city(input.city.clone())
-            .build();
+		let academic = Academic::builder()
+			.rut(input.rut.clone())
+			.names(input.names.clone())
+			.paternal_surname(input.paternal_surname.clone())
+			.maternal_surname(input.maternal_surname.clone())
+			.email(input.email.clone())
+			.maybe_orcid(orcid)
+			.sex(input.sex)
+			.birth_date(input.birth_date)
+			.joined_at(input.joined_at)
+			.work_position_id(work_position_id)
+			.department_id(department.id)
+			.maybe_career_id(career_id)
+			.jce(*input.jce)
+			.acad_category_options_id(category_option_id)
+			.annual_discount_hours(*input.annual_discount_hours)
+			.nationality_code(nationality_code)
+			.city(input.city.clone())
+			.build();
 
-        self.academics.save_tx(tx, &academic).await?;
+		self.academics.save_tx(tx, &academic).await?;
 
-        let degree_1_country_code = input.degree_1_country.as_ref().map(|c| c.code.as_str());
-        let degree_2_country_code = input.degree_2_country.as_ref().map(|c| c.code.as_str());
+		let degree_1_country_code = input.degree_1_country.as_ref().map(|c| c.code.as_str());
+		let degree_2_country_code = input.degree_2_country.as_ref().map(|c| c.code.as_str());
 
-        self.save_degree(
-            tx,
-            &academic.id,
-            &input.degree_1_name,
-            &input.degree_1_university,
-            input.degree_1_date,
-            degree_1_country_code,
-            DegreeKind::Base,
-        )
-        .await?;
+		self.save_degree(
+			tx,
+			&academic.id,
+			&input.degree_1_name,
+			&input.degree_1_university,
+			input.degree_1_date,
+			degree_1_country_code,
+			DegreeKind::Base,
+		)
+		.await?;
 
-        self.save_degree(
-            tx,
-            &academic.id,
-            &input.degree_2_name,
-            &input.degree_2_university,
-            input.degree_2_date,
-            degree_2_country_code,
-            DegreeKind::Advanced,
-        )
-        .await?;
+		self.save_degree(
+			tx,
+			&academic.id,
+			&input.degree_2_name,
+			&input.degree_2_university,
+			input.degree_2_date,
+			degree_2_country_code,
+			DegreeKind::Advanced,
+		)
+		.await?;
 
-        Ok(())
-    }
+		Ok(())
+	}
 
-    #[allow(clippy::too_many_arguments)]
-    async fn save_degree(
-        &self,
-        tx: &mut Tx<'_>,
-        academic_id: &AcademicId,
-        name: &Option<String>,
-        university: &Option<String>,
-        obtained_at: Option<NaiveDate>,
-        country_code: Option<&str>,
-        kind: DegreeKind,
-    ) -> AppResult<()> {
-        let name = name.as_deref().map(|s| s.trim()).unwrap_or("");
-        if name.is_empty() {
-            return Ok(());
-        }
+	#[allow(clippy::too_many_arguments)]
+	async fn save_degree(
+		&self,
+		tx: &mut Tx<'_>,
+		academic_id: &AcademicId,
+		name: &Option<String>,
+		university: &Option<String>,
+		obtained_at: Option<NaiveDate>,
+		country_code: Option<&str>,
+		kind: DegreeKind,
+	) -> AppResult<()> {
+		let name = name.as_deref().map(|s| s.trim()).unwrap_or("");
+		if name.is_empty() {
+			return Ok(());
+		}
 
-        let university = university.as_deref().map(|s| s.trim()).unwrap_or("");
-        if university.is_empty() {
-            return Ok(());
-        }
+		let university = university.as_deref().map(|s| s.trim()).unwrap_or("");
+		if university.is_empty() {
+			return Ok(());
+		}
 
-        let Some(obtained_at) = obtained_at else {
-            return Ok(());
-        };
+		let Some(obtained_at) = obtained_at else {
+			return Ok(());
+		};
 
-        let Some(country_code) = country_code.filter(|c| !c.trim().is_empty()) else {
-            return Ok(());
-        };
+		let Some(country_code) = country_code.filter(|c| !c.trim().is_empty()) else {
+			return Ok(());
+		};
 
-        let degree = Degree::builder()
-            .academic_id(*academic_id)
-            .name(name.to_string())
-            .university(university.to_string())
-            .obtained_at(obtained_at)
-            .kind(kind)
-            .country_code(country_code.to_string())
-            .build();
+		let degree = Degree::builder()
+			.academic_id(*academic_id)
+			.name(name.to_string())
+			.university(university.to_string())
+			.obtained_at(obtained_at)
+			.kind(kind)
+			.country_code(country_code.to_string())
+			.build();
 
-        self.degrees.save_tx(tx, &degree).await?;
+		self.degrees.save_tx(tx, &degree).await?;
 
-        Ok(())
-    }
+		Ok(())
+	}
 
-    pub async fn save_temp_csv(&self, path: &PathBuf, content: &[u8]) -> AppResult<()> {
-        tokio::fs::write(&path, content)
-            .await
-            .map_err(AppError::from)?;
+	pub async fn save_temp_csv(&self, path: &PathBuf, content: &[u8]) -> AppResult<()> {
+		tokio::fs::write(&path, content)
+			.await
+			.map_err(AppError::from)?;
 
-        Ok(())
-    }
+		Ok(())
+	}
 
-    pub async fn delete_temp_csv(&self, path: &PathBuf) -> AppResult<()> {
-        tokio::fs::remove_file(&path)
-            .await
-            .map_err(AppError::from)?;
+	pub async fn delete_temp_csv(&self, path: &PathBuf) -> AppResult<()> {
+		tokio::fs::remove_file(&path)
+			.await
+			.map_err(AppError::from)?;
 
-        Ok(())
-    }
+		Ok(())
+	}
 }

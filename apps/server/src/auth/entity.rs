@@ -1,6 +1,6 @@
 use crate::{
-    auth::UserId,
-    shared::{Entity, Id},
+	auth::UserId,
+	shared::{Entity, Id},
 };
 
 use chrono::{DateTime, Utc};
@@ -11,25 +11,25 @@ pub type SessionId = Id<Session>;
 
 #[derive(Debug, Serialize, Deserialize, FromRow)]
 pub struct Session {
-    pub id: SessionId,
-    pub user_id: UserId,
-    pub refresh_token_hash: String,
-    pub created_at: DateTime<Utc>,
-    pub expires_at: DateTime<Utc>,
-    pub refresh_expires_at: DateTime<Utc>,
-    pub revoked_at: Option<DateTime<Utc>>,
+	pub id: SessionId,
+	pub user_id: UserId,
+	pub refresh_token_hash: String,
+	pub created_at: DateTime<Utc>,
+	pub expires_at: DateTime<Utc>,
+	pub refresh_expires_at: DateTime<Utc>,
+	pub revoked_at: Option<DateTime<Utc>>,
 }
 
 impl Entity for Session {
-    fn key_name() -> &'static str {
-        "session"
-    }
+	fn key_name() -> &'static str {
+		"session"
+	}
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SessionClaims {
-    pub session_id: SessionId,
-    pub user_id: UserId,
-    pub exp: i64,
-    pub typ: String,
+	pub session_id: SessionId,
+	pub user_id: UserId,
+	pub exp: i64,
+	pub typ: String,
 }

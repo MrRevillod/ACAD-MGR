@@ -72,8 +72,12 @@ const textField = (msg: string) => v.pipe(v.string(), v.minLength(1, msg), v.max
 
 export const updateAcademicSchema = v.object({
 	names: v.optional(textField("Los nombres deben tener entre 1 y 255 caracteres")),
-	paternalSurname: v.optional(textField("El apellido paterno debe tener entre 1 y 255 caracteres")),
-	maternalSurname: v.optional(textField("El apellido materno debe tener entre 1 y 255 caracteres")),
+	paternalSurname: v.optional(
+		textField("El apellido paterno debe tener entre 1 y 255 caracteres"),
+	),
+	maternalSurname: v.optional(
+		textField("El apellido materno debe tener entre 1 y 255 caracteres"),
+	),
 	email: v.optional(v.pipe(v.string(), v.email("El email debe ser válido"))),
 	orcid: v.optional(
 		v.nullable(

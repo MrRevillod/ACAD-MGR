@@ -35,7 +35,9 @@
 <section class="w-full max-w-md rounded-xl border border-corp-gray/20 bg-white px-6 py-8">
 	<div class="mb-8 text-center">
 		<h1 class="text-lg font-semibold text-[#1A1A1A]">Iniciar sesión</h1>
-		<p class="mt-1 text-sm text-corp-gray">Ingresa a la web de Administración de la Plataforma.</p>
+		<p class="mt-1 text-sm text-corp-gray">
+			Ingresa a la web de Administración de la Plataforma.
+		</p>
 	</div>
 
 	<Form of={form} onsubmit={(output) => loginMutation.mutate(output)}>

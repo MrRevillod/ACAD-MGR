@@ -43,12 +43,18 @@
 	])
 
 	const fieldItems = $derived([
-		{ value: "", label: filters.domainId ? "Todos los campos" : "Selecciona un dominio primero" },
+		{
+			value: "",
+			label: filters.domainId ? "Todos los campos" : "Selecciona un dominio primero",
+		},
 		...(fieldsQuery.data?.map((f) => ({ value: f.id, label: f.name })) ?? []),
 	])
 
 	const subfieldItems = $derived([
-		{ value: "", label: filters.fieldId ? "Todos los subcampos" : "Selecciona un campo primero" },
+		{
+			value: "",
+			label: filters.fieldId ? "Todos los subcampos" : "Selecciona un campo primero",
+		},
 		...(subfieldsQuery.data?.map((s) => ({ value: s.id, label: s.name })) ?? []),
 	])
 
@@ -158,7 +164,9 @@
 				max="1"
 				bind:value={topicMinScoreValue}
 				oninput={() =>
-					(filters.topicMinScore = topicMinScoreValue ? Number(topicMinScoreValue) : undefined)}
+					(filters.topicMinScore = topicMinScoreValue
+						? Number(topicMinScoreValue)
+						: undefined)}
 				placeholder="0.0 – 1.0"
 				class="h-10 w-full rounded-lg border border-corp-gray/20 bg-white px-3 text-sm tabular-nums text-[#1A1A1A] outline-none transition-colors placeholder:text-corp-gray/50 focus:border-corp-blue/50 focus:ring-2 focus:ring-corp-blue/10"
 			/>
@@ -181,7 +189,8 @@
 					min="1900"
 					max="2100"
 					bind:value={yearFromValue}
-					oninput={() => (filters.yearFrom = yearFromValue ? Number(yearFromValue) : undefined)}
+					oninput={() =>
+						(filters.yearFrom = yearFromValue ? Number(yearFromValue) : undefined)}
 					placeholder="1900"
 					class="h-10 w-full rounded-lg border border-corp-gray/20 bg-white px-3 text-sm tabular-nums text-[#1A1A1A] outline-none transition-colors placeholder:text-corp-gray/50 focus:border-corp-blue/50 focus:ring-2 focus:ring-corp-blue/10"
 				/>

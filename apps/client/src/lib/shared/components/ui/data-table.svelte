@@ -156,7 +156,8 @@
 				</button>
 				{#each { length: Math.min(table.getPageCount(), 7) } as _, i (i)}
 					{@const pageNum =
-						Math.max(0, Math.min(pagination.pageIndex - 3, table.getPageCount() - 7)) + i}
+						Math.max(0, Math.min(pagination.pageIndex - 3, table.getPageCount() - 7)) +
+						i}
 					{#if pageNum < table.getPageCount()}
 						<button
 							class="flex size-8 items-center justify-center rounded-lg text-sm transition-colors {pageNum ===

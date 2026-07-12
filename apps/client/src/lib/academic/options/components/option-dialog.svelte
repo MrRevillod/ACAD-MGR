@@ -52,7 +52,8 @@
 			<Field of={form} path={["categoryId"]}>
 				{#snippet children(field)}
 					<label class="grid gap-1.5">
-						<span class="text-xs font-medium tracking-wide uppercase text-corp-gray">Categoría</span
+						<span class="text-xs font-medium tracking-wide uppercase text-corp-gray"
+							>Categoría</span
 						>
 						<select
 							{...field.props}
@@ -73,7 +74,9 @@
 			<Field of={form} path={["option"]}>
 				{#snippet children(field)}
 					<label class="grid gap-1.5">
-						<span class="text-xs font-medium tracking-wide uppercase text-corp-gray">Opción</span>
+						<span class="text-xs font-medium tracking-wide uppercase text-corp-gray"
+							>Opción</span
+						>
 						<select
 							{...field.props}
 							value={field.input}
@@ -88,7 +91,9 @@
 			<Field of={form} path={["hours"]}>
 				{#snippet children(field)}
 					<label class="grid gap-1.5">
-						<span class="text-xs font-medium tracking-wide uppercase text-corp-gray">Horas</span>
+						<span class="text-xs font-medium tracking-wide uppercase text-corp-gray"
+							>Horas</span
+						>
 						<input
 							{...field.props}
 							value={field.input ?? ""}

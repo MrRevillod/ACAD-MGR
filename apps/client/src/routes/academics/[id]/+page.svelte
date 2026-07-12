@@ -61,7 +61,9 @@
 	)
 
 	const initials = $derived(
-		academic ? (academic.names.charAt(0) + academic.paternalSurname.charAt(0)).toUpperCase() : "",
+		academic
+			? (academic.names.charAt(0) + academic.paternalSurname.charAt(0)).toUpperCase()
+			: "",
 	)
 
 	let showDegreeDialog = $state(false)
@@ -133,19 +135,27 @@
 					<div class="border-t border-white/10 px-6 py-4">
 						<div class="space-y-4">
 							<div>
-								<p class="text-[11px] font-medium tracking-wide uppercase text-white/50">
+								<p
+									class="text-[11px] font-medium tracking-wide uppercase text-white/50"
+								>
 									País de Nacionalidad
 								</p>
-								<p class="mt-1 text-sm font-semibold text-white">{academic.nationality}</p>
+								<p class="mt-1 text-sm font-semibold text-white">
+									{academic.nationality}
+								</p>
 							</div>
 							<div>
-								<p class="text-[11px] font-medium tracking-wide uppercase text-white/50">
+								<p
+									class="text-[11px] font-medium tracking-wide uppercase text-white/50"
+								>
 									Ciudad de Residencia
 								</p>
 								<p class="mt-1 text-sm font-semibold text-white">{academic.city}</p>
 							</div>
 							<div>
-								<p class="text-[11px] font-medium tracking-wide uppercase text-white/50">
+								<p
+									class="text-[11px] font-medium tracking-wide uppercase text-white/50"
+								>
 									Fecha de Nacimiento
 								</p>
 								<p class="mt-1 text-sm font-semibold text-white">
@@ -153,7 +163,11 @@
 								</p>
 							</div>
 							<div>
-								<p class="text-[11px] font-medium tracking-wide uppercase text-white/50">Sexo</p>
+								<p
+									class="text-[11px] font-medium tracking-wide uppercase text-white/50"
+								>
+									Sexo
+								</p>
 								<p class="mt-1 text-sm font-semibold text-white">
 									{SEX_LABELS[academic.sex]}
 								</p>
@@ -179,7 +193,10 @@
 						<button
 							class="group flex w-full items-center justify-center gap-2 rounded-lg bg-white/10 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-white/15 active:scale-[0.97]"
 							onclick={() =>
-								(activeTab = activeTab === "academic-info" ? "publications" : "academic-info")}
+								(activeTab =
+									activeTab === "academic-info"
+										? "publications"
+										: "academic-info")}
 						>
 							<BookOpen class="size-4" />
 							{activeTab === "academic-info"
@@ -223,13 +240,19 @@
 								</div>
 								<div class="grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-3">
 									<div>
-										<p class="text-xs font-medium tracking-wide uppercase text-corp-gray">
+										<p
+											class="text-xs font-medium tracking-wide uppercase text-corp-gray"
+										>
 											Departamento
 										</p>
-										<p class="mt-1 text-[15px] font-medium text-[#1a1a1a]">{academic.department}</p>
+										<p class="mt-1 text-[15px] font-medium text-[#1a1a1a]">
+											{academic.department}
+										</p>
 									</div>
 									<div>
-										<p class="text-xs font-medium tracking-wide uppercase text-corp-gray">
+										<p
+											class="text-xs font-medium tracking-wide uppercase text-corp-gray"
+										>
 											Carrera
 										</p>
 										<p class="mt-1 text-[15px] font-medium text-[#1a1a1a]">
@@ -237,7 +260,9 @@
 										</p>
 									</div>
 									<div>
-										<p class="text-xs font-medium tracking-wide uppercase text-corp-gray">
+										<p
+											class="text-xs font-medium tracking-wide uppercase text-corp-gray"
+										>
 											Ingreso
 										</p>
 										<p class="mt-1 text-[15px] font-medium text-[#1a1a1a]">
@@ -245,13 +270,19 @@
 										</p>
 									</div>
 									<div>
-										<p class="text-xs font-medium tracking-wide uppercase text-corp-gray">Cargo</p>
+										<p
+											class="text-xs font-medium tracking-wide uppercase text-corp-gray"
+										>
+											Cargo
+										</p>
 										<p class="mt-1 text-[15px] font-medium text-[#1a1a1a]">
 											{academic.workPosition ?? "—"}
 										</p>
 									</div>
 									<div>
-										<p class="text-xs font-medium tracking-wide uppercase text-corp-gray">
+										<p
+											class="text-xs font-medium tracking-wide uppercase text-corp-gray"
+										>
 											Jornada Completa Equivalente
 										</p>
 										<p class="mt-1 text-[15px] font-medium text-[#1a1a1a]">
@@ -270,33 +301,50 @@
 								</div>
 								<div class="grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-3">
 									<div>
-										<p class="text-xs font-medium tracking-wide uppercase text-corp-gray">Planta</p>
+										<p
+											class="text-xs font-medium tracking-wide uppercase text-corp-gray"
+										>
+											Planta
+										</p>
 										<p class="mt-1 text-[15px] font-medium text-[#1a1a1a]">
 											{PLANTA_LABELS[academic.planta]}
 										</p>
 									</div>
 									<div>
-										<p class="text-xs font-medium tracking-wide uppercase text-corp-gray">
+										<p
+											class="text-xs font-medium tracking-wide uppercase text-corp-gray"
+										>
 											Categoría
 										</p>
-										<p class="mt-1 text-[15px] font-medium text-[#1a1a1a]">{academic.category}</p>
+										<p class="mt-1 text-[15px] font-medium text-[#1a1a1a]">
+											{academic.category}
+										</p>
 									</div>
 									<div>
-										<p class="text-xs font-medium tracking-wide uppercase text-corp-gray">Opción</p>
+										<p
+											class="text-xs font-medium tracking-wide uppercase text-corp-gray"
+										>
+											Opción
+										</p>
 										<p class="mt-1 text-[15px] font-medium text-[#1a1a1a]">
 											{ACADEMIC_OPTION_LABELS[academic.option]}
 										</p>
 									</div>
 									<div>
-										<p class="text-xs font-medium tracking-wide uppercase text-corp-gray">
+										<p
+											class="text-xs font-medium tracking-wide uppercase text-corp-gray"
+										>
 											Horas de categoría y opción
 										</p>
 										<p class="mt-1 text-[15px] font-medium text-[#1a1a1a]">
-											{academic.acadCategoryHours?.toLocaleString("es-CL") ?? "—"} horas
+											{academic.acadCategoryHours?.toLocaleString("es-CL") ??
+												"—"} horas
 										</p>
 									</div>
 									<div>
-										<p class="text-xs font-medium tracking-wide uppercase text-corp-gray">
+										<p
+											class="text-xs font-medium tracking-wide uppercase text-corp-gray"
+										>
 											Descuento anual
 										</p>
 										<p class="mt-1 text-[15px] font-medium text-[#1a1a1a]">
@@ -321,7 +369,12 @@
 								{:else}
 									<div class="relative">
 										{#each degreeSlots as slot, i (slot.kind)}
-											<div class="relative flex gap-5 {i < degreeSlots.length - 1 ? 'pb-8' : ''}">
+											<div
+												class="relative flex gap-5 {i <
+												degreeSlots.length - 1
+													? 'pb-8'
+													: ''}"
+											>
 												<div class="flex flex-col items-center">
 													<div
 														class="z-10 size-3 shrink-0 rounded-full {slot.isPlaceholder
@@ -331,13 +384,21 @@
 																: 'bg-corp-yellow'}"
 													></div>
 													{#if i < degreeSlots.length - 1}
-														<div class="mt-1 w-px grow bg-corp-gray/20"></div>
+														<div
+															class="mt-1 w-px grow bg-corp-gray/20"
+														></div>
 													{/if}
 												</div>
 												<div class="min-w-0 flex-1">
 													<div class="mb-1 flex items-center gap-2">
-														<Badge variant={slot.kind === "base" ? "base" : "advanced"}>
-															{slot.kind === "base" ? "Título Profesional" : "Grado Académico"}
+														<Badge
+															variant={slot.kind === "base"
+																? "base"
+																: "advanced"}
+														>
+															{slot.kind === "base"
+																? "Título Profesional"
+																: "Grado Académico"}
 														</Badge>
 														{#if !slot.isPlaceholder && isAdmin}
 															<button
@@ -358,13 +419,25 @@
 														</button>
 													{:else}
 														{@const degree = slot as Degree}
-														<p class="text-[15px] font-medium text-[#1a1a1a]">{degree.name}</p>
+														<p
+															class="text-[15px] font-medium text-[#1a1a1a]"
+														>
+															{degree.name}
+														</p>
 														<p class="mt-1 text-sm text-corp-gray">
 															{degree.university}
-															<span class="mx-1.5 text-corp-gray/40">·</span>
-															{CountryValue.format(degree.countryCode)}
-															<span class="mx-1.5 text-corp-gray/40">·</span>
-															{DateValue.formatDate(degree.obtainedAt)}
+															<span class="mx-1.5 text-corp-gray/40"
+																>·</span
+															>
+															{CountryValue.format(
+																degree.countryCode,
+															)}
+															<span class="mx-1.5 text-corp-gray/40"
+																>·</span
+															>
+															{DateValue.formatDate(
+																degree.obtainedAt,
+															)}
 														</p>
 													{/if}
 												</div>

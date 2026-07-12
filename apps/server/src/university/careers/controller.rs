@@ -7,32 +7,32 @@ use sword::web::*;
 
 #[controller(kind = ControllerKind::Web, path = "/careers")]
 pub struct CareersController {
-    careers: Arc<CareersService>,
+	careers: Arc<CareersService>,
 }
 
 impl CareersController {
-    #[get("/")]
-    pub async fn get_careers(&self, req: Request) -> WebResult<Vec<Career>> {
-        let query = req.query_validator::<GetCareersQuery>()?;
-        let careers = self.careers.find(query.unwrap_or_default()).await?;
+	#[get("/")]
+	pub async fn get_careers(&self, req: Request) -> WebResult<Vec<Career>> {
+		let query = req.query_validator::<GetCareersQuery>()?;
+		let careers = self.careers.find(query.unwrap_or_default()).await?;
 
-        Ok(careers)
-    }
+		Ok(careers)
+	}
 
-    #[get("/{id}")]
-    pub async fn get_career(&self, req: Request) -> WebResult<Career> {
-        let career_id = req.param::<CareerId>("id")?;
-        let career = self.careers.find_by_id(&career_id).await?;
+	#[get("/{id}")]
+	pub async fn get_career(&self, req: Request) -> WebResult<Career> {
+		let career_id = req.param::<CareerId>("id")?;
+		let career = self.careers.find_by_id(&career_id).await?;
 
-        Ok(career)
-    }
+		Ok(career)
+	}
 
-    #[post("/")]
-    #[interceptor(SessionCheck)]
-    pub async fn create_career(&self, req: Request) -> WebResult<Career> {
-        let input = req.body_validator::<CreateCareerDto>()?;
-        let career = self.careers.create(input).await?;
+	#[post("/")]
+	#[interceptor(SessionCheck)]
+	pub async fn create_career(&self, req: Request) -> WebResult<Career> {
+		let input = req.body_validator::<CreateCareerDto>()?;
+		let career = self.careers.create(input).await?;
 
-        Ok(career)
-    }
+		Ok(career)
+	}
 }

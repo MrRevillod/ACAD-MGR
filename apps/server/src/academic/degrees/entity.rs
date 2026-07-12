@@ -11,8 +11,8 @@ use sqlx::{FromRow, Type};
 #[sqlx(type_name = "degree_kind", rename_all = "lowercase")]
 #[serde(rename_all = "lowercase")]
 pub enum DegreeKind {
-    Base,
-    Advanced,
+	Base,
+	Advanced,
 }
 
 pub type DegreeId = Id<Degree>;
@@ -20,18 +20,18 @@ pub type DegreeId = Id<Degree>;
 #[derive(Debug, Clone, Serialize, FromRow, Builder)]
 #[serde(rename_all = "camelCase")]
 pub struct Degree {
-    #[builder(default = DegreeId::new())]
-    pub id: DegreeId,
-    pub academic_id: AcademicId,
-    pub name: String,
-    pub university: String,
-    pub obtained_at: NaiveDate,
-    pub kind: DegreeKind,
-    pub country_code: String,
+	#[builder(default = DegreeId::new())]
+	pub id: DegreeId,
+	pub academic_id: AcademicId,
+	pub name: String,
+	pub university: String,
+	pub obtained_at: NaiveDate,
+	pub kind: DegreeKind,
+	pub country_code: String,
 }
 
 impl Entity for Degree {
-    fn key_name() -> &'static str {
-        "degree"
-    }
+	fn key_name() -> &'static str {
+		"degree"
+	}
 }

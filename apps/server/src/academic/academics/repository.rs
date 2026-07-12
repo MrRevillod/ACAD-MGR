@@ -7,13 +7,13 @@ use sword::prelude::*;
 
 #[injectable]
 pub struct AcademicsRepository {
-    database: Arc<Database>,
+	database: Arc<Database>,
 }
 
 impl AcademicsRepository {
-    pub async fn list(&self, filter: AcademicListFilter) -> AppResult<Vec<AcademicView>> {
-        let mut query = QueryBuilder::new(
-            r"
+	pub async fn list(&self, filter: AcademicListFilter) -> AppResult<Vec<AcademicView>> {
+		let mut query = QueryBuilder::new(
+			r"
             SELECT
                 a.id, a.names, a.paternal_surname, a.maternal_surname,
                 a.email, a.orcid, a.sex, a.birth_date, a.joined_at,
@@ -36,72 +36,72 @@ impl AcademicsRepository {
             JOIN countries co ON a.nationality_code = co.code
             WHERE 1=1
             ",
-        );
+		);
 
-        if let Some(q) = filter.search {
-            let pattern = format!("%{}%", q.trim());
+		if let Some(q) = filter.search {
+			let pattern = format!("%{}%", q.trim());
 
-            query
-                .push(" AND (a.names ILIKE ")
-                .push_bind(pattern.clone())
-                .push(" OR a.paternal_surname ILIKE ")
-                .push_bind(pattern.clone())
-                .push(" OR a.maternal_surname ILIKE ")
-                .push_bind(pattern.clone())
-                .push(" OR a.email ILIKE ")
-                .push_bind(pattern)
-                .push(")");
-        }
+			query
+				.push(" AND (a.names ILIKE ")
+				.push_bind(pattern.clone())
+				.push(" OR a.paternal_surname ILIKE ")
+				.push_bind(pattern.clone())
+				.push(" OR a.maternal_surname ILIKE ")
+				.push_bind(pattern.clone())
+				.push(" OR a.email ILIKE ")
+				.push_bind(pattern)
+				.push(")");
+		}
 
-        if let Some(id) = filter.department_id {
-            query.push(" AND a.department_id = ").push_bind(id);
-        }
+		if let Some(id) = filter.department_id {
+			query.push(" AND a.department_id = ").push_bind(id);
+		}
 
-        if let Some(id) = filter.career_id {
-            query.push(" AND a.career_id = ").push_bind(id);
-        }
+		if let Some(id) = filter.career_id {
+			query.push(" AND a.career_id = ").push_bind(id);
+		}
 
-        if let Some(id) = filter.category_id {
-            query.push(" AND aco.category_id = ").push_bind(id);
-        }
+		if let Some(id) = filter.category_id {
+			query.push(" AND aco.category_id = ").push_bind(id);
+		}
 
-        if let Some(planta) = filter.planta {
-            query.push(" AND ac.planta = ").push_bind(planta);
-        }
+		if let Some(planta) = filter.planta {
+			query.push(" AND ac.planta = ").push_bind(planta);
+		}
 
-        if let Some(option) = filter.option {
-            query.push(" AND aco.option = ").push_bind(option);
-        }
+		if let Some(option) = filter.option {
+			query.push(" AND aco.option = ").push_bind(option);
+		}
 
-        match filter.sort {
-            Some(AcademicSortField::Names) => {
-                query.push(" ORDER BY a.names ASC");
-            }
-            Some(AcademicSortField::MaternalSurname) => {
-                query.push(" ORDER BY a.maternal_surname, a.paternal_surname, a.names ASC");
-            }
-            Some(AcademicSortField::JoinedAt) => {
-                query.push(" ORDER BY a.joined_at ASC");
-            }
-            Some(AcademicSortField::BirthDate) => {
-                query.push(" ORDER BY a.birth_date ASC");
-            }
-            Some(AcademicSortField::PaternalSurname) | None => {
-                query.push(" ORDER BY a.paternal_surname, a.maternal_surname, a.names ASC");
-            }
-        }
+		match filter.sort {
+			Some(AcademicSortField::Names) => {
+				query.push(" ORDER BY a.names ASC");
+			}
+			Some(AcademicSortField::MaternalSurname) => {
+				query.push(" ORDER BY a.maternal_surname, a.paternal_surname, a.names ASC");
+			}
+			Some(AcademicSortField::JoinedAt) => {
+				query.push(" ORDER BY a.joined_at ASC");
+			}
+			Some(AcademicSortField::BirthDate) => {
+				query.push(" ORDER BY a.birth_date ASC");
+			}
+			Some(AcademicSortField::PaternalSurname) | None => {
+				query.push(" ORDER BY a.paternal_surname, a.maternal_surname, a.names ASC");
+			}
+		}
 
-        let items = query
-            .build_query_as::<AcademicView>()
-            .fetch_all(self.database.pool())
-            .await?;
+		let items = query
+			.build_query_as::<AcademicView>()
+			.fetch_all(self.database.pool())
+			.await?;
 
-        Ok(items)
-    }
+		Ok(items)
+	}
 
-    pub async fn find_view_by_id(&self, id: &AcademicId) -> AppResult<Option<AcademicView>> {
-        let item = sqlx::query_as::<_, AcademicView>(
-            r"
+	pub async fn find_view_by_id(&self, id: &AcademicId) -> AppResult<Option<AcademicView>> {
+		let item = sqlx::query_as::<_, AcademicView>(
+			r"
             SELECT
                 a.id, a.names, a.paternal_surname, a.maternal_surname,
                 a.email, a.orcid, a.sex, a.birth_date, a.joined_at,
@@ -124,53 +124,53 @@ impl AcademicsRepository {
             JOIN countries co ON a.nationality_code = co.code
             WHERE a.id = $1
             ",
-        )
-        .bind(id)
-        .fetch_optional(self.database.pool())
-        .await?;
+		)
+		.bind(id)
+		.fetch_optional(self.database.pool())
+		.await?;
 
-        Ok(item)
-    }
+		Ok(item)
+	}
 
-    pub async fn find_by_id(&self, id: &AcademicId) -> AppResult<Option<Academic>> {
-        let item = sqlx::query_as::<_, Academic>("SELECT * FROM academics WHERE id = $1")
-            .bind(id)
-            .fetch_optional(self.database.pool())
-            .await?;
+	pub async fn find_by_id(&self, id: &AcademicId) -> AppResult<Option<Academic>> {
+		let item = sqlx::query_as::<_, Academic>("SELECT * FROM academics WHERE id = $1")
+			.bind(id)
+			.fetch_optional(self.database.pool())
+			.await?;
 
-        Ok(item)
-    }
+		Ok(item)
+	}
 
-    #[allow(dead_code)]
-    pub async fn find_by_email(&self, email: &str) -> AppResult<Option<Academic>> {
-        let item = sqlx::query_as::<_, Academic>("SELECT * FROM academics WHERE email = $1")
-            .bind(email)
-            .fetch_optional(self.database.pool())
-            .await?;
+	#[allow(dead_code)]
+	pub async fn find_by_email(&self, email: &str) -> AppResult<Option<Academic>> {
+		let item = sqlx::query_as::<_, Academic>("SELECT * FROM academics WHERE email = $1")
+			.bind(email)
+			.fetch_optional(self.database.pool())
+			.await?;
 
-        Ok(item)
-    }
+		Ok(item)
+	}
 
-    pub async fn find_by_rut(&self, rut: &str) -> AppResult<Option<Academic>> {
-        let item = sqlx::query_as::<_, Academic>("SELECT * FROM academics WHERE rut = $1")
-            .bind(rut)
-            .fetch_optional(self.database.pool())
-            .await?;
+	pub async fn find_by_rut(&self, rut: &str) -> AppResult<Option<Academic>> {
+		let item = sqlx::query_as::<_, Academic>("SELECT * FROM academics WHERE rut = $1")
+			.bind(rut)
+			.fetch_optional(self.database.pool())
+			.await?;
 
-        Ok(item)
-    }
+		Ok(item)
+	}
 
-    pub async fn find_by_orcid(&self, orcid: &str) -> AppResult<Option<Academic>> {
-        let item = sqlx::query_as::<_, Academic>("SELECT * FROM academics WHERE orcid = $1")
-            .bind(orcid)
-            .fetch_optional(self.database.pool())
-            .await?;
+	pub async fn find_by_orcid(&self, orcid: &str) -> AppResult<Option<Academic>> {
+		let item = sqlx::query_as::<_, Academic>("SELECT * FROM academics WHERE orcid = $1")
+			.bind(orcid)
+			.fetch_optional(self.database.pool())
+			.await?;
 
-        Ok(item)
-    }
+		Ok(item)
+	}
 
-    pub async fn save(&self, academic: &Academic) -> AppResult<()> {
-        let query = r"
+	pub async fn save(&self, academic: &Academic) -> AppResult<()> {
+		let query = r"
         INSERT INTO academics (
             id, rut, names, paternal_surname, maternal_surname, email, orcid, sex,
             birth_date, joined_at, work_position_id,
@@ -199,33 +199,33 @@ impl AcademicsRepository {
             city = EXCLUDED.city
         ";
 
-        sqlx::query(query)
-            .bind(academic.id)
-            .bind(&academic.rut)
-            .bind(&academic.names)
-            .bind(&academic.paternal_surname)
-            .bind(&academic.maternal_surname)
-            .bind(&academic.email)
-            .bind(&academic.orcid)
-            .bind(academic.sex)
-            .bind(academic.birth_date)
-            .bind(academic.joined_at)
-            .bind(academic.work_position_id)
-            .bind(academic.department_id)
-            .bind(academic.career_id)
-            .bind(academic.jce)
-            .bind(academic.acad_category_options_id)
-            .bind(academic.annual_discount_hours)
-            .bind(&academic.nationality_code)
-            .bind(&academic.city)
-            .execute(self.database.pool())
-            .await?;
+		sqlx::query(query)
+			.bind(academic.id)
+			.bind(&academic.rut)
+			.bind(&academic.names)
+			.bind(&academic.paternal_surname)
+			.bind(&academic.maternal_surname)
+			.bind(&academic.email)
+			.bind(&academic.orcid)
+			.bind(academic.sex)
+			.bind(academic.birth_date)
+			.bind(academic.joined_at)
+			.bind(academic.work_position_id)
+			.bind(academic.department_id)
+			.bind(academic.career_id)
+			.bind(academic.jce)
+			.bind(academic.acad_category_options_id)
+			.bind(academic.annual_discount_hours)
+			.bind(&academic.nationality_code)
+			.bind(&academic.city)
+			.execute(self.database.pool())
+			.await?;
 
-        Ok(())
-    }
+		Ok(())
+	}
 
-    pub async fn save_tx(&self, tx: &mut Tx<'_>, academic: &Academic) -> AppResult<()> {
-        let query = r"
+	pub async fn save_tx(&self, tx: &mut Tx<'_>, academic: &Academic) -> AppResult<()> {
+		let query = r"
         INSERT INTO academics (
             id, rut, names, paternal_surname, maternal_surname, email, orcid, sex,
             birth_date, joined_at, work_position_id,
@@ -235,28 +235,28 @@ impl AcademicsRepository {
             $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18
         )";
 
-        sqlx::query(query)
-            .bind(academic.id)
-            .bind(&academic.rut)
-            .bind(&academic.names)
-            .bind(&academic.paternal_surname)
-            .bind(&academic.maternal_surname)
-            .bind(&academic.email)
-            .bind(&academic.orcid)
-            .bind(academic.sex)
-            .bind(academic.birth_date)
-            .bind(academic.joined_at)
-            .bind(academic.work_position_id)
-            .bind(academic.department_id)
-            .bind(academic.career_id)
-            .bind(academic.jce)
-            .bind(academic.acad_category_options_id)
-            .bind(academic.annual_discount_hours)
-            .bind(&academic.nationality_code)
-            .bind(&academic.city)
-            .execute(&mut **tx)
-            .await?;
+		sqlx::query(query)
+			.bind(academic.id)
+			.bind(&academic.rut)
+			.bind(&academic.names)
+			.bind(&academic.paternal_surname)
+			.bind(&academic.maternal_surname)
+			.bind(&academic.email)
+			.bind(&academic.orcid)
+			.bind(academic.sex)
+			.bind(academic.birth_date)
+			.bind(academic.joined_at)
+			.bind(academic.work_position_id)
+			.bind(academic.department_id)
+			.bind(academic.career_id)
+			.bind(academic.jce)
+			.bind(academic.acad_category_options_id)
+			.bind(academic.annual_discount_hours)
+			.bind(&academic.nationality_code)
+			.bind(&academic.city)
+			.execute(&mut **tx)
+			.await?;
 
-        Ok(())
-    }
+		Ok(())
+	}
 }

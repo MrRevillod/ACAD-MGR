@@ -118,7 +118,9 @@
 			<Field of={form} path={["name"]}>
 				{#snippet children(field)}
 					<label class="grid gap-1.5">
-						<span class="text-xs font-medium tracking-wide uppercase text-corp-gray">Nombre</span>
+						<span class="text-xs font-medium tracking-wide uppercase text-corp-gray"
+							>Nombre</span
+						>
 						<input
 							{...field.props}
 							value={field.input}
@@ -153,7 +155,9 @@
 				<Field of={form} path={["obtainedAt"]}>
 					{#snippet children(field)}
 						<label class="grid gap-1.5">
-							<span class="text-xs font-medium tracking-wide uppercase text-corp-gray">Fecha</span>
+							<span class="text-xs font-medium tracking-wide uppercase text-corp-gray"
+								>Fecha</span
+							>
 							<input
 								{...field.props}
 								value={field.input}
@@ -169,7 +173,9 @@
 				<Field of={form} path={["kind"]}>
 					{#snippet children(field)}
 						<label class="grid gap-1.5">
-							<span class="text-xs font-medium tracking-wide uppercase text-corp-gray">Tipo</span>
+							<span class="text-xs font-medium tracking-wide uppercase text-corp-gray"
+								>Tipo</span
+							>
 							<select
 								{...field.props}
 								value={field.input}
@@ -186,7 +192,9 @@
 			<Field of={form} path={["countryCode"]}>
 				{#snippet children(field)}
 					<label class="grid gap-1.5">
-						<span class="text-xs font-medium tracking-wide uppercase text-corp-gray">País</span>
+						<span class="text-xs font-medium tracking-wide uppercase text-corp-gray"
+							>País</span
+						>
 						<select
 							{...field.props}
 							value={field.input}

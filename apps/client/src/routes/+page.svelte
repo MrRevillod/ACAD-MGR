@@ -13,7 +13,9 @@
 			>
 		</div>
 
-		<h1 class="text-3xl font-bold tracking-tight text-[#1A1A1A] sm:text-4xl">Gestión Académica</h1>
+		<h1 class="text-3xl font-bold tracking-tight text-[#1A1A1A] sm:text-4xl">
+			Gestión Académica
+		</h1>
 		<p class="mt-4 text-base leading-relaxed text-corp-gray">
 			Sistema de administración y consulta de la información académica de los docentes de la
 			Facultad de Ingeniería. Visualiza fichas, categorías, grados y más.

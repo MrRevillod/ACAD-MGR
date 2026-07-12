@@ -31,7 +31,9 @@
 	<div class="mb-6 flex items-center justify-between">
 		<div>
 			<h1 class="text-lg font-semibold text-[#1A1A1A]">Cargos Laborales</h1>
-			<p class="mt-1 text-sm text-corp-gray">Gestiona los cargos laborales de los académicos.</p>
+			<p class="mt-1 text-sm text-corp-gray">
+				Gestiona los cargos laborales de los académicos.
+			</p>
 		</div>
 		<Button onclick={() => (showCreate = true)}>
 			<Plus class="size-4" />

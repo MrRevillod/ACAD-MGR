@@ -57,7 +57,8 @@
 	}))
 
 	const updateUserMut = createMutation(() => ({
-		mutationFn: ({ id, data }: { id: string; data: UpdateUserDto }) => userService.update(id, data),
+		mutationFn: ({ id, data }: { id: string; data: UpdateUserDto }) =>
+			userService.update(id, data),
 		onSuccess: () => {
 			void queryClient.invalidateQueries({ queryKey: ["users"] })
 			toast.success("Usuario actualizado")
@@ -93,7 +94,9 @@
 			<Field of={form} path={["name"]}>
 				{#snippet children(field)}
 					<label class="grid gap-1.5">
-						<span class="text-xs font-medium tracking-wide uppercase text-corp-gray">Nombre</span>
+						<span class="text-xs font-medium tracking-wide uppercase text-corp-gray"
+							>Nombre</span
+						>
 						<input
 							{...field.props}
 							value={field.input}
@@ -108,7 +111,9 @@
 			<Field of={form} path={["email"]}>
 				{#snippet children(field)}
 					<label class="grid gap-1.5">
-						<span class="text-xs font-medium tracking-wide uppercase text-corp-gray">Email</span>
+						<span class="text-xs font-medium tracking-wide uppercase text-corp-gray"
+							>Email</span
+						>
 						<input
 							{...field.props}
 							value={field.input}

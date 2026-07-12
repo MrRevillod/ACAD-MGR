@@ -59,7 +59,9 @@
 						{#if work.publicationYear}
 							<span class="text-sm text-corp-gray">
 								<span class="tabular-nums">{work.publicationYear}</span>
-								{#if work.publicationDate}· {DateValue.formatDate(work.publicationDate)}{/if}
+								{#if work.publicationDate}· {DateValue.formatDate(
+										work.publicationDate,
+									)}{/if}
 							</span>
 						{/if}
 						{#if work.isAccepted}
@@ -77,8 +79,12 @@
 							</span>
 						{/if}
 					</div>
-					<h1 class="mt-3 text-2xl font-semibold text-balance text-[#1A1A1A]">{work.title}</h1>
-					<div class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-corp-gray">
+					<h1 class="mt-3 text-2xl font-semibold text-balance text-[#1A1A1A]">
+						{work.title}
+					</h1>
+					<div
+						class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-corp-gray"
+					>
 						{#if work.doi}
 							<a
 								href={work.doi}
@@ -105,20 +111,28 @@
 
 				{#if work.abstract}
 					<section>
-						<h2 class="mb-3 text-xs font-semibold tracking-widest uppercase text-corp-blue">
+						<h2
+							class="mb-3 text-xs font-semibold tracking-widest uppercase text-corp-blue"
+						>
 							Abstract
 						</h2>
-						<p class="text-pretty text-sm leading-relaxed text-[#1A1A1A]">{work.abstract}</p>
+						<p class="text-pretty text-sm leading-relaxed text-[#1A1A1A]">
+							{work.abstract}
+						</p>
 					</section>
 				{/if}
 
 				{#if work.source}
 					<section>
-						<h2 class="mb-3 text-xs font-semibold tracking-widest uppercase text-corp-blue">
+						<h2
+							class="mb-3 text-xs font-semibold tracking-widest uppercase text-corp-blue"
+						>
 							Publicado en
 						</h2>
 						<div class="flex items-center gap-2">
-							<p class="text-sm font-medium text-[#1A1A1A]">{work.source.displayName}</p>
+							<p class="text-sm font-medium text-[#1A1A1A]">
+								{work.source.displayName}
+							</p>
 							<span class="text-xs text-corp-gray">· {work.source.ty}</span>
 						</div>
 					</section>
@@ -142,7 +156,9 @@
 									class="rounded-lg border border-corp-gray/10 bg-white p-3 transition-colors hover:border-corp-blue/30"
 								>
 									<div class="flex items-center gap-2">
-										<p class="text-sm font-medium text-[#1A1A1A]">{auth.name}</p>
+										<p class="text-sm font-medium text-[#1A1A1A]">
+											{auth.name}
+										</p>
 										{#if auth.isCorresponding}
 											<Badge variant="default">
 												<Mail class="mr-1 size-3" />
@@ -173,7 +189,9 @@
 									{#if auth.affiliations.length > 0}
 										<ul class="mt-2 space-y-1">
 											{#each auth.affiliations as aff, i (i)}
-												<li class="flex items-start gap-1.5 text-xs text-corp-gray">
+												<li
+													class="flex items-start gap-1.5 text-xs text-corp-gray"
+												>
 													<Building2 class="mt-0.5 size-3 shrink-0" />
 													<span>{aff}</span>
 												</li>
