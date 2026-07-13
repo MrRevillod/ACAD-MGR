@@ -12,7 +12,7 @@ app ?= "server"
 service ?= $(app)
 
 .DEFAULT_GOAL := run
-.PHONY: run detach clean fmt lint migration machete clean-db db setup down
+.PHONY: run detach clean fmt lint migration machete clean-db db setup down seed
 
 setup:
 	rm -rf $(CLIENT)/node_modules
@@ -52,3 +52,7 @@ migration:
 
 machete:
 	cargo machete
+
+seed:
+	cargo run --bin openalex-seeder
+	cargo run --bin issn-seeder

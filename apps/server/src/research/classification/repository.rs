@@ -119,7 +119,7 @@ impl WorkClassificationRepository {
 
 	pub async fn unknown_keyword_id(&self) -> AppResult<Option<ResearchKeyword>> {
 		sqlx::query_as::<_, ResearchKeyword>(
-			"SELECT * FROM research_keywords WHERE openalex_id = 'unknown'",
+			"SELECT * FROM keywords WHERE openalex_id = 'unknown'",
 		)
 		.fetch_optional(self.database.pool())
 		.await
@@ -132,7 +132,7 @@ impl WorkClassificationRepository {
 		name: &str,
 	) -> AppResult<ResearchKeywordId> {
 		let row = sqlx::query(
-			"INSERT INTO research_keywords (openalex_id, name)
+			"INSERT INTO keywords (openalex_id, name)
 			VALUES ($1, $2) ON CONFLICT (openalex_id)
 			DO UPDATE SET name = EXCLUDED.name RETURNING id",
 		)
@@ -144,14 +144,14 @@ impl WorkClassificationRepository {
 	}
 
 	pub async fn list_keywords(&self, f: ClassificationFilter) -> AppResult<Vec<ResearchKeyword>> {
-		let mut query = QueryBuilder::<Postgres>::new("SELECT * FROM research_keywords WHERE 1=1");
+		let mut query = QueryBuilder::<Postgres>::new("SELECT * FROM keywords WHERE 1=1");
 
 		if let Some(search) = f.search {
 			let pattern = format!("%{}%", search.trim());
-			query.push(" AND keyword ILIKE ").push_bind(pattern);
+			query.push(" AND name ILIKE ").push_bind(pattern);
 		}
 
-		query.push(" ORDER BY keyword");
+		query.push(" ORDER BY name");
 		query.push(" LIMIT 50");
 
 		query

@@ -2,6 +2,8 @@ import { createMutation, createQuery, useQueryClient } from "@tanstack/svelte-qu
 
 import { classificationService, worksService } from "./service"
 import type { GetWorksParams, SyncResult } from "./types"
+import { departmentService } from "$lib/university/departments/service"
+import { careerService } from "$lib/university/careers/service"
 
 export function useWorksQuery(getParams: () => GetWorksParams) {
 	return createQuery(() => ({
@@ -76,5 +78,24 @@ export function useKeywordsQuery() {
 		queryKey: ["classification", "keywords"],
 		queryFn: () => classificationService.keywords(),
 		staleTime: 5 * 60 * 1000,
+	}))
+}
+
+export function useDepartmentsQuery() {
+	return createQuery(() => ({
+		queryKey: ["university", "departments"],
+		queryFn: () => departmentService.list(),
+		staleTime: 5 * 60 * 1000,
+	}))
+}
+
+export function useCareersQuery(getDepartmentId: () => string | undefined) {
+	return createQuery(() => ({
+		queryKey: ["university", "careers", getDepartmentId()],
+		queryFn: () =>
+			careerService.list(
+				getDepartmentId() ? { department_id: getDepartmentId() } : undefined,
+			),
+		enabled: Boolean(getDepartmentId()),
 	}))
 }

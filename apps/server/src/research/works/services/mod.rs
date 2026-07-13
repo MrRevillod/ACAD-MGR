@@ -30,7 +30,7 @@ impl WorksService {
 		};
 
 		let source = match work.primary_source_id {
-			Some(sid) => self.sources.find_by_id(&sid).await?,
+			Some(sid) => self.sources.find_source_view_by_id(&sid).await?,
 			None => None,
 		};
 
@@ -71,6 +71,7 @@ impl WorksService {
 			.ok()
 			.flatten()
 			.map(|t| t.id);
+
 		let unknown_keyword_id = self
 			.classification
 			.unknown_keyword_id()
@@ -154,6 +155,7 @@ async fn process_single_work(
 		.as_deref()
 		.and_then(|s| WorkType::from_str(s).ok())
 		.unwrap_or(WorkType::Other);
+
 	let lang = oa_work.language.clone().unwrap_or_else(|| "en".to_string());
 
 	let (is_accepted, is_published) = oa_work
@@ -173,6 +175,15 @@ async fn process_single_work(
 		.and_then(|l| l.source.as_ref())
 	{
 		let source_ty = s.r#type.clone().unwrap_or_else(|| "unknown".to_string());
+		let issn_l = s.issn_l.as_deref().and_then(normalize_issn);
+		let issn: Option<Vec<String>> = s.issn.as_ref().and_then(|vec| {
+			let normalized: Vec<String> = vec.iter().filter_map(|v| normalize_issn(v)).collect();
+			if normalized.is_empty() {
+				None
+			} else {
+				Some(normalized)
+			}
+		});
 		Some(
 			sources_repo
 				.save(&Source {
@@ -180,6 +191,8 @@ async fn process_single_work(
 					openalex_id: s.id.clone().unwrap_or_default(),
 					display_name: s.display_name.clone().unwrap_or_default(),
 					ty: source_ty,
+					issn_l,
+					issn,
 				})
 				.await?,
 		)
@@ -300,4 +313,13 @@ async fn process_single_work(
 		topics,
 		keywords: kw_count,
 	})
+}
+
+fn normalize_issn(value: &str) -> Option<String> {
+	let cleaned = value.trim().replace('-', "").to_uppercase();
+	if cleaned.is_empty() {
+		None
+	} else {
+		Some(cleaned)
+	}
 }

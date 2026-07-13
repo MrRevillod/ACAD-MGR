@@ -18,7 +18,7 @@
 	import { DateValue } from "$lib/shared/value-objects/date.value"
 
 	import { useWorkDetailQuery } from "$lib/research/queries"
-	import { POSITION_LABELS, WORK_TYPE_LABELS } from "$lib/research/types"
+	import { POSITION_LABELS, WORK_TYPE_LABELS, JOURNAL_KIND_LABELS } from "$lib/research/types"
 
 	const id = $derived(page.params.id ?? "")
 
@@ -133,6 +133,11 @@
 							<p class="text-sm font-medium text-[#1A1A1A]">
 								{work.source.displayName}
 							</p>
+							{#each work.source.kinds as kind (kind)}
+								<Badge variant={kind === "scopus" ? "advanced" : "base"}>
+									{JOURNAL_KIND_LABELS[kind]}
+								</Badge>
+							{/each}
 							<span class="text-xs text-corp-gray">· {work.source.ty}</span>
 						</div>
 					</section>

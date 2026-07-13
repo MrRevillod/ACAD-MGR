@@ -21,6 +21,8 @@ pub struct GetWorksQuery {
 	pub keyword_min_score: Option<f64>,
 	pub is_accepted: Option<bool>,
 	pub is_published: Option<bool>,
+	pub department_id: Option<Uuid>,
+	pub career_id: Option<Uuid>,
 	#[validate(range(min = 1, max = 1000))]
 	pub size: Option<u32>,
 }

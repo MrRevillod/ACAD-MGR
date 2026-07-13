@@ -11,6 +11,10 @@ path = "src/main.rs"
 name = "openalex-seeder"
 path = "bin/openalex-seeder/main.rs"
 
+[[bin]]
+name = "issn-seeder"
+path = "bin/issn-seeder/main.rs"
+
 [dependencies]
 orcid = "0.2.3"
 tokio = { version = "1.52.3", features = ["full"] }

@@ -74,11 +74,21 @@ export interface Work {
 	primarySourceId: string | null
 }
 
+export type JournalKind = "wos" | "scopus"
+
+export const JOURNAL_KIND_LABELS: Record<JournalKind, string> = {
+	wos: "WoS",
+	scopus: "Scopus",
+}
+
 export interface Source {
 	id: string
 	openalexId: string
 	displayName: string
 	ty: string
+	issnL: string | null
+	issn: string[] | null
+	kinds: JournalKind[]
 }
 
 export interface Authorship {
@@ -130,6 +140,8 @@ export interface GetWorksParams {
 	keywordMinScore?: number
 	isAccepted?: boolean
 	isPublished?: boolean
+	departmentId?: string
+	careerId?: string
 	size?: number
 }
 

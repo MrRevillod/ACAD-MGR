@@ -11,15 +11,20 @@ import type {
 	WorkDetail,
 } from "./types"
 
+function toSnakeCase(str: string): string {
+	return str.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`)
+}
+
 function serializeParams(params: GetWorksParams) {
 	const out: Record<string, string | number | boolean> = {}
 	for (const [k, v] of Object.entries(params)) {
 		if (v == null) continue
+		const key = toSnakeCase(k)
 		if (Array.isArray(v)) {
 			if (v.length === 0) continue
-			out[k] = v.join(",")
+			out[key] = v.join(",")
 		} else {
-			out[k] = v as string | number | boolean
+			out[key] = v as string | number | boolean
 		}
 	}
 	return out

@@ -14,6 +14,8 @@ pub struct Source {
 	pub openalex_id: String,
 	pub display_name: String,
 	pub ty: String,
+	pub issn_l: Option<String>,
+	pub issn: Option<Vec<String>>,
 }
 
 impl Entity for Source {

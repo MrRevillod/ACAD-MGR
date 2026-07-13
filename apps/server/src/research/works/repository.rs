@@ -46,8 +46,20 @@ impl WorksRepository {
 		);
 
 		if let Some(academic_id) = query.academic_id {
-			qb.push(" AND wa.work_id IN (SELECT wa2.work_id FROM work_authorships wa2 JOIN academics a ON a.orcid = wa2.orcid WHERE a.id = ");
+			qb.push(" AND wa.work_id IN (SELECT wa2.work_id FROM work_authorships wa2 JOIN academics a ON a.orcid = wa2.orcid WHERE wa2.is_external = false AND a.orcid != 'https://orcid.org/0000-0000-0000-0000' AND a.id = ");
 			qb.push_bind(academic_id);
+			qb.push(")");
+		}
+
+		if let Some(department_id) = query.department_id {
+			qb.push(" AND wa.work_id IN (SELECT wa2.work_id FROM work_authorships wa2 JOIN academics a ON a.orcid = wa2.orcid WHERE wa2.is_external = false AND a.orcid != 'https://orcid.org/0000-0000-0000-0000' AND a.department_id = ");
+			qb.push_bind(department_id);
+			qb.push(")");
+		}
+
+		if let Some(career_id) = query.career_id {
+			qb.push(" AND wa.work_id IN (SELECT wa2.work_id FROM work_authorships wa2 JOIN academics a ON a.orcid = wa2.orcid WHERE wa2.is_external = false AND a.orcid != 'https://orcid.org/0000-0000-0000-0000' AND a.career_id = ");
+			qb.push_bind(career_id);
 			qb.push(")");
 		}
 

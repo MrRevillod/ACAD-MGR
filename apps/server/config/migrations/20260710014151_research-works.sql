@@ -29,7 +29,9 @@ CREATE TABLE sources (
 	id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 	openalex_id TEXT UNIQUE NOT NULL,
 	display_name TEXT NOT NULL,
-	ty TEXT NOT NULL
+	ty TEXT NOT NULL,
+	issn_l TEXT,
+	issn TEXT[]
 );
 
 CREATE INDEX idx_sources_openalex_id ON sources(openalex_id);

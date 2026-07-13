@@ -6,7 +6,7 @@ use serde::Serialize;
 pub struct WorkDetailView {
 	#[serde(flatten)]
 	pub work: Work,
-	pub source: Option<Source>,
+	pub source: Option<SourceView>,
 	pub authorships: Vec<Authorship>,
 	pub topics: Vec<ResearchTopicView>,
 	pub keywords: Vec<ResearchKeywordView>,

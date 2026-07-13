@@ -15,7 +15,7 @@
 	import { DateValue } from "$lib/shared/value-objects/date.value"
 
 	import { useWorkDetailQuery } from "../queries"
-	import { POSITION_LABELS, WORK_TYPE_LABELS } from "../types"
+	import { POSITION_LABELS, WORK_TYPE_LABELS, JOURNAL_KIND_LABELS } from "../types"
 
 	interface Props {
 		workId: string | null
@@ -118,6 +118,11 @@
 					</h3>
 					<div class="flex items-center gap-2">
 						<p class="text-sm font-medium text-[#1A1A1A]">{work.source.displayName}</p>
+						{#each work.source.kinds as kind (kind)}
+							<Badge variant={kind === "scopus" ? "advanced" : "base"}>
+								{JOURNAL_KIND_LABELS[kind]}
+							</Badge>
+						{/each}
 						<span class="text-xs text-corp-gray">· {work.source.ty}</span>
 					</div>
 				</div>

@@ -1,13 +1,67 @@
 <script lang="ts">
 	import { AlertCircle, BookOpen, Loader2 } from "@lucide/svelte"
+	import * as v from "valibot"
+	import { useSearchParams } from "runed/kit"
 
 	import WorkDetailDialog from "$lib/research/components/work-detail-dialog.svelte"
 	import WorksFilters from "$lib/research/components/works-filters.svelte"
 	import WorksTable from "$lib/research/components/works-table.svelte"
 	import { useWorksQuery } from "$lib/research/queries"
-	import type { GetWorksParams, Work } from "$lib/research/types"
+	import type { GetWorksParams, Work, WorkType } from "$lib/research/types"
 
-	let filters = $state<GetWorksParams>({ size: 100 })
+	const schema = v.object({
+		search: v.optional(v.fallback(v.string(), ""), ""),
+		type: v.optional(v.fallback(v.string(), ""), ""),
+		domain_id: v.optional(v.fallback(v.string(), ""), ""),
+		field_id: v.optional(v.fallback(v.string(), ""), ""),
+		subfield_id: v.optional(v.fallback(v.string(), ""), ""),
+		topic_id: v.optional(v.fallback(v.string(), ""), ""),
+		topic_min_score: v.optional(v.fallback(v.string(), ""), ""),
+		keyword_id: v.optional(v.fallback(v.string(), ""), ""),
+		department_id: v.optional(v.fallback(v.string(), ""), ""),
+		career_id: v.optional(v.fallback(v.string(), ""), ""),
+		year_from: v.optional(v.fallback(v.string(), ""), ""),
+		year_to: v.optional(v.fallback(v.string(), ""), ""),
+	})
+
+	const params = useSearchParams(schema, { debounce: 300, pushHistory: false })
+
+	// Cascade: clear children when parent changes
+	$effect(() => {
+		if (!params.domain_id) {
+			params.field_id = ""
+			params.subfield_id = ""
+			params.topic_id = ""
+		}
+	})
+	$effect(() => {
+		if (!params.field_id) {
+			params.subfield_id = ""
+			params.topic_id = ""
+		}
+	})
+	$effect(() => {
+		if (!params.subfield_id) params.topic_id = ""
+	})
+	$effect(() => {
+		if (!params.department_id) params.career_id = ""
+	})
+
+	let filters = $derived<GetWorksParams>({
+		size: 100,
+		yearFrom: params.year_from ? Number(params.year_from) : new Date().getFullYear() - 5,
+		...(params.search && { search: params.search }),
+		...(params.type && { type: [params.type as WorkType] }),
+		...(params.domain_id && { domainId: params.domain_id }),
+		...(params.field_id && { fieldId: params.field_id }),
+		...(params.subfield_id && { subfieldId: params.subfield_id }),
+		...(params.topic_id && { topicId: params.topic_id }),
+		...(params.topic_min_score && { topicMinScore: Number(params.topic_min_score) }),
+		...(params.keyword_id && { keywordId: params.keyword_id }),
+		...(params.department_id && { departmentId: params.department_id }),
+		...(params.career_id && { careerId: params.career_id }),
+		...(params.year_to && { yearTo: Number(params.year_to) }),
+	})
 
 	const worksQuery = useWorksQuery(() => filters)
 
@@ -17,6 +71,10 @@
 	function openWork(work: Work) {
 		selectedWorkId = work.id
 		dialogOpen = true
+	}
+
+	function clearFilters() {
+		params.reset()
 	}
 </script>
 
@@ -36,7 +94,21 @@
 	</header>
 
 	<div class="flex min-h-0 flex-1 gap-8">
-		<WorksFilters bind:filters />
+		<WorksFilters
+			bind:search={params.search}
+			bind:type={params.type}
+			bind:domainId={params.domain_id}
+			bind:fieldId={params.field_id}
+			bind:subfieldId={params.subfield_id}
+			bind:topicId={params.topic_id}
+			bind:topicMinScore={params.topic_min_score}
+			bind:keywordId={params.keyword_id}
+			bind:departmentId={params.department_id}
+			bind:careerId={params.career_id}
+			bind:yearFrom={params.year_from}
+			bind:yearTo={params.year_to}
+			onClear={clearFilters}
+		/>
 
 		<main class="min-w-0 flex-1 overflow-y-auto">
 			{#if worksQuery.isPending}
