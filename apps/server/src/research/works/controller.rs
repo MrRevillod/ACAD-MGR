@@ -1,8 +1,5 @@
 use crate::auth::SessionCheck;
-use crate::research::works::dtos::GetWorksQuery;
-use crate::research::works::errors::WorksError;
-use crate::research::works::service::WorksService;
-use crate::research::works::views::{SyncResultView, WorkDetailView, WorkView};
+use crate::research::*;
 
 use std::sync::Arc;
 use sword::prelude::*;
@@ -23,13 +20,13 @@ impl WorksController {
 	}
 
 	#[get("/")]
-	pub async fn list_works(&self, req: Request) -> WebResult<Vec<WorkView>> {
+	pub async fn list_works(&self, req: Request) -> WebResult<Vec<Work>> {
 		let query = req.query_validator::<GetWorksQuery>()?;
 		Ok(self.works.list(&query.unwrap_or_default()).await?)
 	}
 
 	#[get("/academic/{id}")]
-	pub async fn list_works_by_academic(&self, req: Request) -> WebResult<Vec<WorkView>> {
+	pub async fn list_works_by_academic(&self, req: Request) -> WebResult<Vec<Work>> {
 		let academic_id = req.param::<Uuid>("id")?;
 		let query = GetWorksQuery {
 			academic_id: Some(academic_id),
@@ -40,12 +37,9 @@ impl WorksController {
 
 	#[get("/{id}")]
 	pub async fn get_work(&self, req: Request) -> WebResult<WorkDetailView> {
-		let work_id = req.param::<Uuid>("id")?;
-		let work = self
-			.works
-			.find_by_id(crate::research::works::entity::WorkId::from_uuid(work_id))
-			.await?
-			.ok_or(WorksError::WorkNotFound)?;
+		let work_id = req.param::<WorkId>("id")?;
+		let work = self.works.find_by_id(work_id).await?;
+
 		Ok(work)
 	}
 }

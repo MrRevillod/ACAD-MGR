@@ -1,6 +1,5 @@
 use crate::{
-	academic::AcademicError, auth::AuthError, research::works::WorksError,
-	university::UniversityError,
+	academic::AcademicError, auth::AuthError, research::WorksError, university::UniversityError,
 };
 
 use sqlx::Error as SqlxError;

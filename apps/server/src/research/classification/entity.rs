@@ -86,3 +86,13 @@ impl Entity for ResearchKeyword {
 		"research_keyword"
 	}
 }
+
+#[allow(dead_code)]
+pub struct ClassificationFilter {
+	pub domain_id: Option<ResearchDomainId>,
+	pub field_id: Option<ResearchFieldId>,
+	pub subfield_id: Option<ResearchSubfieldId>,
+	pub topic_id: Option<ResearchTopicId>,
+	pub openalex_id: Option<String>,
+	pub search: Option<String>,
+}

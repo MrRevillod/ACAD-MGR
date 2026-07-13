@@ -1,11 +1,14 @@
-pub mod classification;
-pub mod works;
+mod authorships;
+mod classification;
+mod sources;
+mod works;
+
+pub use authorships::*;
+pub use classification::*;
+pub use sources::*;
+pub use works::*;
 
 use sword::prelude::*;
-
-use classification::*;
-use works::{OpenAlexClient, OpenAlexConfig};
-use works::{WorksController, WorksRepository, WorksService};
 
 pub struct ResearchModule;
 
@@ -19,6 +22,8 @@ impl Module for ResearchModule {
 		components.register::<WorkClassificationRepository>();
 		components.register::<WorksService>();
 		components.register::<WorksRepository>();
+		components.register::<SourcesRepository>();
+		components.register::<AuthorshipsRepository>();
 	}
 
 	async fn register_providers(config: &Config, providers: &ProviderRegistry) {

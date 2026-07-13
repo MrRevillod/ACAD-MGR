@@ -92,7 +92,7 @@ impl From<CreateAcademicDto> for Academic {
 			.paternal_surname(input.paternal_surname)
 			.maternal_surname(input.maternal_surname)
 			.email(input.email)
-			.maybe_orcid(input.orcid.map(|o| super::normalize_orcid(&o)))
+			.maybe_orcid(input.orcid)
 			.sex(input.sex)
 			.jce(input.jce)
 			.birth_date(input.birth_date)

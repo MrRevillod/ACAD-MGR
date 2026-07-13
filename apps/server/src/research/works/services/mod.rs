@@ -1,12 +1,11 @@
-use crate::research::classification::{ResearchKeywordsRepository, ResearchTopicsRepository};
-use crate::research::works::dtos::GetWorksQuery;
-use crate::research::works::entity::{AuthorshipPosition, WorkId, WorkType};
-use crate::research::works::errors::WorksError;
-use crate::research::works::openalex::OpenAlexClient;
-use crate::research::works::repository::{NewAuthorship, NewWork, WorksRepository};
-use crate::research::works::views::{SourceView, SyncResultView, WorkDetailView, WorkView};
+mod openalex;
+
+use crate::research::*;
 use crate::shared::AppResult;
 
+pub use openalex::*;
+
+use std::str::FromStr;
 use std::sync::Arc;
 use sword::prelude::*;
 use uuid::Uuid;
@@ -14,77 +13,38 @@ use uuid::Uuid;
 #[injectable]
 pub struct WorksService {
 	works: Arc<WorksRepository>,
+	sources: Arc<SourcesRepository>,
+	authorships: Arc<AuthorshipsRepository>,
+	classification: Arc<WorkClassificationRepository>,
 	openalex: Arc<OpenAlexClient>,
-	topics: Arc<ResearchTopicsRepository>,
-	keywords: Arc<ResearchKeywordsRepository>,
 }
 
 impl WorksService {
-	pub async fn list(&self, query: &GetWorksQuery) -> AppResult<Vec<WorkView>> {
-		let works = self.works.list(query).await?;
-		Ok(works
-			.into_iter()
-			.map(|w| WorkView {
-				id: w.id,
-				openalex_id: w.openalex_id,
-				title: w.title,
-				r#abstract: w.r#abstract,
-				doi: w.doi,
-				publication_date: w.publication_date,
-				publication_year: w.publication_year,
-				r#type: w.ty,
-				lang: w.lang,
-				is_accepted: w.is_accepted,
-				is_published: w.is_published,
-				primary_source_id: w.primary_source_id,
-			})
-			.collect())
+	pub async fn list(&self, query: &GetWorksQuery) -> AppResult<Vec<Work>> {
+		self.works.list(query).await
 	}
 
-	pub async fn find_by_id(&self, id: WorkId) -> AppResult<Option<WorkDetailView>> {
-		let work = match self.works.find_by_id(&id).await? {
-			Some(w) => w,
-			None => return Ok(None),
+	pub async fn find_by_id(&self, id: WorkId) -> AppResult<WorkDetailView> {
+		let Some(work) = self.works.find_by_id(&id).await? else {
+			return Err(WorksError::NotFound)?;
 		};
 
 		let source = match work.primary_source_id {
-			Some(sid) => self
-				.works
-				.find_source_by_id(&sid)
-				.await?
-				.map(|s| SourceView {
-					id: s.id,
-					openalex_id: s.openalex_id,
-					display_name: s.display_name,
-					ty: s.ty,
-				}),
+			Some(sid) => self.sources.find_by_id(&sid).await?,
 			None => None,
 		};
 
-		let authorships = self.works.list_authorships(&work.id).await?;
-		let topics = self.works.list_topics_with_ancestry(&work.id).await?;
-		let keywords = self.works.list_keywords_with_names(&work.id).await?;
+		let authorships = self.authorships.list(&work.id).await?;
+		let topics = self.classification.list_topics_by_work(&work.id).await?;
+		let keywords = self.classification.list_keywords_by_work(&work.id).await?;
 
-		Ok(Some(WorkDetailView {
-			work: WorkView {
-				id: work.id,
-				openalex_id: work.openalex_id,
-				title: work.title,
-				r#abstract: work.r#abstract,
-				doi: work.doi,
-				publication_date: work.publication_date,
-				publication_year: work.publication_year,
-				r#type: work.ty,
-				lang: work.lang,
-				is_accepted: work.is_accepted,
-				is_published: work.is_published,
-				primary_source_id: work.primary_source_id,
-			},
+		Ok(WorkDetailView {
+			work,
 			source,
 			authorships,
 			topics,
 			keywords,
-		}))
+		})
 	}
 
 	pub async fn sync_from_openalex(&self, academic_id: Uuid) -> AppResult<SyncResultView> {
@@ -104,14 +64,27 @@ impl WorksService {
 		let mut keywords_count = 0usize;
 		let mut errors = Vec::new();
 
-		let unknown_topic_id = self.topics.unknown_topic_id().await.ok();
-		let unknown_keyword_id = self.keywords.unknown_keyword_id().await.ok();
+		let unknown_topic_id = self
+			.classification
+			.unknown_topic_id()
+			.await
+			.ok()
+			.flatten()
+			.map(|t| t.id);
+		let unknown_keyword_id = self
+			.classification
+			.unknown_keyword_id()
+			.await
+			.ok()
+			.flatten()
+			.map(|k| k.id);
 
 		for oa_work in &oa_works {
 			let work_result = process_single_work(
 				&self.works,
-				&self.topics,
-				&self.keywords,
+				&self.sources,
+				&self.authorships,
+				&self.classification,
 				oa_work,
 				unknown_topic_id,
 				unknown_keyword_id,
@@ -157,9 +130,10 @@ struct ProcessStats {
 }
 
 async fn process_single_work(
-	repo: &WorksRepository,
-	topics_repo: &ResearchTopicsRepository,
-	keywords_repo: &ResearchKeywordsRepository,
+	works_repo: &WorksRepository,
+	sources_repo: &SourcesRepository,
+	authorships_repo: &AuthorshipsRepository,
+	classification_repo: &WorkClassificationRepository,
 	oa_work: &papers_openalex::Work,
 	unknown_topic_id: Option<crate::research::classification::ResearchTopicId>,
 	unknown_keyword_id: Option<crate::research::classification::ResearchKeywordId>,
@@ -175,7 +149,11 @@ async fn process_single_work(
 		.as_deref()
 		.and_then(|d| chrono::NaiveDate::parse_from_str(d, "%Y-%m-%d").ok());
 
-	let work_type = parse_oa_type(oa_work.r#type.as_deref());
+	let work_type = oa_work
+		.r#type
+		.as_deref()
+		.and_then(|s| WorkType::from_str(s).ok())
+		.unwrap_or(WorkType::Other);
 	let lang = oa_work.language.clone().unwrap_or_else(|| "en".to_string());
 
 	let (is_accepted, is_published) = oa_work
@@ -196,12 +174,14 @@ async fn process_single_work(
 	{
 		let source_ty = s.r#type.clone().unwrap_or_else(|| "unknown".to_string());
 		Some(
-			repo.upsert_source(
-				&s.id.clone().unwrap_or_default(),
-				&s.display_name.clone().unwrap_or_default(),
-				&source_ty,
-			)
-			.await?,
+			sources_repo
+				.save(&Source {
+					id: SourceId::new(),
+					openalex_id: s.id.clone().unwrap_or_default(),
+					display_name: s.display_name.clone().unwrap_or_default(),
+					ty: source_ty,
+				})
+				.await?,
 		)
 	} else {
 		None
@@ -220,7 +200,7 @@ async fn process_single_work(
 		is_published,
 		primary_source_id: source_id,
 	};
-	let inserted = repo.insert_work(&new_work).await?;
+	let inserted = works_repo.insert_work(&new_work).await?;
 
 	let work_id = match inserted {
 		Some(id) => id,
@@ -242,7 +222,7 @@ async fn process_single_work(
 				None => continue,
 			};
 
-			let academic_name = repo.find_academic_name_by_orcid(orcid).await?;
+			let academic_name = works_repo.find_academic_name_by_orcid(orcid).await?;
 			let is_external = academic_name.is_none();
 			let name = if is_external {
 				auth.author
@@ -269,7 +249,7 @@ async fn process_single_work(
 				affiliations: auth.raw_affiliation_strings.clone().unwrap_or_default(),
 				position,
 			};
-			repo.insert_authorship(&new_authorship).await?;
+			authorships_repo.insert(&new_authorship).await?;
 			authorships += 1;
 		}
 	}
@@ -278,8 +258,8 @@ async fn process_single_work(
 	if let Some(work_topics) = &oa_work.topics {
 		for t in work_topics {
 			let topic_id = match &t.id {
-				Some(id) => topics_repo
-					.find_by_openalex_id(id)
+				Some(id) => classification_repo
+					.find_topic_by_openalex_id(id)
 					.await?
 					.map(|rt| *rt.id)
 					.or(unknown_topic_id.map(|id| *id)),
@@ -287,7 +267,8 @@ async fn process_single_work(
 			};
 
 			if let Some(tid) = topic_id {
-				repo.link_topic(&work_id, tid, t.score.unwrap_or(0.0))
+				works_repo
+					.link_topic(&work_id, tid, t.score.unwrap_or(0.0))
 					.await?;
 				topics += 1;
 			}
@@ -300,14 +281,14 @@ async fn process_single_work(
 			let keyword_id = match &k.id {
 				Some(id) => {
 					let name = k.display_name.as_deref().unwrap_or("Unknown");
-					Some(keywords_repo.upsert(id, name).await?)
+					Some(classification_repo.upsert_keyword(id, name).await?)
 				}
 				None => unknown_keyword_id,
 			};
 
 			if let Some(kid) = keyword_id {
 				let score = k.score.unwrap_or(0.0);
-				repo.link_keyword(&work_id, *kid, score).await?;
+				works_repo.link_keyword(&work_id, *kid, score).await?;
 				kw_count += 1;
 			}
 		}
@@ -319,34 +300,4 @@ async fn process_single_work(
 		topics,
 		keywords: kw_count,
 	})
-}
-
-fn parse_oa_type(ty: Option<&str>) -> WorkType {
-	match ty {
-		Some("article") => WorkType::Article,
-		Some("book") => WorkType::Book,
-		Some("book-chapter") => WorkType::BookChapter,
-		Some("book-review") => WorkType::BookReview,
-		Some("conference-abstract") => WorkType::ConferenceAbstract,
-		Some("conference-paper") => WorkType::ConferencePaper,
-		Some("data-paper") => WorkType::DataPaper,
-		Some("dissertation") => WorkType::Dissertation,
-		Some("editorial") => WorkType::Editorial,
-		Some("erratum") => WorkType::Erratum,
-		Some("letter") => WorkType::Letter,
-		Some("libguide") => WorkType::Libguide,
-		Some("other") => WorkType::Other,
-		Some("paratext") => WorkType::Paratext,
-		Some("peer-review") => WorkType::PeerReview,
-		Some("preprint") => WorkType::Preprint,
-		Some("reference-entry") => WorkType::ReferenceEntry,
-		Some("report") => WorkType::Report,
-		Some("retraction") => WorkType::Retraction,
-		Some("review") => WorkType::Review,
-		Some("software") => WorkType::Software,
-		Some("software-paper") => WorkType::SoftwarePaper,
-		Some("standard") => WorkType::Standard,
-		Some("supplementary-materials") => WorkType::SupplementaryMaterials,
-		_ => WorkType::Other,
-	}
 }

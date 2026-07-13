@@ -1,4 +1,3 @@
-use super::super::normalize_orcid;
 use crate::academic::*;
 use crate::shared::{AppError, AppResult, TransactionManager, Tx};
 use crate::university::*;
@@ -136,7 +135,7 @@ impl ImportsService {
 		if let Some(expected_hours) = category_option.hours
 			&& expected_hours != *input.acad_category_hours
 		{
-			return Err(AcademicError::CategoryOptionHoursMismatch)?;
+			Err(AcademicError::CategoryOptionHoursMismatch)?;
 		}
 
 		let Some(category) = self
@@ -148,17 +147,15 @@ impl ImportsService {
 		};
 
 		if category.name != input.category_name {
-			return Err(AcademicError::CategoryOptionCategoryMismatch)?;
+			Err(AcademicError::CategoryOptionCategoryMismatch)?;
 		}
 
 		if category.planta != AcademicPlanta::from(&input.planta) {
-			return Err(AcademicError::CategoryPlantaMismatch)?;
+			Err(AcademicError::CategoryPlantaMismatch)?;
 		}
 
 		let category_option_id = category_option.id;
 		let nationality_code = input.nationality_country.code.clone();
-
-		tracing::info!("Processing nationality code: {}", nationality_code);
 
 		let Some(_) = self.countries.find_by_code(&nationality_code).await? else {
 			return Err(UniversityError::CountryNotFound(nationality_code))?;
@@ -167,8 +164,8 @@ impl ImportsService {
 		let orcid = input
 			.orcid
 			.as_deref()
-			.filter(|o| !o.trim().is_empty() && *o != "-")
-			.map(normalize_orcid);
+			.filter(|o| !o.trim().is_empty() && *o != "-" || *o != "NO TIENE")
+			.map(ToString::to_string);
 
 		let academic = Academic::builder()
 			.rut(input.rut.clone())

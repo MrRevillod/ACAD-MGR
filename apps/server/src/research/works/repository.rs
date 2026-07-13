@@ -1,12 +1,11 @@
+use crate::research::sources::SourceId;
 use crate::research::works::dtos::GetWorksQuery;
-use crate::research::works::entity::{
-	AuthorshipPosition, Source, SourceId, Work, WorkId, WorkType,
-};
-use crate::research::works::views::{AuthorshipView, WorkKeywordView, WorkTopicView};
+use crate::research::works::entity::{Work, WorkId, WorkType};
 use crate::shared::{AppResult, Database};
 
 use chrono::NaiveDate;
 use sqlx::{QueryBuilder, Row};
+use std::str::FromStr;
 use std::sync::Arc;
 use sword::prelude::*;
 use uuid::Uuid;
@@ -23,16 +22,6 @@ pub struct NewWork {
 	pub is_accepted: bool,
 	pub is_published: bool,
 	pub primary_source_id: Option<SourceId>,
-}
-
-pub struct NewAuthorship {
-	pub work_id: WorkId,
-	pub orcid: String,
-	pub name: String,
-	pub is_external: bool,
-	pub is_corresponding: bool,
-	pub affiliations: Vec<String>,
-	pub position: AuthorshipPosition,
 }
 
 #[injectable]
@@ -80,7 +69,7 @@ impl WorksRepository {
 		if let Some(ref types) = query.r#type {
 			let parsed: Vec<WorkType> = types
 				.split(',')
-				.filter_map(|s| parse_work_type(s.trim()))
+				.filter_map(|s| WorkType::from_str(s.trim()).ok())
 				.collect();
 			if !parsed.is_empty() {
 				qb.push(" AND w.ty = ANY(");
@@ -158,128 +147,6 @@ impl WorksRepository {
 			.map_err(Into::into)
 	}
 
-	pub async fn list_authorships(&self, work_id: &WorkId) -> AppResult<Vec<AuthorshipView>> {
-		sqlx::query_as::<_, (String, String, bool, bool, Vec<String>, AuthorshipPosition)>(
-            "SELECT orcid, name, is_external, is_corresponding, affiliations, position FROM work_authorships WHERE work_id = $1 ORDER BY CASE position WHEN 'first' THEN 0 WHEN 'middle' THEN 1 WHEN 'last' THEN 2 END",
-        )
-        .bind(work_id)
-        .fetch_all(self.database.pool())
-        .await
-        .map(|rows| {
-            rows.into_iter()
-                .map(|(orcid, name, is_external, is_corresponding, affiliations, position)| {
-                    AuthorshipView {
-                        orcid,
-                        name,
-                        is_external,
-                        is_corresponding,
-                        affiliations,
-                        position,
-                    }
-                })
-                .collect()
-        })
-        .map_err(Into::into)
-	}
-
-	pub async fn list_topics_with_ancestry(
-		&self,
-		work_id: &WorkId,
-	) -> AppResult<Vec<WorkTopicView>> {
-		sqlx::query_as::<_, (Uuid, String, f64, Uuid, String, Uuid, String, Uuid, String)>(
-			r"SELECT
-                wt.topic_id, t.name, wt.score,
-                s.id, s.name,
-                f.id, f.name,
-                d.id, d.name
-            FROM work_topics wt
-            JOIN research_topics t ON t.id = wt.topic_id
-            JOIN research_subfields s ON s.id = t.subfield_id
-            JOIN research_fields f ON f.id = s.field_id
-            JOIN research_domains d ON d.id = f.domain_id
-            WHERE wt.work_id = $1
-            ORDER BY wt.score DESC",
-		)
-		.bind(work_id)
-		.fetch_all(self.database.pool())
-		.await
-		.map(|rows| {
-			rows.into_iter()
-				.map(
-					|(
-						topic_id,
-						name,
-						score,
-						subfield_id,
-						subfield_name,
-						field_id,
-						field_name,
-						domain_id,
-						domain_name,
-					)| {
-						WorkTopicView {
-							topic_id,
-							name,
-							score,
-							subfield_id,
-							subfield_name,
-							field_id,
-							field_name,
-							domain_id,
-							domain_name,
-						}
-					},
-				)
-				.collect()
-		})
-		.map_err(Into::into)
-	}
-
-	pub async fn list_keywords_with_names(
-		&self,
-		work_id: &WorkId,
-	) -> AppResult<Vec<WorkKeywordView>> {
-		sqlx::query_as::<_, (Uuid, String, f64)>(
-            "SELECT wk.keyword_id, k.name, wk.score FROM work_keywords wk JOIN keywords k ON k.id = wk.keyword_id WHERE wk.work_id = $1 ORDER BY wk.score DESC",
-        )
-        .bind(work_id)
-        .fetch_all(self.database.pool())
-        .await
-        .map(|rows| {
-            rows.into_iter()
-                .map(|(keyword_id, name, score)| WorkKeywordView { keyword_id, name, score })
-                .collect()
-        })
-        .map_err(Into::into)
-	}
-
-	pub async fn find_source_by_id(&self, id: &SourceId) -> AppResult<Option<Source>> {
-		sqlx::query_as::<_, Source>(
-			"SELECT id, openalex_id, display_name, ty FROM sources WHERE id = $1",
-		)
-		.bind(id)
-		.fetch_optional(self.database.pool())
-		.await
-		.map_err(Into::into)
-	}
-
-	pub async fn upsert_source(
-		&self,
-		openalex_id: &str,
-		display_name: &str,
-		ty: &str,
-	) -> AppResult<SourceId> {
-		let row = sqlx::query(
-            "INSERT INTO sources (openalex_id, display_name, ty) VALUES ($1, $2, $3) ON CONFLICT (openalex_id) DO UPDATE SET display_name = EXCLUDED.display_name, ty = EXCLUDED.ty RETURNING id",
-        )
-        .bind(openalex_id)
-        .bind(display_name)
-        .bind(ty)
-        .fetch_one(self.database.pool())
-        .await?;
-		Ok(SourceId::from_uuid(row.get("id")))
-	}
-
 	pub async fn insert_work(&self, work: &NewWork) -> AppResult<Option<WorkId>> {
 		let row = sqlx::query(
             "INSERT INTO works (openalex_id, title, abstract, doi, publication_date, publication_year, ty, lang, is_accepted, is_published, primary_source_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) ON CONFLICT (openalex_id) DO NOTHING RETURNING id",
@@ -300,22 +167,6 @@ impl WorksRepository {
 		Ok(row
 			.map(|r| SourceId::from_uuid(r.get("id")))
 			.map(|sid| WorkId::from_uuid(*sid)))
-	}
-
-	pub async fn insert_authorship(&self, authorship: &NewAuthorship) -> AppResult<()> {
-		sqlx::query(
-            "INSERT INTO work_authorships (work_id, orcid, name, is_external, is_corresponding, affiliations, position) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (work_id, orcid) DO NOTHING",
-        )
-        .bind(authorship.work_id)
-        .bind(&authorship.orcid)
-        .bind(&authorship.name)
-        .bind(authorship.is_external)
-        .bind(authorship.is_corresponding)
-        .bind(&authorship.affiliations)
-        .bind(authorship.position)
-        .execute(self.database.pool())
-        .await?;
-		Ok(())
 	}
 
 	pub async fn link_topic(&self, work_id: &WorkId, topic_id: Uuid, score: f64) -> AppResult<()> {
@@ -363,35 +214,5 @@ impl WorksRepository {
 			.fetch_optional(self.database.pool())
 			.await
 			.map_err(Into::into)
-	}
-}
-
-fn parse_work_type(s: &str) -> Option<WorkType> {
-	match s {
-		"article" => Some(WorkType::Article),
-		"book" => Some(WorkType::Book),
-		"book-chapter" => Some(WorkType::BookChapter),
-		"book-review" => Some(WorkType::BookReview),
-		"conference-abstract" => Some(WorkType::ConferenceAbstract),
-		"conference-paper" => Some(WorkType::ConferencePaper),
-		"data-paper" => Some(WorkType::DataPaper),
-		"dissertation" => Some(WorkType::Dissertation),
-		"editorial" => Some(WorkType::Editorial),
-		"erratum" => Some(WorkType::Erratum),
-		"letter" => Some(WorkType::Letter),
-		"libguide" => Some(WorkType::Libguide),
-		"other" => Some(WorkType::Other),
-		"paratext" => Some(WorkType::Paratext),
-		"peer-review" => Some(WorkType::PeerReview),
-		"preprint" => Some(WorkType::Preprint),
-		"reference-entry" => Some(WorkType::ReferenceEntry),
-		"report" => Some(WorkType::Report),
-		"retraction" => Some(WorkType::Retraction),
-		"review" => Some(WorkType::Review),
-		"software" => Some(WorkType::Software),
-		"software-paper" => Some(WorkType::SoftwarePaper),
-		"standard" => Some(WorkType::Standard),
-		"supplementary-materials" => Some(WorkType::SupplementaryMaterials),
-		_ => None,
 	}
 }

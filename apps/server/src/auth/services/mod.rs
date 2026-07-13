@@ -29,7 +29,7 @@ impl AuthService {
 		};
 
 		if !self.hasher.verify(password, &user.password_hash)? {
-			return Err(AuthError::InvalidCredentials)?;
+			Err(AuthError::InvalidCredentials)?;
 		}
 
 		let session_id = SessionId::new();
@@ -67,7 +67,7 @@ impl AuthService {
 			.decode::<SessionClaims>(token, self.config.jwt_secret.as_ref())?;
 
 		if claims.typ != "refresh" {
-			return Err(AuthError::InvalidToken)?;
+			Err(AuthError::InvalidToken)?;
 		}
 
 		let session = self

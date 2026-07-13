@@ -2,7 +2,6 @@ mod imports;
 
 pub use imports::*;
 
-use super::normalize_orcid;
 use crate::{academic::*, shared::AppResult, university::*};
 use std::sync::Arc;
 use sword::prelude::*;
@@ -44,14 +43,13 @@ impl AcademicsService {
 		let academic = Academic::from(input.clone());
 
 		if self.academics.find_by_rut(&academic.rut).await?.is_some() {
-			return Err(AcademicError::AcademicRutAlreadyExists)?;
+			Err(AcademicError::AcademicRutAlreadyExists)?;
 		}
 
-		let normalized_orcid = input.orcid.as_deref().map(normalize_orcid);
-		if let Some(ref orcid) = normalized_orcid
+		if let Some(ref orcid) = input.orcid
 			&& self.academics.find_by_orcid(orcid).await?.is_some()
 		{
-			return Err(AcademicError::AcademicOrcidAlreadyExists)?;
+			Err(AcademicError::AcademicOrcidAlreadyExists)?;
 		}
 
 		let Some(depto) = self.departments.find_by_id(&academic.department_id).await? else {
@@ -64,7 +62,7 @@ impl AcademicsService {
 			};
 
 			if career.department_id != depto.id {
-				return Err(UniversityError::CareerDepartmentMismatch)?;
+				Err(UniversityError::CareerDepartmentMismatch)?;
 			}
 		}
 
@@ -93,13 +91,13 @@ impl AcademicsService {
 			academic.maternal_surname = maternal_surname.clone();
 		}
 
-		let normalized_orcid = input.orcid.as_deref().map(normalize_orcid);
-		if let Some(ref orcid) = normalized_orcid {
+		if let Some(ref orcid) = input.orcid {
 			if self.academics.find_by_orcid(orcid).await?.is_some()
 				&& Some(orcid.as_str()) != academic.orcid.as_deref()
 			{
-				return Err(AcademicError::AcademicOrcidAlreadyExists)?;
+				Err(AcademicError::AcademicOrcidAlreadyExists)?;
 			}
+
 			academic.orcid = Some(orcid.clone());
 		}
 
@@ -117,14 +115,15 @@ impl AcademicsService {
 
 		if let Some(wp_id) = input.work_position_id {
 			if self.work_positions.find_by_id(&wp_id).await?.is_none() {
-				return Err(UniversityError::WorkPositionNotFound)?;
+				Err(UniversityError::WorkPositionNotFound)?;
 			}
+
 			academic.work_position_id = wp_id;
 		}
 
 		if let Some(dept_id) = input.department_id {
 			if self.departments.find_by_id(&dept_id).await?.is_none() {
-				return Err(UniversityError::DepartmentNotFound)?;
+				Err(UniversityError::DepartmentNotFound)?;
 			}
 
 			academic.department_id = dept_id;
@@ -135,7 +134,7 @@ impl AcademicsService {
 				};
 
 				if career.department_id != dept_id {
-					return Err(UniversityError::CareerDepartmentMismatch)?;
+					Err(UniversityError::CareerDepartmentMismatch)?;
 				}
 
 				academic.career_id = Some(career_id);
@@ -148,7 +147,7 @@ impl AcademicsService {
 			};
 
 			if career.department_id != academic.department_id {
-				return Err(UniversityError::CareerDepartmentMismatch)?;
+				Err(UniversityError::CareerDepartmentMismatch)?;
 			}
 
 			academic.career_id = Some(career_id);
@@ -161,8 +160,9 @@ impl AcademicsService {
 				.await?
 				.is_none()
 			{
-				return Err(AcademicError::CategoryOptionNotFound)?;
+				Err(AcademicError::CategoryOptionNotFound)?;
 			}
+
 			academic.acad_category_options_id = cat_opt_id;
 		}
 
@@ -176,7 +176,7 @@ impl AcademicsService {
 
 		if let Some(code) = &input.nationality_code {
 			if self.countries.find_by_code(code).await?.is_none() {
-				return Err(UniversityError::CountryNotFound(code.clone()))?;
+				Err(UniversityError::CountryNotFound(code.clone()))?;
 			}
 
 			academic.nationality_code = code.clone();

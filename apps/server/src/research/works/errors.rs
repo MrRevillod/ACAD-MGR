@@ -1,3 +1,4 @@
+use papers_openalex::OpenAlexError;
 use sword::web::*;
 use thiserror::Error;
 
@@ -13,9 +14,9 @@ pub enum WorksError {
 
 	#[http(code = 404, message = "Obra no encontrada")]
 	#[error("Work not found")]
-	WorkNotFound,
+	NotFound,
 
 	#[http(code = 502, message = "Error al consultar OpenAlex")]
 	#[error("OpenAlex API error: {0}")]
-	OpenAlexError(String),
+	OpenAlexError(#[from] OpenAlexError),
 }

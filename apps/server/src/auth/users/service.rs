@@ -33,7 +33,7 @@ impl UsersService {
 
 	pub async fn create(&self, dto: CreateUserDto) -> AppResult<UserView> {
 		if self.users.find_by_email(&dto.email).await?.is_some() {
-			return Err(AuthError::EmailAlreadyExists)?;
+			Err(AuthError::EmailAlreadyExists)?;
 		}
 
 		let user = User {
@@ -58,7 +58,7 @@ impl UsersService {
 			&& email != &user.email
 			&& self.users.find_by_email(email).await?.is_some()
 		{
-			return Err(AuthError::EmailAlreadyExists)?;
+			Err(AuthError::EmailAlreadyExists)?;
 		}
 
 		let updated = User {
@@ -79,7 +79,7 @@ impl UsersService {
 
 	pub async fn delete(&self, id: &UserId) -> AppResult<()> {
 		if self.users.find_by_id(id).await?.is_none() {
-			return Err(AuthError::UserNotFound)?;
+			Err(AuthError::UserNotFound)?;
 		}
 
 		self.users.delete(id).await

@@ -1,6 +1,6 @@
-use crate::shared::AppResult;
+use crate::{research::WorksError, shared::AppResult};
 
-use papers_openalex::{ListParams, OpenAlexClient as OaClient};
+use papers_openalex::{ListParams, OpenAlexClient as OaClient, Work as OaWork};
 use serde::Deserialize;
 use sword::prelude::*;
 
@@ -41,16 +41,18 @@ impl OpenAlexClient {
 		}
 	}
 
-	pub async fn list_works_by_orcid(&self, orcid: &str) -> AppResult<Vec<papers_openalex::Work>> {
+	pub async fn list_works_by_orcid(&self, orcid: &str) -> AppResult<Vec<OaWork>> {
 		let params = ListParams::builder()
 			.filter(format!("authorships.author.orcid:{}", orcid))
 			.select(SELECT_FIELDS.join(","))
 			.build();
+
 		let response = self
 			.inner
 			.list_works(&params)
 			.await
-			.map_err(|e| crate::research::works::WorksError::OpenAlexError(e.to_string()))?;
+			.map_err(WorksError::from)?;
+
 		Ok(response.results)
 	}
 }

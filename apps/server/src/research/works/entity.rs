@@ -1,12 +1,13 @@
+use crate::research::sources::SourceId;
 use crate::shared::{Entity, Id};
 
 use bon::Builder;
 use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, Type};
+use std::str::FromStr;
 
 pub type WorkId = Id<Work>;
-pub type SourceId = Id<Source>;
 
 #[derive(Debug, Clone, Copy, Type, Serialize, Deserialize, Eq, PartialEq)]
 #[sqlx(type_name = "work_type", rename_all = "kebab-case")]
@@ -38,27 +39,37 @@ pub enum WorkType {
 	SupplementaryMaterials,
 }
 
-#[derive(Debug, Clone, Copy, Type, Serialize, Deserialize, Eq, PartialEq)]
-#[sqlx(type_name = "authorship_position", rename_all = "lowercase")]
-#[serde(rename_all = "lowercase")]
-pub enum AuthorshipPosition {
-	First,
-	Middle,
-	Last,
-}
+impl FromStr for WorkType {
+	type Err = String;
 
-#[derive(Debug, Clone, Serialize, FromRow, Builder)]
-pub struct Source {
-	#[builder(default = SourceId::new())]
-	pub id: SourceId,
-	pub openalex_id: String,
-	pub display_name: String,
-	pub ty: String,
-}
-
-impl Entity for Source {
-	fn key_name() -> &'static str {
-		"source"
+	fn from_str(s: &str) -> Result<Self, Self::Err> {
+		match s {
+			"article" => Ok(WorkType::Article),
+			"book" => Ok(WorkType::Book),
+			"book-chapter" => Ok(WorkType::BookChapter),
+			"book-review" => Ok(WorkType::BookReview),
+			"conference-abstract" => Ok(WorkType::ConferenceAbstract),
+			"conference-paper" => Ok(WorkType::ConferencePaper),
+			"data-paper" => Ok(WorkType::DataPaper),
+			"dissertation" => Ok(WorkType::Dissertation),
+			"editorial" => Ok(WorkType::Editorial),
+			"erratum" => Ok(WorkType::Erratum),
+			"letter" => Ok(WorkType::Letter),
+			"libguide" => Ok(WorkType::Libguide),
+			"other" => Ok(WorkType::Other),
+			"paratext" => Ok(WorkType::Paratext),
+			"peer-review" => Ok(WorkType::PeerReview),
+			"preprint" => Ok(WorkType::Preprint),
+			"reference-entry" => Ok(WorkType::ReferenceEntry),
+			"report" => Ok(WorkType::Report),
+			"retraction" => Ok(WorkType::Retraction),
+			"review" => Ok(WorkType::Review),
+			"software" => Ok(WorkType::Software),
+			"software-paper" => Ok(WorkType::SoftwarePaper),
+			"standard" => Ok(WorkType::Standard),
+			"supplementary-materials" => Ok(WorkType::SupplementaryMaterials),
+			other => Err(format!("unknown work type: {other}")),
+		}
 	}
 }
 
