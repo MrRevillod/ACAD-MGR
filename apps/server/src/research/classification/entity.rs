@@ -7,6 +7,7 @@ use sqlx::FromRow;
 pub type ResearchDomainId = Id<ResearchDomain>;
 
 #[derive(Debug, Clone, Serialize, FromRow, Builder)]
+#[serde(rename_all = "camelCase")]
 pub struct ResearchDomain {
 	#[builder(default = ResearchDomainId::new())]
 	pub id: ResearchDomainId,
@@ -23,6 +24,7 @@ impl Entity for ResearchDomain {
 pub type ResearchFieldId = Id<ResearchField>;
 
 #[derive(Debug, Clone, Serialize, FromRow, Builder)]
+#[serde(rename_all = "camelCase")]
 pub struct ResearchField {
 	#[builder(default = ResearchFieldId::new())]
 	pub id: ResearchFieldId,
@@ -40,6 +42,7 @@ impl Entity for ResearchField {
 pub type ResearchSubfieldId = Id<ResearchSubfield>;
 
 #[derive(Debug, Clone, Serialize, FromRow, Builder)]
+#[serde(rename_all = "camelCase")]
 pub struct ResearchSubfield {
 	#[builder(default = ResearchSubfieldId::new())]
 	pub id: ResearchSubfieldId,
@@ -57,6 +60,7 @@ impl Entity for ResearchSubfield {
 pub type ResearchTopicId = Id<ResearchTopic>;
 
 #[derive(Debug, Clone, Serialize, FromRow, Builder)]
+#[serde(rename_all = "camelCase")]
 pub struct ResearchTopic {
 	#[builder(default = ResearchTopicId::new())]
 	pub id: ResearchTopicId,
@@ -74,6 +78,7 @@ impl Entity for ResearchTopic {
 pub type ResearchKeywordId = Id<ResearchKeyword>;
 
 #[derive(Debug, Clone, Serialize, FromRow, Builder)]
+#[serde(rename_all = "camelCase")]
 pub struct ResearchKeyword {
 	#[builder(default = ResearchKeywordId::new())]
 	pub id: ResearchKeywordId,

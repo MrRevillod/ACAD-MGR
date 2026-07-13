@@ -7,6 +7,7 @@ use sqlx::FromRow;
 pub type SourceId = Id<Source>;
 
 #[derive(Debug, Clone, Serialize, FromRow, Builder)]
+#[serde(rename_all = "camelCase")]
 pub struct Source {
 	#[builder(default = SourceId::new())]
 	pub id: SourceId,

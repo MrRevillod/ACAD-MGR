@@ -64,6 +64,7 @@ fn validate_password(password: &str) -> Result<(), ValidationError> {
 }
 
 #[derive(Debug, Clone, Serialize, FromRow)]
+#[serde(rename_all = "camelCase")]
 pub struct UserView {
 	pub id: UserId,
 	pub name: String,

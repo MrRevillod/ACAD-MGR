@@ -74,6 +74,7 @@ impl FromStr for WorkType {
 }
 
 #[derive(Debug, Clone, Serialize, FromRow, Builder)]
+#[serde(rename_all = "camelCase")]
 pub struct Work {
 	#[builder(default = WorkId::new())]
 	pub id: WorkId,

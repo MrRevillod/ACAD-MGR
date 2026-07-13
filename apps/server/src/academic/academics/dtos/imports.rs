@@ -148,12 +148,14 @@ pub enum ImportedAcademicPlanta {
 }
 
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ImportResult {
 	pub imported: usize,
 	pub errors: Vec<ImportRowError>,
 }
 
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ImportRowError {
 	pub row: usize,
 	pub reasons: Vec<String>,

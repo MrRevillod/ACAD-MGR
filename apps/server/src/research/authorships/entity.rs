@@ -12,6 +12,7 @@ pub enum AuthorshipPosition {
 }
 
 #[derive(Debug, Serialize, FromRow)]
+#[serde(rename_all = "camelCase")]
 pub struct Authorship {
 	pub work_id: WorkId,
 	pub orcid: String,
