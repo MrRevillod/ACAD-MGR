@@ -5,10 +5,9 @@
 	import Button from "$lib/shared/components/ui/button.svelte"
 	import { academicService } from "$lib/academic/academics/service"
 	import { countryItems } from "$lib/shared/countries"
-	import { SEX_LABELS } from "$lib/academic/academics/enums"
-	import { updateAcademicSchema } from "../dtos"
-	import type { Academic } from "$lib/academic/academics/dtos"
-	import type { UpdateAcademicDto } from "$lib/academic/academics/dtos"
+	import { updateAcademicDTOSchema } from "../dtos"
+	import type { Academic } from "../entity"
+	import type { UpdateAcademicDTO } from "../dtos"
 
 	interface Props {
 		academic: Academic
@@ -18,11 +17,11 @@
 
 	let { academic, open = $bindable(), onClose }: Props = $props()
 
-	const form = createForm({ schema: updateAcademicSchema })
+	const form = createForm({ schema: updateAcademicDTOSchema })
 
 	$effect(() => {
 		if (!open) return
-		const matched = countryItems.find((i) => i.label.includes(academic.nationality))
+		const matched = countryItems.find((i) => i.label.includes(academic.nationality.toDisplay()))
 		reset(form, {
 			initialInput: {
 				names: academic.names,
@@ -30,11 +29,11 @@
 				maternalSurname: academic.maternalSurname,
 				email: academic.email,
 				orcid: academic.orcid ?? null,
-				sex: academic.sex,
-				birthDate: academic.birthDate,
+				sex: academic.sex.code,
+				birthDate: academic.birthDate.iso ?? "",
 				city: academic.city,
 				nationalityCode: matched?.value ?? "CL",
-				jce: academic.jce,
+				jce: academic.jce.number,
 				annualDiscountHours: academic.annualDiscountHours,
 			},
 		})
@@ -43,7 +42,7 @@
 	const queryClient = useQueryClient()
 
 	const updateAcademic = createMutation(() => ({
-		mutationFn: (output: UpdateAcademicDto) => academicService.update(academic.id, output),
+		mutationFn: (output: UpdateAcademicDTO) => academicService.update(academic.id, output),
 		onSuccess: () => {
 			void queryClient.invalidateQueries({ queryKey: ["academic", academic.id] })
 			open = false
@@ -141,7 +140,11 @@
 								value={field.input ?? ""}
 								class="h-10 w-full rounded-lg border border-corp-gray/20 bg-white px-3 text-sm text-[#1A1A1A] outline-none transition-colors placeholder:text-corp-gray/50 focus:border-corp-blue/50 focus:ring-2 focus:ring-corp-blue/10"
 							>
-								{#each Object.entries(SEX_LABELS) as [value, label] (value)}
+								{#each Object.entries({
+									H: "Masculino",
+									M: "Femenino",
+									O: "Otro",
+								}) as [value, label] (value)}
 									<option {value}>{label}</option>
 								{/each}
 							</select>

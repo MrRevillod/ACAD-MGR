@@ -4,8 +4,6 @@ import { ApiResponse } from "./response"
 import type { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios"
 
 class HttpClient {
-	constructor() {}
-
 	public async request<T>(config: AxiosRequestConfig): Promise<T> {
 		return api
 			.request<unknown, AxiosResponse<unknown>>(config)
@@ -13,14 +11,11 @@ class HttpClient {
 				const payload = response.data
 
 				if (!ApiResponse.is(payload)) {
-					throw ApiResponse.genericError(
-						response.status,
-						"Respuesta del servidor inválida.",
-					)
+					throw ApiResponse.genericError(response.status, "Respuesta del servidor inválida.")
 				}
 
 				if (!payload.success) {
-					throw payload
+					throw ApiResponse.from(payload)
 				}
 
 				return (payload as ApiResponse<T>).data as T
@@ -31,14 +26,11 @@ class HttpClient {
 				const axiosError = error as AxiosError<unknown>
 
 				if (axiosError.response?.data && ApiResponse.is(axiosError.response.data)) {
-					throw axiosError.response.data
+					throw ApiResponse.from(axiosError.response.data)
 				}
 
 				if (axiosError.response) {
-					throw ApiResponse.genericError(
-						axiosError.response.status,
-						"Error del servidor.",
-					)
+					throw ApiResponse.genericError(axiosError.response.status, "Error del servidor.")
 				}
 
 				if (axiosError.code === "ECONNABORTED") {
@@ -50,4 +42,4 @@ class HttpClient {
 	}
 }
 
-export const httpClient = new HttpClient()
+export const http = new HttpClient()

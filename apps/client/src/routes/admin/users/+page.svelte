@@ -2,11 +2,11 @@
 	import { createQuery } from "@tanstack/svelte-query"
 	import { Loader2, AlertCircle, Plus } from "@lucide/svelte"
 	import { createColumnHelper, type TableFeatures } from "@tanstack/svelte-table"
-	import { userService } from "$lib/auth/users.service"
+	import { usersService } from "$lib/users/service"
 	import DataTable from "$lib/shared/components/ui/data-table.svelte"
 	import UserDialog from "$lib/auth/components/user-dialog.svelte"
 	import { toast } from "svelte-sonner"
-	import type { User } from "$lib/auth/auth.dtos"
+	import type { User } from "$lib/users/entity"
 
 	let search = $state("")
 	let showDialog = $state(false)
@@ -14,7 +14,7 @@
 
 	const usersQuery = createQuery(() => ({
 		queryKey: ["users", search],
-		queryFn: () => userService.list(search ? { search } : undefined),
+		queryFn: () => usersService.list(search ? { search } : undefined),
 	}))
 
 	const users = $derived(usersQuery.data ?? [])
@@ -32,7 +32,7 @@
 	async function handleDelete(u: User) {
 		if (!window.confirm(`¿Eliminar a "${u.name}"? Esta acción no se puede deshacer.`)) return
 		try {
-			await userService.delete(u.id)
+			await usersService.delete(u.id)
 			toast.success("Usuario eliminado")
 			void usersQuery.refetch()
 		} catch {
@@ -45,7 +45,7 @@
 	const columns = [
 		helper.accessor("name", { header: "Nombre" }),
 		helper.accessor("email", { header: "Email" }),
-		helper.accessor((row) => (row.role === "admin" ? "Administrador" : row.role), {
+		helper.accessor((row) => (row.role.code === "admin" ? "Administrador" : row.role.code), {
 			header: "Rol",
 		}),
 	]

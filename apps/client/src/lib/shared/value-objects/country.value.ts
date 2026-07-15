@@ -4,20 +4,26 @@ export class CountryValue {
 	private readonly name?: string
 	private readonly flag?: string
 
-	private constructor(public readonly code: string) {
+	private constructor(public readonly code: string | null) {
+		if (!code) {
+			this.name = "--"
+			this.flag = "--"
+			return
+		}
+
 		this.name = countryCodeToName[code]
-		this.flag = codeToEmoji(code)
+		try {
+			this.flag = codeToEmoji(code)
+		} catch {
+			this.flag = ""
+		}
 	}
 
-	static from(value?: string | null): CountryValue | null {
-		if (typeof value !== "string") return null
-		if (!/^[A-Z]{2}$/.test(value)) return null
-		if (!(value in countryCodeToName)) return null
-
+	static from(value: string | null): CountryValue {
 		return new CountryValue(value)
 	}
 
-	static format(value?: string | null): string {
+	static format(value: string | null): string {
 		const cv = CountryValue.from(value)
 		if (!cv) return "--"
 

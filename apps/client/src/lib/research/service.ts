@@ -1,4 +1,4 @@
-import { httpClient } from "$lib/shared/http/request"
+import { http } from "$lib/shared/http/client"
 import type {
 	GetWorksParams,
 	ResearchDomain,
@@ -32,7 +32,7 @@ function serializeParams(params: GetWorksParams) {
 
 export const worksService = {
 	list(params: GetWorksParams = {}): Promise<Work[]> {
-		return httpClient.request<Work[]>({
+		return http.request<Work[]>({
 			method: "GET",
 			url: "/works",
 			params: serializeParams(params),
@@ -40,7 +40,7 @@ export const worksService = {
 	},
 
 	get(id: string): Promise<WorkDetail> {
-		return httpClient.request<WorkDetail>({
+		return http.request<WorkDetail>({
 			method: "GET",
 			url: `/works/${id}`,
 		})
@@ -50,7 +50,7 @@ export const worksService = {
 		academicId: string,
 		params: Omit<GetWorksParams, "academicId"> = {},
 	): Promise<Work[]> {
-		return httpClient.request<Work[]>({
+		return http.request<Work[]>({
 			method: "GET",
 			url: `/works/academic/${academicId}`,
 			params: serializeParams(params),
@@ -58,7 +58,7 @@ export const worksService = {
 	},
 
 	sync(academicId: string): Promise<SyncResult> {
-		return httpClient.request<SyncResult>({
+		return http.request<SyncResult>({
 			method: "POST",
 			url: `/works/sync/${academicId}`,
 		})
@@ -67,14 +67,14 @@ export const worksService = {
 
 export const classificationService = {
 	domains(): Promise<ResearchDomain[]> {
-		return httpClient.request<ResearchDomain[]>({
+		return http.request<ResearchDomain[]>({
 			method: "GET",
 			url: "/works-classification/domains",
 		})
 	},
 
 	fields(domainId?: string): Promise<ResearchField[]> {
-		return httpClient.request<ResearchField[]>({
+		return http.request<ResearchField[]>({
 			method: "GET",
 			url: "/works-classification/fields",
 			params: domainId ? { domain_id: domainId } : undefined,
@@ -82,7 +82,7 @@ export const classificationService = {
 	},
 
 	subfields(fieldId?: string): Promise<ResearchSubfield[]> {
-		return httpClient.request<ResearchSubfield[]>({
+		return http.request<ResearchSubfield[]>({
 			method: "GET",
 			url: "/works-classification/subfields",
 			params: fieldId ? { field_id: fieldId } : undefined,
@@ -90,7 +90,7 @@ export const classificationService = {
 	},
 
 	topics(subfieldId?: string): Promise<ResearchTopic[]> {
-		return httpClient.request<ResearchTopic[]>({
+		return http.request<ResearchTopic[]>({
 			method: "GET",
 			url: "/works-classification/topics",
 			params: subfieldId ? { subfield_id: subfieldId } : undefined,
@@ -98,7 +98,7 @@ export const classificationService = {
 	},
 
 	keywords(): Promise<ResearchKeyword[]> {
-		return httpClient.request<ResearchKeyword[]>({
+		return http.request<ResearchKeyword[]>({
 			method: "GET",
 			url: "/works-classification/keywords",
 		})

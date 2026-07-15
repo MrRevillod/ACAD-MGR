@@ -1,46 +1,69 @@
-import { httpClient } from "$lib/shared/http/request"
-import type { Academic, UpdateAcademicDto, CreateAcademicDto, GetAcademicsParams } from "./dtos"
+import { http } from "$lib/shared/http/client"
+import { Academic } from "./entity"
 
-export const academicService = {
-	list(params?: GetAcademicsParams): Promise<Academic[]> {
-		return httpClient.request<Academic[]>({
+import type {
+	AcademicDTO,
+	CreateAcademicDTO,
+	GetAcademicsParams,
+	ImportResult,
+	UpdateAcademicDTO,
+} from "./dtos"
+
+class AcademicsService {
+	constructor() {}
+
+	public list(params?: GetAcademicsParams): Promise<Academic[]> {
+		const academics = http.request<AcademicDTO[]>({
 			method: "GET",
 			url: "/academics",
 			params,
 		})
-	},
 
-	get(id: string): Promise<Academic> {
-		return httpClient.request<Academic>({
+		return academics.then((data) => data.map((dto) => Academic.fromDTO(dto)))
+	}
+
+	public get(id: string): Promise<Academic> {
+		const academic = http.request<AcademicDTO>({
 			method: "GET",
 			url: `/academics/${id}`,
 		})
-	},
 
-	create(data: CreateAcademicDto): Promise<Academic> {
-		return httpClient.request<Academic>({
+		return academic.then((dto) => Academic.fromDTO(dto))
+	}
+
+	public create(data: CreateAcademicDTO): Promise<Academic> {
+		const academic = http.request<AcademicDTO>({
 			method: "POST",
 			url: "/academics",
 			data,
 		})
-	},
 
-	update(id: string, data: UpdateAcademicDto): Promise<Academic> {
-		return httpClient.request<Academic>({
+		return academic.then((dto) => Academic.fromDTO(dto))
+	}
+
+	public update(id: string, data: UpdateAcademicDTO): Promise<Academic> {
+		const academic = http.request<AcademicDTO>({
 			method: "PATCH",
 			url: `/academics/${id}`,
 			data,
 		})
-	},
 
-	async import(file: File): Promise<void> {
+		return academic.then((dto) => Academic.fromDTO(dto))
+	}
+
+	public import(file: File): Promise<ImportResult> {
 		const formData = new FormData()
 		formData.append("file", file)
 
-		return httpClient.request<void>({
+		return http.request<ImportResult>({
 			method: "POST",
 			url: "/academics/import",
 			data: formData,
+			headers: {
+				"Content-Type": "multipart/form-data",
+			},
 		})
-	},
+	}
 }
+
+export const academicService = new AcademicsService()

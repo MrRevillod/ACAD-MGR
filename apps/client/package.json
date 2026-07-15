@@ -22,6 +22,7 @@
 		"axios": "^1.17.0",
 		"country-list-spanish": "^0.3.2",
 		"dompurify": "^3.3.0",
+		"layerchart": "^2.0.1",
 		"runed": "^0.37.1",
 		"svelte-sonner": "^1.1.1",
 		"valibot": "^1.4.1"

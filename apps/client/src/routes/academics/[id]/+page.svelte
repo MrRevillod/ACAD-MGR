@@ -13,7 +13,7 @@
 		ExternalLink,
 	} from "@lucide/svelte"
 
-	import { authStore } from "$lib/auth/auth.store.svelte"
+	import { authStore } from "$lib/auth/store.svelte"
 	import { academicService } from "$academics/service"
 	import { degreeService } from "$degrees/service"
 	import DegreeDialog from "$degrees/components/degree-dialog.svelte"
@@ -23,7 +23,6 @@
 	import { CLf64Value } from "$shared/value-objects/cl-f64.value"
 	import { DateValue } from "$shared/value-objects/date.value"
 	import { CountryValue } from "$shared/value-objects/country.value"
-	import { SEX_LABELS, PLANTA_LABELS, ACADEMIC_OPTION_LABELS } from "$academics/enums"
 	import { DEGREE_KIND } from "$degrees/enums"
 	import type { Degree } from "$degrees/dtos"
 
@@ -141,7 +140,7 @@
 									País de Nacionalidad
 								</p>
 								<p class="mt-1 text-sm font-semibold text-white">
-									{academic.nationality}
+									{academic.nationality.toDisplay()}
 								</p>
 							</div>
 							<div>
@@ -159,7 +158,7 @@
 									Fecha de Nacimiento
 								</p>
 								<p class="mt-1 text-sm font-semibold text-white">
-									{DateValue.formatDate(academic.birthDate)}
+									{DateValue.formatDate(academic.birthDate.iso)}
 								</p>
 							</div>
 							<div>
@@ -169,7 +168,7 @@
 									Sexo
 								</p>
 								<p class="mt-1 text-sm font-semibold text-white">
-									{SEX_LABELS[academic.sex]}
+									{academic.sex.toDisplay()}
 								</p>
 							</div>
 							{#if academic.orcid}
@@ -266,7 +265,7 @@
 											Ingreso
 										</p>
 										<p class="mt-1 text-[15px] font-medium text-[#1a1a1a]">
-											{DateValue.formatDate(academic.joinedAt)}
+											{DateValue.formatDate(academic.joinedAt.iso)}
 										</p>
 									</div>
 									<div>
@@ -286,7 +285,7 @@
 											Jornada Completa Equivalente
 										</p>
 										<p class="mt-1 text-[15px] font-medium text-[#1a1a1a]">
-											{CLf64Value.format(academic.jce)}
+											{CLf64Value.format(academic.jce.number)}
 										</p>
 									</div>
 								</div>
@@ -307,7 +306,7 @@
 											Planta
 										</p>
 										<p class="mt-1 text-[15px] font-medium text-[#1a1a1a]">
-											{PLANTA_LABELS[academic.planta]}
+											{academic.planta.toDisplay()}
 										</p>
 									</div>
 									<div>
@@ -327,7 +326,7 @@
 											Opción
 										</p>
 										<p class="mt-1 text-[15px] font-medium text-[#1a1a1a]">
-											{ACADEMIC_OPTION_LABELS[academic.option]}
+											{academic.option.toDisplay()}
 										</p>
 									</div>
 									<div>

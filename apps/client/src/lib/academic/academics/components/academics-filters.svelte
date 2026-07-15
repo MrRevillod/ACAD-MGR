@@ -2,8 +2,8 @@
 	import Label from "$lib/shared/components/ui/label.svelte"
 	import Select from "$lib/shared/components/ui/select.svelte"
 	import Button from "$lib/shared/components/ui/button.svelte"
-	import { Search, RotateCcw, Plus } from "@lucide/svelte"
-	import { authStore } from "$lib/auth/auth.store.svelte"
+	import { Search, RotateCcw, Plus, Upload } from "@lucide/svelte"
+	import { authStore } from "$lib/auth/store.svelte"
 	import type { Department } from "$lib/university/departments/dtos"
 	import type { Career } from "$lib/university/careers/dtos"
 	import type { AcademicCategory } from "$lib/academic/categories/dtos"
@@ -20,6 +20,7 @@
 		categories: AcademicCategory[] | undefined
 		onClear: () => void
 		onCreate: () => void
+		onImport?: (file: File) => void
 	}
 
 	let {
@@ -34,9 +35,12 @@
 		categories,
 		onClear,
 		onCreate,
+		onImport,
 	}: Props = $props()
 
 	const isAdmin = $derived(authStore.isAuthenticated())
+
+	let fileInput = $state<HTMLInputElement | null>(null)
 
 	const deptItems = $derived([
 		{ value: "", label: "Todos" },
@@ -80,6 +84,25 @@
 			<Plus class="size-4" />
 			Crear académico
 		</button>
+		{#if onImport}
+			<button
+				class="mt-2 inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-corp-gray/20 bg-white px-4 py-2 text-sm font-medium text-corp-gray transition-colors hover:bg-corp-gray/5 hover:text-[#1A1A1A] active:scale-95"
+				onclick={() => fileInput?.click()}
+			>
+				<Upload class="size-4" />
+				Importar CSV
+			</button>
+			<input
+				type="file"
+				accept=".csv"
+				class="hidden"
+				bind:this={fileInput}
+				onchange={(e) => {
+					const file = (e.target as HTMLInputElement)?.files?.[0]
+					if (file) onImport(file)
+				}}
+			/>
+		{/if}
 	{/if}
 
 	<div class="relative mt-6">

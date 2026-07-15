@@ -15,15 +15,13 @@ impl SourcesRepository {
 	pub async fn find_source_view_by_id(&self, id: &SourceId) -> AppResult<Option<SourceView>> {
 		sqlx::query_as::<_, SourceView>(
 			r#"SELECT s.id, s.openalex_id, s.display_name, s.ty, s.issn_l, s.issn,
-			          COALESCE(
-			              ARRAY(SELECT DISTINCT unnest(ji.kinds)
-			                    FROM journal_issn ji
-			                    WHERE ji.issn = s.issn_l
-			                       OR ji.eissn = s.issn_l
-			                       OR ji.issn = ANY(s.issn)
-			                       OR ji.eissn = ANY(s.issn)),
-			              ARRAY[]::journal_kind[]
-			          ) AS kinds
+			          (SELECT ji.kind FROM journal_issn ji
+			           WHERE ji.issn = s.issn_l
+			              OR ji.eissn = s.issn_l
+			              OR ji.issn = ANY(s.issn)
+			              OR ji.eissn = ANY(s.issn)
+			           LIMIT 1
+			          ) AS kind
 			   FROM sources s
 			   WHERE s.id = $1"#,
 		)

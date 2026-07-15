@@ -18,6 +18,18 @@ pub struct Source {
 	pub issn: Option<Vec<String>>,
 }
 
+impl Source {
+	pub fn normalize_issn(issn: &str) -> Option<String> {
+		let normalized = issn.replace("-", "").to_uppercase();
+
+		if normalized.is_empty() {
+			None
+		} else {
+			Some(normalized)
+		}
+	}
+}
+
 impl Entity for Source {
 	fn key_name() -> &'static str {
 		"source"

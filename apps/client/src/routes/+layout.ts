@@ -1,4 +1,4 @@
-import { authService } from "$lib/auth/auth.service"
+import { authService } from "$lib/auth/service"
 
 export const ssr = false
 

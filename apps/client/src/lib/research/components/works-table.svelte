@@ -9,7 +9,7 @@
 
 	import DataTable from "$lib/shared/components/ui/data-table.svelte"
 
-	import { WORK_TYPE_LABELS, type Work } from "../types"
+	import type { Work } from "../types"
 
 	interface Props {
 		works: Work[]
@@ -29,9 +29,10 @@
 			header: "Año",
 			cell: (ctx) => renderSnippet(yearSnippet, { year: ctx.row.original.publicationYear }),
 		}),
-		helper.accessor("type", {
-			header: "Tipo",
-			cell: (ctx) => renderSnippet(typeSnippet, { type: ctx.row.original.type }),
+		helper.accessor("journalKind", {
+			header: "Indexación",
+			cell: (ctx) =>
+				renderSnippet(journalKindSnippet, { kind: ctx.row.original.journalKind }),
 		}),
 		helper.accessor("isAccepted", {
 			header: "Estado",
@@ -66,12 +67,22 @@
 	<span class="tabular-nums text-corp-gray">{year ?? "—"}</span>
 {/snippet}
 
-{#snippet typeSnippet({ type }: { type: Work["type"] })}
-	<span
-		class="inline-flex items-center rounded-full bg-corp-gray/10 px-2 py-0.5 text-xs font-medium text-corp-gray"
-	>
-		{WORK_TYPE_LABELS[type] ?? type}
-	</span>
+{#snippet journalKindSnippet({ kind }: { kind: string | null })}
+	{#if kind === "wos"}
+		<span
+			class="inline-flex items-center rounded-full bg-corp-blue/10 px-2 py-0.5 text-xs font-semibold text-corp-blue uppercase"
+		>
+			WoS
+		</span>
+	{:else if kind === "scopus"}
+		<span
+			class="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700 uppercase"
+		>
+			Scopus
+		</span>
+	{:else}
+		<span class="text-xs text-corp-gray/60">—</span>
+	{/if}
 {/snippet}
 
 {#snippet statusSnippet({ isAccepted, isPublished }: { isAccepted: boolean; isPublished: boolean })}

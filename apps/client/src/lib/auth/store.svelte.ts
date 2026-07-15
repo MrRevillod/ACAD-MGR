@@ -1,4 +1,4 @@
-import type { User } from "$lib/auth/auth.dtos"
+import type { User } from "$users/entity"
 
 class AuthStore {
 	user = $state<User | null>(null)

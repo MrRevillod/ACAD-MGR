@@ -1,8 +1,8 @@
-import { httpClient } from "$lib/shared/http/request"
+import { http } from "$lib/shared/http/client"
 import type { Faculty } from "./dtos"
 
 export const facultyService = {
 	list(): Promise<Faculty[]> {
-		return httpClient.request<Faculty[]>({ method: "GET", url: "/faculties" })
+		return http.request<Faculty[]>({ method: "GET", url: "/faculties" })
 	},
 }

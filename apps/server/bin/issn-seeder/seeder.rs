@@ -26,97 +26,180 @@ async fn upsert_record(
 	r: &IssnRecord,
 	kind: &str,
 ) -> Result<u64, Box<dyn std::error::Error>> {
-	let existing = sqlx::query_as::<_, (i32, Option<String>, Option<String>)>(
-		r#"SELECT id, issn, eissn FROM journal_issn
-		   WHERE ($1::text IS NOT NULL AND issn = $1)
-		      OR ($2::text IS NOT NULL AND eissn = $2)
-		   ORDER BY id"#,
-	)
-	.bind(&r.issn)
-	.bind(&r.eissn)
-	.fetch_all(&mut **tx)
-	.await?;
-
-	if existing.is_empty() {
-		let result = sqlx::query(
-			"INSERT INTO journal_issn (issn, eissn, kinds) VALUES ($1, $2, ARRAY[$3::journal_kind])",
-		)
-		.bind(&r.issn)
-		.bind(&r.eissn)
-		.bind(kind)
-		.execute(&mut **tx)
-		.await?;
-		return Ok(result.rows_affected());
-	}
-
-	let target_id = if existing.len() == 1 {
-		existing[0].0
-	} else {
-		let keep_id = existing[0].0;
-		let mut fill_issn = existing[0].1.clone();
-		let mut fill_eissn = existing[0].2.clone();
-
-		for (other_id, db_issn, db_eissn) in &existing[1..] {
-			if fill_issn.is_none() {
-				fill_issn = db_issn.clone();
-			}
-			if fill_eissn.is_none() {
-				fill_eissn = db_eissn.clone();
-			}
-
-			let row_kinds: Option<Vec<String>> = sqlx::query_scalar(
-				"SELECT kinds::text[] FROM journal_issn WHERE id = $1",
-			)
-			.bind(other_id)
-			.fetch_optional(&mut **tx)
-			.await?
-			.flatten();
-
-			sqlx::query("DELETE FROM journal_issn WHERE id = $1")
-				.bind(other_id)
-				.execute(&mut **tx)
-				.await?;
-
-			if let Some(kinds) = row_kinds {
-				sqlx::query(
-					r#"UPDATE journal_issn SET
-					     kinds = ARRAY(SELECT DISTINCT unnest(journal_issn.kinds || $2::journal_kind[]))
-					   WHERE id = $1"#,
-				)
-				.bind(keep_id)
-				.bind(&kinds)
-				.execute(&mut **tx)
-				.await?;
-			}
+	if kind == "wos" {
+		if let Some(ref issn) = r.issn {
+			return upsert_issn_wos(tx, issn, r.eissn.as_deref()).await;
 		}
+		if let Some(ref eissn) = r.eissn {
+			return upsert_eissn_wos(tx, eissn).await;
+		}
+	} else {
+		if let Some(ref issn) = r.issn {
+			return upsert_issn_scopus(tx, issn, r.eissn.as_deref()).await;
+		}
+		if let Some(ref eissn) = r.eissn {
+			return upsert_eissn_scopus(tx, eissn).await;
+		}
+	}
+	Ok(0)
+}
 
-		sqlx::query(
-			r#"UPDATE journal_issn SET
-			     issn = COALESCE(issn, $2),
-			     eissn = COALESCE(eissn, $3)
-			   WHERE id = $1"#,
-		)
-		.bind(keep_id)
-		.bind(fill_issn.as_deref())
-		.bind(fill_eissn.as_deref())
+async fn upsert_issn_wos(
+	tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+	issn: &str,
+	eissn: Option<&str>,
+) -> Result<u64, Box<dyn std::error::Error>> {
+	sqlx::query("SAVEPOINT wos_issn_sp")
 		.execute(&mut **tx)
 		.await?;
-
-		keep_id
-	};
 
 	let result = sqlx::query(
-		r#"UPDATE journal_issn SET
-		     issn = COALESCE(issn, $2),
-		     eissn = COALESCE(eissn, $3),
-		     kinds = ARRAY(SELECT DISTINCT unnest(kinds || ARRAY[$4::journal_kind]))
-		   WHERE id = $1"#,
+		r#"INSERT INTO journal_issn (issn, eissn, kind)
+		   VALUES ($1, $2, 'wos'::journal_kind)
+		   ON CONFLICT (issn) DO UPDATE SET
+		     eissn = COALESCE(journal_issn.eissn, EXCLUDED.eissn),
+		     kind = EXCLUDED.kind"#,
 	)
-	.bind(target_id)
-	.bind(r.issn.as_deref())
-	.bind(r.eissn.as_deref())
-	.bind(kind)
+	.bind(issn)
+	.bind(eissn)
+	.execute(&mut **tx)
+	.await;
+
+	match result {
+		Ok(r) => {
+			sqlx::query("RELEASE SAVEPOINT wos_issn_sp")
+				.execute(&mut **tx)
+				.await?;
+			Ok(r.rows_affected())
+		}
+		Err(sqlx::Error::Database(ref e)) if e.is_unique_violation() => {
+			sqlx::query("ROLLBACK TO SAVEPOINT wos_issn_sp")
+				.execute(&mut **tx)
+				.await?;
+			if let Some(eissn_val) = eissn {
+				let r = sqlx::query(
+					r#"UPDATE journal_issn SET
+					     issn = COALESCE(issn, $1),
+					     kind = 'wos'::journal_kind
+					   WHERE eissn = $2"#,
+				)
+				.bind(issn)
+				.bind(eissn_val)
+				.execute(&mut **tx)
+				.await?;
+				Ok(r.rows_affected())
+			} else {
+				Ok(0)
+			}
+		}
+		Err(e) => Err(Box::new(e)),
+	}
+}
+
+async fn upsert_eissn_wos(
+	tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+	eissn: &str,
+) -> Result<u64, Box<dyn std::error::Error>> {
+	let result = sqlx::query(
+		r#"INSERT INTO journal_issn (eissn, kind)
+		   VALUES ($1, 'wos'::journal_kind)
+		   ON CONFLICT (eissn) DO UPDATE SET kind = EXCLUDED.kind"#,
+	)
+	.bind(eissn)
 	.execute(&mut **tx)
 	.await?;
+	Ok(result.rows_affected())
+}
+
+async fn upsert_issn_scopus(
+	tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+	issn: &str,
+	eissn: Option<&str>,
+) -> Result<u64, Box<dyn std::error::Error>> {
+	if let Some(eissn_val) = eissn
+		&& let Some(id) = find_id_by_eissn(tx, eissn_val).await?
+	{
+		return update_issin_by_id(tx, id, issn).await;
+	}
+
+	if let Some(id) = find_id_by_issn(tx, issn).await? {
+		if let Some(eissn_val) = eissn {
+			return update_eissn_by_id(tx, id, eissn_val).await;
+		}
+		return Ok(0);
+	}
+
+	let result = sqlx::query(
+		"INSERT INTO journal_issn (issn, eissn, kind) VALUES ($1, $2, 'scopus'::journal_kind)",
+	)
+	.bind(issn)
+	.bind(eissn)
+	.execute(&mut **tx)
+	.await?;
+	Ok(result.rows_affected())
+}
+
+async fn upsert_eissn_scopus(
+	tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+	eissn: &str,
+) -> Result<u64, Box<dyn std::error::Error>> {
+	if find_id_by_eissn(tx, eissn).await?.is_some() {
+		return Ok(0);
+	}
+
+	let result = sqlx::query(
+		"INSERT INTO journal_issn (eissn, kind) VALUES ($1, 'scopus'::journal_kind)",
+	)
+	.bind(eissn)
+	.execute(&mut **tx)
+	.await?;
+	Ok(result.rows_affected())
+}
+
+async fn find_id_by_eissn(
+	tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+	value: &str,
+) -> Result<Option<i32>, Box<dyn std::error::Error>> {
+	sqlx::query_scalar::<_, i32>("SELECT id FROM journal_issn WHERE eissn = $1")
+		.bind(value)
+		.fetch_optional(&mut **tx)
+		.await
+		.map_err(Into::into)
+}
+
+async fn find_id_by_issn(
+	tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+	value: &str,
+) -> Result<Option<i32>, Box<dyn std::error::Error>> {
+	sqlx::query_scalar::<_, i32>("SELECT id FROM journal_issn WHERE issn = $1")
+		.bind(value)
+		.fetch_optional(&mut **tx)
+		.await
+		.map_err(Into::into)
+}
+
+async fn update_issin_by_id(
+	tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+	id: i32,
+	issn: &str,
+) -> Result<u64, Box<dyn std::error::Error>> {
+	let result = sqlx::query("UPDATE journal_issn SET issn = COALESCE(issn, $1) WHERE id = $2")
+		.bind(issn)
+		.bind(id)
+		.execute(&mut **tx)
+		.await?;
+	Ok(result.rows_affected())
+}
+
+async fn update_eissn_by_id(
+	tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+	id: i32,
+	eissn: &str,
+) -> Result<u64, Box<dyn std::error::Error>> {
+	let result = sqlx::query("UPDATE journal_issn SET eissn = COALESCE(eissn, $1) WHERE id = $2")
+		.bind(eissn)
+		.bind(id)
+		.execute(&mut **tx)
+		.await?;
 	Ok(result.rows_affected())
 }

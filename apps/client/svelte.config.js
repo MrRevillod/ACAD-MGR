@@ -17,6 +17,7 @@ const config = {
 			"$departments": "src/lib/university/departments",
 			"$faculties": "src/lib/university/faculties",
 			"$work-positions": "src/lib/university/work-positions",
+			"$users": "src/lib/users",
 		},
 	},
 	compilerOptions: {

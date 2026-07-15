@@ -89,6 +89,7 @@ pub struct Work {
 	pub is_accepted: bool,
 	pub is_published: bool,
 	pub primary_source_id: Option<SourceId>,
+	pub journal_kind: Option<String>,
 }
 
 impl Entity for Work {

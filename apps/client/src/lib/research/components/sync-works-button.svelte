@@ -2,7 +2,7 @@
 	import { Loader2, RefreshCw, AlertCircle } from "@lucide/svelte"
 	import { toast } from "svelte-sonner"
 
-	import { authStore } from "$lib/auth/auth.store.svelte"
+	import { authStore } from "$lib/auth/store.svelte"
 	import { useSyncWorksMutation } from "../queries"
 
 	interface Props {

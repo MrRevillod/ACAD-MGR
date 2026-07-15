@@ -1,9 +1,9 @@
-import { httpClient } from "$lib/shared/http/request"
+import { http } from "$lib/shared/http/client"
 import type { AcademicWorkPosition, CreatePositionDto } from "./dtos"
 
 export const positionService = {
 	list(params?: { name?: string }): Promise<AcademicWorkPosition[]> {
-		return httpClient.request<AcademicWorkPosition[]>({
+		return http.request<AcademicWorkPosition[]>({
 			method: "GET",
 			url: "/work-positions",
 			params,
@@ -11,7 +11,7 @@ export const positionService = {
 	},
 
 	create(data: CreatePositionDto): Promise<AcademicWorkPosition> {
-		return httpClient.request<AcademicWorkPosition>({
+		return http.request<AcademicWorkPosition>({
 			method: "POST",
 			url: "/work-positions",
 			data,

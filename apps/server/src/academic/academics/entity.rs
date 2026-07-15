@@ -55,6 +55,12 @@ pub struct AcademicListFilter {
 	pub option: Option<AcademicOption>,
 }
 
+impl Academic {
+	pub fn full_name(&self) -> String {
+		format!("{} {} {}", self.names, self.paternal_surname, self.maternal_surname)
+	}
+}
+
 impl Entity for Academic {
 	fn key_name() -> &'static str {
 		"academic"

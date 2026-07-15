@@ -1,9 +1,10 @@
 <script lang="ts">
-	import { authStore } from "$lib/auth/auth.store.svelte"
-	import { authService } from "$lib/auth/auth.service"
+	import { page } from "$app/state"
+	import { authStore } from "$lib/auth/store.svelte"
+	import { authService } from "$lib/auth/service"
 	import { goto } from "$app/navigation"
 	import { resolve } from "$app/paths"
-	import { Users, Settings, LogOut, LogIn } from "@lucide/svelte"
+	import { Users, Settings, LogOut, LogIn, BookOpen, BarChart3 } from "@lucide/svelte"
 	import { createMutation } from "@tanstack/svelte-query"
 
 	const logoutMutation = createMutation(() => ({
@@ -13,6 +14,14 @@
 			void goto(resolve("/"))
 		},
 	}))
+
+	const path = $derived(page.url.pathname)
+
+	function navClass(prefix: string) {
+		return path.startsWith(prefix)
+			? "inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-corp-blue bg-corp-blue/5 transition-colors"
+			: "inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-corp-gray transition-colors hover:bg-corp-gray/5 hover:text-[#1A1A1A]"
+	}
 
 	function handleLogout() {
 		logoutMutation.mutate()
@@ -26,19 +35,23 @@
 		</a>
 
 		<nav class="flex items-center gap-1">
-			<a
-				href="/academics"
-				class="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-corp-gray transition-colors hover:bg-corp-gray/5 hover:text-[#1A1A1A]"
-			>
+			<a href="/works" class={navClass("/works")}>
+				<BookOpen class="size-4" />
+				<span class="hidden sm:inline">Publicaciones</span>
+			</a>
+
+			<a href="/stats" class={navClass("/stats")}>
+				<BarChart3 class="size-4" />
+				<span class="hidden sm:inline">Estadísticas</span>
+			</a>
+
+			<a href="/academics" class={navClass("/academics")}>
 				<Users class="size-4" />
 				<span class="hidden sm:inline">Académicos</span>
 			</a>
 
 			{#if authStore.isAuthenticated()}
-				<a
-					href="/admin"
-					class="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-corp-gray transition-colors hover:bg-corp-gray/5 hover:text-[#1A1A1A]"
-				>
+				<a href="/admin" class={navClass("/admin")}>
 					<Settings class="size-4" />
 					<span class="hidden sm:inline">Administración</span>
 				</a>

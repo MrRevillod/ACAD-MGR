@@ -10,10 +10,11 @@
 	import { categoryService } from "$lib/academic/categories/service"
 	import { optionService } from "$lib/academic/options/service"
 	import { countryItems } from "$lib/shared/countries"
-	import { SEX_LABELS, ACADEMIC_OPTION_LABELS } from "$lib/academic/academics/enums"
 	import { toast } from "svelte-sonner"
-	import { createAcademicSchema } from "../dtos"
-	import type { CreateAcademicDto } from "$lib/academic/academics/dtos"
+	import { createAcademicDTOSchema } from "../dtos"
+	import type { CreateAcademicDTO } from "$lib/academic/academics/dtos"
+	import { SexValue } from "$shared/value-objects/sex.value"
+	import { AcademicOptionValue } from "$academics/value-objects/option.value"
 
 	interface Props {
 		open: boolean
@@ -22,7 +23,7 @@
 
 	let { open = $bindable(), onClose }: Props = $props()
 
-	const form = createForm({ schema: createAcademicSchema })
+	const form = createForm({ schema: createAcademicDTOSchema })
 
 	let selectedCategoryId = $state("")
 	let selectedCategoryError: string | undefined = $state(undefined)
@@ -60,7 +61,7 @@
 	const queryClient = useQueryClient()
 
 	const createAcad = createMutation(() => ({
-		mutationFn: (output: CreateAcademicDto) => academicService.create(output),
+		mutationFn: (output: CreateAcademicDTO) => academicService.create(output),
 		onSuccess: () => {
 			void queryClient.invalidateQueries({ queryKey: ["academics"] })
 			toast.success("Académico creado")
@@ -103,7 +104,7 @@
 	const categories = $derived(categoriesQuery.data ?? [])
 	const options = $derived(optionsQuery.data ?? [])
 
-	function handleSubmit(output: CreateAcademicDto) {
+	function handleSubmit(output: CreateAcademicDTO) {
 		if (!selectedCategoryId) {
 			selectedCategoryError = "Seleccione primero una categoría"
 			return
@@ -226,7 +227,7 @@
 								value={field.input}
 								class="h-10 w-full rounded-lg border border-corp-gray/20 bg-white px-3 text-sm text-[#1A1A1A] outline-none transition-colors placeholder:text-corp-gray/50 focus:border-corp-blue/50 focus:ring-2 focus:ring-corp-blue/10"
 							>
-								{#each Object.entries(SEX_LABELS) as [value, label] (value)}
+								{#each Object.entries(SexValue.LABELS) as [value, label] (value)}
 									<option {value}>{label}</option>
 								{/each}
 							</select>
@@ -432,7 +433,7 @@
 										categories.find((c) => c.id === o.categoryId)?.name ??
 										o.categoryId}
 									<option value={o.id}>
-										{catLabel} · {ACADEMIC_OPTION_LABELS[o.option]}{o.hours !=
+										{catLabel} · {AcademicOptionValue.LABELS[o.option]}{o.hours !=
 										null
 											? ` · ${o.hours} hrs`
 											: ""}

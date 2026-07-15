@@ -3,11 +3,10 @@
 	import { createMutation, useQueryClient } from "@tanstack/svelte-query"
 	import Dialog from "$lib/shared/components/ui/dialog.svelte"
 	import Button from "$lib/shared/components/ui/button.svelte"
-	import { userService } from "$lib/auth/users.service"
+	import { usersService } from "$lib/users/service"
 	import { toast } from "svelte-sonner"
-	import { createUserSchema, updateUserSchema } from "$lib/auth/auth.dtos"
-	import type { User } from "$lib/auth/auth.dtos"
-	import type { CreateUserDto, UpdateUserDto } from "$lib/auth/auth.dtos"
+	import { createUserDTOSchema, updateUserDTOSchema, type CreateUserDTO, type UpdateUserDTO } from "$lib/users/dtos"
+	import type { User } from "$lib/users/entity"
 
 	interface Props {
 		user?: User | null
@@ -19,7 +18,7 @@
 	let { user = null, open = $bindable(), onClose, onDelete }: Props = $props()
 
 	// svelte-ignore state_referenced_locally
-	const schema = user ? updateUserSchema : createUserSchema
+	const schema = user ? updateUserDTOSchema : createUserDTOSchema
 	const form = createForm({ schema })
 
 	$effect(() => {
@@ -29,7 +28,7 @@
 				initialInput: {
 					name: user.name,
 					email: user.email,
-					role: user.role,
+					role: user.role.code as "admin",
 				},
 			})
 		} else {
@@ -47,7 +46,7 @@
 	const queryClient = useQueryClient()
 
 	const createUserMut = createMutation(() => ({
-		mutationFn: (output: CreateUserDto) => userService.create(output),
+		mutationFn: (output: CreateUserDTO) => usersService.create(output),
 		onSuccess: () => {
 			void queryClient.invalidateQueries({ queryKey: ["users"] })
 			toast.success("Usuario creado")
@@ -57,8 +56,8 @@
 	}))
 
 	const updateUserMut = createMutation(() => ({
-		mutationFn: ({ id, data }: { id: string; data: UpdateUserDto }) =>
-			userService.update(id, data),
+		mutationFn: ({ id, data }: { id: string; data: UpdateUserDTO }) =>
+			usersService.update(id, data),
 		onSuccess: () => {
 			void queryClient.invalidateQueries({ queryKey: ["users"] })
 			toast.success("Usuario actualizado")
@@ -67,13 +66,13 @@
 		onError: () => toast.error("Error al actualizar el usuario"),
 	}))
 
-	function handleCreate(output: CreateUserDto) {
+	function handleCreate(output: CreateUserDTO) {
 		createUserMut.mutate(output)
 	}
 
-	function handleUpdate(output: UpdateUserDto) {
+	function handleUpdate(output: UpdateUserDTO) {
 		if (!user) return
-		const data: UpdateUserDto = {
+		const data: UpdateUserDTO = {
 			name: output.name,
 			email: output.email,
 		}
@@ -88,7 +87,7 @@
 	<Form
 		of={form}
 		onsubmit={(output) =>
-			user ? handleUpdate(output as UpdateUserDto) : handleCreate(output as CreateUserDto)}
+			user ? handleUpdate(output as UpdateUserDTO) : handleCreate(output as CreateUserDTO)}
 	>
 		<div class="grid gap-4">
 			<Field of={form} path={["name"]}>

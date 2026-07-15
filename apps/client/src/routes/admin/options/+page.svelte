@@ -8,7 +8,7 @@
 	import Badge from "$lib/shared/components/ui/badge.svelte"
 	import DataTable from "$lib/shared/components/ui/data-table.svelte"
 	import { Plus, Loader2, Pencil, Trash2 } from "@lucide/svelte"
-	import { ACADEMIC_OPTION_LABELS, type AcademicOption } from "$lib/academic/academics/enums"
+	import { AcademicOptionValue, type AcademicOption } from "$lib/academic/academics/value-objects/option.value"
 	import type { AcademicCategoryOption } from "$lib/academic/options/dtos"
 
 	const query = createQuery(() => ({
@@ -72,7 +72,7 @@
 
 {#snippet optionBadge(params: { value: AcademicOption })}
 	<Badge variant={params.value === "research" ? "advanced" : "base"}>
-		{ACADEMIC_OPTION_LABELS[params.value]}
+		{AcademicOptionValue.LABELS[params.value]}
 	</Badge>
 {/snippet}
 

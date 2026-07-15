@@ -133,11 +133,13 @@
 							<p class="text-sm font-medium text-[#1A1A1A]">
 								{work.source.displayName}
 							</p>
-							{#each work.source.kinds as kind (kind)}
-								<Badge variant={kind === "scopus" ? "advanced" : "base"}>
-									{JOURNAL_KIND_LABELS[kind]}
+							{#if work.source.kind}
+								<Badge
+									variant={work.source.kind === "scopus" ? "advanced" : "base"}
+								>
+									{JOURNAL_KIND_LABELS[work.source.kind]}
 								</Badge>
-							{/each}
+							{/if}
 							<span class="text-xs text-corp-gray">· {work.source.ty}</span>
 						</div>
 					</section>

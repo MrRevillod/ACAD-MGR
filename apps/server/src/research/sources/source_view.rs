@@ -1,5 +1,5 @@
+use super::journal_kind::JournalKind;
 use super::SourceId;
-use super::JournalKind;
 
 use serde::Serialize;
 use sqlx::FromRow;
@@ -13,5 +13,5 @@ pub struct SourceView {
 	pub ty: String,
 	pub issn_l: Option<String>,
 	pub issn: Option<Vec<String>>,
-	pub kinds: Vec<JournalKind>,
+	pub kind: Option<JournalKind>,
 }

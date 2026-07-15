@@ -1,14 +1,22 @@
 export class DateValue {
 	private constructor(private readonly value?: string) {}
 
+	public get iso(): string | null {
+		return this.value ?? null
+	}
+
 	private parsed(): Date | null {
 		if (!this.value) return null
 		const d = new Date(this.value)
 		return Number.isNaN(d.getTime()) ? null : d
 	}
 
-	static from(value?: string | null): DateValue | null {
-		if (typeof value !== "string") return null
+	static from(value?: string | null): DateValue {
+		if (typeof value !== "string") {
+			console.warn("Invalid DateValue:", value)
+			return new DateValue(undefined)
+		}
+
 		return new DateValue(value)
 	}
 

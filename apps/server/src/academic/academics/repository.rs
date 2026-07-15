@@ -25,7 +25,7 @@ impl AcademicsRepository {
                 ac.planta,
                 aco.option,
                 aco.hours AS acad_category_hours, a.annual_discount_hours,
-                co.name AS nationality,
+                a.nationality_code AS nationality,
                 a.city
             FROM academics a
             LEFT JOIN academic_work_positions wp ON a.work_position_id = wp.id
@@ -33,7 +33,6 @@ impl AcademicsRepository {
             LEFT JOIN careers c ON a.career_id = c.id
             JOIN academic_category_options aco ON a.acad_category_options_id = aco.id
             JOIN academic_categories ac ON aco.category_id = ac.id
-            JOIN countries co ON a.nationality_code = co.code
             WHERE 1=1
             ",
 		);
@@ -113,7 +112,7 @@ impl AcademicsRepository {
                 ac.planta,
                 aco.option,
                 aco.hours AS acad_category_hours, a.annual_discount_hours,
-                co.name AS nationality,
+                a.nationality_code AS nationality,
                 a.city
             FROM academics a
             LEFT JOIN academic_work_positions wp ON a.work_position_id = wp.id
@@ -121,7 +120,6 @@ impl AcademicsRepository {
             LEFT JOIN careers c ON a.career_id = c.id
             JOIN academic_category_options aco ON a.acad_category_options_id = aco.id
             JOIN academic_categories ac ON aco.category_id = ac.id
-            JOIN countries co ON a.nationality_code = co.code
             WHERE a.id = $1
             ",
 		)

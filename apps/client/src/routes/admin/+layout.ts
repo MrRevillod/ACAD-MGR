@@ -1,5 +1,5 @@
 import { redirect } from "@sveltejs/kit"
-import { authStore } from "$lib/auth/auth.store.svelte"
+import { authStore } from "$lib/auth/store.svelte"
 
 export const load = async () => {
 	if (!authStore.isAuthenticated()) {

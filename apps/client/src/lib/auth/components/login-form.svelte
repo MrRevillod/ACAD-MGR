@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { createForm, Field, Form } from "@formisch/svelte"
-	import { loginSchema, type LoginInput } from "$lib/auth/auth.dtos"
+	import { loginDTOSchema, type LoginDTO } from "$lib/auth/dtos"
 	import { createMutation } from "@tanstack/svelte-query"
 	import { toast } from "svelte-sonner"
 	import { LogIn, Eye, EyeOff } from "@lucide/svelte"
-	import { authService } from "$lib/auth/auth.service"
-	import { authStore } from "$lib/auth/auth.store.svelte"
+	import { authService } from "$lib/auth/service"
+	import { authStore } from "$lib/auth/store.svelte"
 	import type { ApiResponse } from "$lib/shared/http/response"
 
 	interface Props {
@@ -14,12 +14,12 @@
 
 	let { onSuccess }: Props = $props()
 
-	const form = createForm({ schema: loginSchema })
+	const form = createForm({ schema: loginDTOSchema })
 
 	let showPassword = $state(false)
 
 	const loginMutation = createMutation(() => ({
-		mutationFn: (payload: LoginInput) => authService.login(payload),
+		mutationFn: (payload: LoginDTO) => authService.login(payload),
 		onSuccess: async (user) => {
 			authStore.setSession(user)
 			onSuccess?.()

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Users, Settings, ArrowRight } from "@lucide/svelte"
-	import { authStore } from "$lib/auth/auth.store.svelte"
+	import { authStore } from "$lib/auth/store.svelte"
 </script>
 
 <div class="mx-auto flex h-full max-w-[1600px] items-center justify-center px-4 sm:px-6 lg:px-8">

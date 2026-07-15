@@ -9,6 +9,14 @@ export class FullName {
 		return new FullName(names, paternalSurname, maternalSurname)
 	}
 
+	static fromFullString(fullName: string): string {
+		return fullName
+			.toLowerCase()
+			.split(" ")
+			.map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+			.join(" ")
+	}
+
 	private toPascalCase(str: string): string {
 		return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()
 	}

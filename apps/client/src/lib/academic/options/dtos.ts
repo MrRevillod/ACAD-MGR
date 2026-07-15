@@ -1,5 +1,5 @@
 import * as v from "valibot"
-import { ACADEMIC_OPTION, type AcademicOption } from "$lib/academic/academics/enums"
+import { AcademicOptionValue, type AcademicOption } from "$lib/academic/academics/value-objects/option.value"
 
 export interface AcademicCategoryOption {
 	id: string
@@ -21,7 +21,7 @@ const hoursSchema = v.optional(
 
 export const createOptionSchema = v.object({
 	categoryId: v.pipe(v.string(), v.nonEmpty("Seleccione una categoría")),
-	option: v.picklist(ACADEMIC_OPTION, "Seleccione una opción"),
+	option: v.picklist(AcademicOptionValue.OPTIONS, "Seleccione una opción"),
 	hours: hoursSchema,
 })
 

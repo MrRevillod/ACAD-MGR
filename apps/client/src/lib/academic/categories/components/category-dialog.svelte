@@ -5,7 +5,7 @@
 	import Button from "$lib/shared/components/ui/button.svelte"
 	import { categoryService } from "$lib/academic/categories/service"
 	import { toast } from "svelte-sonner"
-	import { ACADEMIC_PLANTA, PLANTA_LABELS } from "$lib/academic/academics/enums"
+	import { PlantaValue } from "$lib/academic/academics/value-objects/planta.value"
 	import { createCategorySchema, type CreateCategoryDto } from "../dtos"
 
 	interface Props {
@@ -71,8 +71,8 @@
 							value={field.input}
 							class="h-10 w-full rounded-lg border border-corp-gray/20 bg-white px-3 text-sm text-[#1A1A1A] outline-none transition-colors placeholder:text-corp-gray/50 focus:border-corp-blue/50 focus:ring-2 focus:ring-corp-blue/10"
 						>
-							{#each ACADEMIC_PLANTA as p (p)}
-								<option value={p}>{PLANTA_LABELS[p]}</option>
+							{#each PlantaValue.PLANTA as p (p)}
+								<option value={p}>{PlantaValue.LABELS[p]}</option>
 							{/each}
 						</select>
 					</label>

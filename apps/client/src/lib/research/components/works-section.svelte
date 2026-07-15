@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { AlertCircle, BookOpen, Loader2 } from "@lucide/svelte"
 
-	import type { Academic } from "$lib/academic/academics/dtos"
+	import type { Academic } from "$lib/academic/academics/entity"
 
 	import { useWorksByAcademicQuery } from "../queries"
 	import type { Work } from "../types"

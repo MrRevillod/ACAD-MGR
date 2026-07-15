@@ -1,8 +1,9 @@
 <script lang="ts">
-	import { createQuery } from "@tanstack/svelte-query"
+	import { createMutation, createQuery, useQueryClient } from "@tanstack/svelte-query"
 	import { goto } from "$app/navigation"
 	import { resolve } from "$app/paths"
 	import { Loader2, AlertCircle } from "@lucide/svelte"
+	import { toast } from "svelte-sonner"
 	import { createColumnHelper, type TableFeatures } from "@tanstack/svelte-table"
 	import { useSearchParams } from "runed/kit"
 	import * as v from "valibot"
@@ -13,8 +14,8 @@
 	import DataTable from "$lib/shared/components/ui/data-table.svelte"
 	import AcademicsFilters from "$lib/academic/academics/components/academics-filters.svelte"
 	import AcademicCreateDialog from "$lib/academic/academics/components/academic-create-dialog.svelte"
-	import type { Academic, GetAcademicsParams } from "$lib/academic/academics/dtos"
-	import { PLANTA_LABELS, ACADEMIC_OPTION_LABELS } from "$lib/academic/academics/enums"
+	import type { GetAcademicsParams } from "$lib/academic/academics/dtos"
+	import type { Academic } from "$lib/academic/academics/entity"
 	import { FullName } from "$lib/shared/value-objects/full-name.value"
 
 	const searchParamsSchema = v.object({
@@ -69,6 +70,20 @@
 		queryFn: () => academicService.list(filters),
 	}))
 
+	const queryClient = useQueryClient()
+
+	const importMutation = createMutation(() => ({
+		mutationFn: (file: File) => academicService.import(file),
+		onSuccess: (result) => {
+			void queryClient.invalidateQueries({ queryKey: ["academics"] })
+			toast.success(`${result.imported} académicos importados`)
+			if (result.errors.length > 0) {
+				toast.error(`${result.errors.length} filas con errores`)
+			}
+		},
+		onError: () => toast.error("Error al importar el archivo"),
+	}))
+
 	const helper = createColumnHelper<TableFeatures, Academic>()
 
 	const columns = [
@@ -82,11 +97,11 @@
 		helper.accessor("email", { header: "Email" }),
 		helper.accessor("department", { header: "Departamento" }),
 		helper.accessor("category", { header: "Categoría" }),
-		helper.accessor((row) => PLANTA_LABELS[row.planta], {
+		helper.accessor((row) => row.planta.toDisplay(), {
 			id: "planta",
 			header: "Planta",
 		}),
-		helper.accessor((row) => ACADEMIC_OPTION_LABELS[row.option], {
+		helper.accessor((row) => row.option.toDisplay(), {
 			id: "option",
 			header: "Opción",
 		}),
@@ -107,6 +122,7 @@
 			categories={categoriesQuery.data}
 			onClear={clearFilters}
 			onCreate={() => (showCreateDialog = true)}
+			onImport={(file) => importMutation.mutate(file)}
 		/>
 
 		<main class="min-w-0 flex-1 overflow-y-auto">

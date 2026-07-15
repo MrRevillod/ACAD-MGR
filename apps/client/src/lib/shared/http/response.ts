@@ -1,4 +1,5 @@
-export type ValidationErrors = Record<string, { code: string; message: string }[]>
+const DEFAULT_ERROR_MESSAGE =
+	"Ocurrió un error inesperado, por favor intente nuevamente más tarde."
 
 export class ApiResponse<T = unknown> {
 	constructor(
@@ -8,7 +9,7 @@ export class ApiResponse<T = unknown> {
 		public timestamp: string,
 		public data?: T | null,
 		public error?: unknown,
-		public errors?: ValidationErrors | null,
+		public errors?: ValidationErrors | null
 	) {}
 
 	static is(payload: unknown): payload is ApiResponse<unknown> {
@@ -27,4 +28,22 @@ export class ApiResponse<T = unknown> {
 	static genericError(code: number, message: string): ApiResponse<never> {
 		return new ApiResponse<never>(code, false, message, new Date().toISOString())
 	}
+
+	static from(payload: ApiResponse<unknown>): ApiResponse<unknown> {
+		return new ApiResponse<unknown>(
+			payload.code,
+			payload.success,
+			payload.message,
+			payload.timestamp,
+			payload.data,
+			payload.error,
+			payload.errors
+		)
+	}
+
+	get messageOrDefault(): string {
+		return this.message ?? DEFAULT_ERROR_MESSAGE
+	}
 }
+
+export type ValidationErrors = Record<string, { code: string; message: string }[]>

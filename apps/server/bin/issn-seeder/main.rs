@@ -19,11 +19,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
 	let data_dir = Path::new("data/ISSN");
 
 	let files: &[(&str, &str)] = &[
-		("SCOPUS.csv", "scopus"),
 		("WoS-AHCI.csv", "wos"),
 		("WoS-ESCI.csv", "wos"),
 		("WoS-SCIE.csv", "wos"),
 		("WoS-SSCI.csv", "wos"),
+		("SCOPUS.csv", "scopus"),
 	];
 
 	for (filename, kind) in files {

@@ -4,7 +4,7 @@
 	import { categoryService } from "$lib/academic/categories/service"
 	import { optionService } from "$lib/academic/options/service"
 	import { positionService } from "$lib/university/work-positions/service"
-	import { userService } from "$lib/auth/users.service"
+	import { usersService } from "$lib/users/service"
 	import { GraduationCap, Users, Tags, ListOrdered, Briefcase } from "@lucide/svelte"
 
 	const academicsQuery = createQuery(() => ({
@@ -14,7 +14,7 @@
 
 	const usersQuery = createQuery(() => ({
 		queryKey: ["admin", "users"],
-		queryFn: () => userService.list(),
+		queryFn: () => usersService.list(),
 	}))
 
 	const categoriesQuery = createQuery(() => ({
