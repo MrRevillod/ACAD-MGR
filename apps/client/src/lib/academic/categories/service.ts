@@ -1,27 +1,37 @@
 import { http } from "$lib/shared/http/client"
-import type { AcademicCategory, CreateCategoryDto } from "./dtos"
+import { AcademicCategory } from "./entity"
 
-export const categoryService = {
-	list(params?: { name?: string; planta?: string }): Promise<AcademicCategory[]> {
-		return http.request<AcademicCategory[]>({
+import type { AcademicCategoryDTO, CreateCategoryDTO } from "./dtos"
+
+class CategoryService {
+	public list(params?: { name?: string; planta?: string }): Promise<AcademicCategory[]> {
+		const category = http.request<AcademicCategoryDTO[]>({
 			method: "GET",
 			url: "/academic-categories",
 			params,
 		})
-	},
 
-	get(id: string): Promise<AcademicCategory> {
-		return http.request<AcademicCategory>({
+		return category.then((dtos) => dtos.map((dto) => AcademicCategory.fromDTO(dto)))
+	}
+
+	public get(id: string): Promise<AcademicCategory> {
+		const category = http.request<AcademicCategoryDTO>({
 			method: "GET",
 			url: `/academic-categories/${id}`,
 		})
-	},
 
-	create(data: CreateCategoryDto): Promise<AcademicCategory> {
-		return http.request<AcademicCategory>({
+		return category.then((dto) => AcademicCategory.fromDTO(dto))
+	}
+
+	public create(data: CreateCategoryDTO): Promise<AcademicCategory> {
+		const category = http.request<AcademicCategoryDTO>({
 			method: "POST",
 			url: "/academic-categories",
 			data,
 		})
-	},
+
+		return category.then((dto) => AcademicCategory.fromDTO(dto))
+	}
 }
+
+export const categoryService = new CategoryService()

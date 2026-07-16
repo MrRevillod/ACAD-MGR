@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { TimeSeriesStat } from "../types"
+	import type { TimeSeriesStat } from "$stats/dtos"
 
 	interface Props {
 		journalKind: TimeSeriesStat[]

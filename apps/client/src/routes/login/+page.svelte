@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { goto } from "$app/navigation"
-	import { resolve } from "$app/paths"
-	import LoginForm from "$lib/auth/components/login-form.svelte"
+
+	import LoginForm from "$auth/components/login-form.svelte"
 
 	async function handleSuccess() {
-		await goto(resolve("/"))
+		await goto("/")
 	}
 </script>
 

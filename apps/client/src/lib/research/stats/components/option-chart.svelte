@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { TimeSeriesStat } from "../types"
+	import type { TimeSeriesStat } from "$stats/dtos"
 
 	interface Props {
 		data: TimeSeriesStat[]
@@ -17,13 +17,11 @@
 		research: "#EDC500",
 	}
 
-	const allYears = $derived([
-		...new Set(data.flatMap((s) => s.values.map((v) => v.year))),
-	].sort((a, b) => a - b))
-
-	const maxVal = $derived(
-		Math.max(...data.flatMap((s) => s.values.map((v) => v.value)), 1),
+	const allYears = $derived(
+		[...new Set(data.flatMap((s) => s.values.map((v) => v.year)))].sort((a, b) => a - b),
 	)
+
+	const maxVal = $derived(Math.max(...data.flatMap((s) => s.values.map((v) => v.value)), 1))
 
 	const pad = 40
 	const bottom = 40
@@ -59,7 +57,9 @@
 				y2={y(tick)}
 				class="stroke-corp-gray/15"
 			/>
-			<text x={pad - 6} y={y(tick) + 4} text-anchor="end" class="fill-corp-gray text-[10px]">{tick}</text>
+			<text x={pad - 6} y={y(tick) + 4} text-anchor="end" class="fill-corp-gray text-[10px]"
+				>{tick}</text
+			>
 		{/each}
 
 		{#each allYears as year, yi (year)}

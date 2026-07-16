@@ -1,11 +1,15 @@
 import * as v from "valibot"
-import { AcademicOptionValue, type AcademicOption } from "$lib/academic/academics/value-objects/option.value"
+import { AcademicOptionValue } from "./value-objects/option.value"
 
-export interface AcademicCategoryOption {
+export interface AcademicCategoryOptionDTO {
 	id: string
 	categoryId: string
-	option: AcademicOption
+	option: string
 	hours: number | null
+}
+
+export interface GetOptionsParams {
+	category_id?: string
 }
 
 const normalizeDecimal = (v: unknown) => (typeof v === "string" ? v.replace(",", ".") : v)
@@ -26,3 +30,9 @@ export const createOptionSchema = v.object({
 })
 
 export type CreateOptionDto = v.InferInput<typeof createOptionSchema>
+
+export const createOptionDTOInitialInput = {
+	categoryId: "",
+	option: "teaching" as const,
+	hours: null as number | null,
+}

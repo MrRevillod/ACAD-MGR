@@ -1,12 +1,16 @@
 <script lang="ts">
-	import { createQuery } from "@tanstack/svelte-query"
-	import { Loader2, AlertCircle, Plus } from "@lucide/svelte"
-	import { createColumnHelper, type TableFeatures } from "@tanstack/svelte-table"
-	import { usersService } from "$lib/users/service"
-	import DataTable from "$lib/shared/components/ui/data-table.svelte"
-	import UserDialog from "$lib/auth/components/user-dialog.svelte"
-	import { toast } from "svelte-sonner"
 	import type { User } from "$lib/users/entity"
+	import type { TableFeatures } from "@tanstack/svelte-table"
+
+	import { toast } from "svelte-sonner"
+	import { createQuery } from "@tanstack/svelte-query"
+	import { usersService } from "$users/service"
+	import { inlineTryAsync } from "$shared/try"
+	import { createColumnHelper } from "@tanstack/svelte-table"
+	import { Loader, CircleAlert, Plus } from "@lucide/svelte"
+
+	import DataTable from "$shared/components/ui/data-table.svelte"
+	import UserDialog from "$auth/components/user-dialog.svelte"
 
 	let search = $state("")
 	let showDialog = $state(false)
@@ -31,11 +35,14 @@
 
 	async function handleDelete(u: User) {
 		if (!window.confirm(`¿Eliminar a "${u.name}"? Esta acción no se puede deshacer.`)) return
-		try {
+
+		const [_, e] = await inlineTryAsync(async () => {
 			await usersService.delete(u.id)
 			toast.success("Usuario eliminado")
 			void usersQuery.refetch()
-		} catch {
+		})
+
+		if (e !== null) {
 			toast.error("Error al eliminar el usuario")
 		}
 	}
@@ -82,11 +89,11 @@
 
 	{#if usersQuery.isPending}
 		<div class="flex items-center justify-center py-16">
-			<Loader2 class="size-6 animate-spin text-corp-gray" />
+			<Loader class="size-6 animate-spin text-corp-gray" />
 		</div>
 	{:else if usersQuery.isError}
 		<div class="flex flex-col items-center justify-center py-16 text-center">
-			<AlertCircle class="size-8 text-red-500" />
+			<CircleAlert class="size-8 text-red-500" />
 			<p class="mt-3 text-sm text-corp-gray">Error al cargar los usuarios.</p>
 		</div>
 	{:else}

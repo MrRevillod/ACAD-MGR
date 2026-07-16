@@ -1,6 +1,6 @@
 <script lang="ts">
 	import {
-		Loader2,
+		Loader,
 		ExternalLink,
 		Mail,
 		Building2,
@@ -10,12 +10,13 @@
 	} from "@lucide/svelte"
 	import { toast } from "svelte-sonner"
 
-	import Dialog from "$lib/shared/components/ui/dialog.svelte"
-	import Badge from "$lib/shared/components/ui/badge.svelte"
-	import { DateValue } from "$lib/shared/value-objects/date.value"
+	import { DateValue } from "$shared/value-objects/date.value"
+	import { WORK_TYPE_LABELS } from "$works/dtos"
+	import { useWorkDetailQuery } from "$works/queries"
+	import { AuthorshipPositionValue } from "$works/value-objects/position.value"
 
-	import { useWorkDetailQuery } from "../queries"
-	import { POSITION_LABELS, WORK_TYPE_LABELS, JOURNAL_KIND_LABELS } from "../types"
+	import Badge from "$shared/components/ui/badge.svelte"
+	import Dialog from "$shared/components/ui/dialog.svelte"
 
 	interface Props {
 		workId: string | null
@@ -39,7 +40,7 @@
 		</p>
 	{:else if query.isPending}
 		<div class="flex justify-center py-12">
-			<Loader2 class="size-6 animate-spin text-corp-gray" />
+			<Loader class="size-6 animate-spin text-corp-gray" />
 		</div>
 	{:else if query.isError || !query.data}
 		<p class="py-12 text-center text-sm text-red-500">Error al cargar la publicación.</p>
@@ -118,9 +119,11 @@
 					</h3>
 					<div class="flex items-center gap-2">
 						<p class="text-sm font-medium text-[#1A1A1A]">{work.source.displayName}</p>
-						{#if work.source.kind}
-							<Badge variant={work.source.kind === "scopus" ? "advanced" : "base"}>
-								{JOURNAL_KIND_LABELS[work.source.kind]}
+						{#if work.source.kind.code}
+							<Badge
+								variant={work.source.kind.code === "scopus" ? "advanced" : "base"}
+							>
+								{work.source.kind.toDisplay()}
 							</Badge>
 						{/if}
 						<span class="text-xs text-corp-gray">· {work.source.ty}</span>
@@ -171,7 +174,7 @@
 								</button>
 								<p class="mt-0.5 text-xs text-corp-gray">
 									Posición: <span class="font-medium text-[#1A1A1A]"
-										>{POSITION_LABELS[auth.position]}</span
+										>{AuthorshipPositionValue.LABELS[auth.position]}</span
 									>
 								</p>
 								{#if auth.affiliations.length > 0}

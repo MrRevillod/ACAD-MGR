@@ -57,7 +57,10 @@ pub struct AcademicListFilter {
 
 impl Academic {
 	pub fn full_name(&self) -> String {
-		format!("{} {} {}", self.names, self.paternal_surname, self.maternal_surname)
+		format!(
+			"{} {} {}",
+			self.names, self.paternal_surname, self.maternal_surname
+		)
 	}
 }
 

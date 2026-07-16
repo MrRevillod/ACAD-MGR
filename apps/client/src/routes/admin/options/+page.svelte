@@ -1,15 +1,18 @@
 <script lang="ts">
+	import type { TableFeatures } from "@tanstack/svelte-table"
+	import type { AcademicOptionValue } from "$options/value-objects/option.value"
+	import type { AcademicCategoryOption } from "$options/entity"
+
 	import { createQuery } from "@tanstack/svelte-query"
-	import { renderSnippet, createColumnHelper, type TableFeatures } from "@tanstack/svelte-table"
-	import { optionService } from "$lib/academic/options/service"
-	import { categoryService } from "$lib/academic/categories/service"
-	import OptionDialog from "$lib/academic/options/components/option-dialog.svelte"
-	import Button from "$lib/shared/components/ui/button.svelte"
-	import Badge from "$lib/shared/components/ui/badge.svelte"
-	import DataTable from "$lib/shared/components/ui/data-table.svelte"
-	import { Plus, Loader2, Pencil, Trash2 } from "@lucide/svelte"
-	import { AcademicOptionValue, type AcademicOption } from "$lib/academic/academics/value-objects/option.value"
-	import type { AcademicCategoryOption } from "$lib/academic/options/dtos"
+	import { optionService } from "$options/service"
+	import { categoryService } from "$categories/service"
+	import { Plus, Loader, Pencil, Trash2 } from "@lucide/svelte"
+	import { renderSnippet, createColumnHelper } from "@tanstack/svelte-table"
+
+	import Badge from "$shared/components/ui/badge.svelte"
+	import Button from "$shared/components/ui/button.svelte"
+	import DataTable from "$shared/components/ui/data-table.svelte"
+	import OptionDialog from "$options/components/option-dialog.svelte"
 
 	const query = createQuery(() => ({
 		queryKey: ["admin", "options"],
@@ -63,16 +66,16 @@
 
 	{#if query.isPending}
 		<div class="flex items-center justify-center py-16">
-			<Loader2 class="size-6 animate-spin text-corp-gray" />
+			<Loader class="size-6 animate-spin text-corp-gray" />
 		</div>
 	{:else}
 		<DataTable data={query.data ?? []} {columns} pageSize={10} />
 	{/if}
 </div>
 
-{#snippet optionBadge(params: { value: AcademicOption })}
-	<Badge variant={params.value === "research" ? "advanced" : "base"}>
-		{AcademicOptionValue.LABELS[params.value]}
+{#snippet optionBadge(params: { value: AcademicOptionValue })}
+	<Badge variant={params.value.code === "research" ? "advanced" : "base"}>
+		{params.value.toDisplay()}
 	</Badge>
 {/snippet}
 

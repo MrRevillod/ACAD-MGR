@@ -35,6 +35,7 @@ struct TopPublisherRow {
 	total: Option<i64>,
 	scopus: Option<i64>,
 	wos: Option<i64>,
+	unindexed: Option<i64>,
 	option: String,
 }
 
@@ -82,17 +83,15 @@ impl StatsRepository {
 		&self,
 		query: &WorksStatsQuery,
 	) -> AppResult<Vec<TimeSeriesStat>> {
-		let rows = sqlx::query_as::<_, JournalKindRow>(
-			&format!(
-				r#"SELECT w.publication_year AS year,
+		let rows = sqlx::query_as::<_, JournalKindRow>(&format!(
+			r#"SELECT w.publication_year AS year,
 					COUNT(DISTINCT w.id) FILTER (WHERE ji.kind = 'wos')::bigint AS wos,
 					COUNT(DISTINCT w.id) FILTER (WHERE ji.kind = 'scopus')::bigint AS scopus
 				{}
 				GROUP BY w.publication_year
 				ORDER BY w.publication_year"#,
-				base_from()
-			),
-		)
+			base_from()
+		))
 		.bind(query.year_from.unwrap_or(1900))
 		.bind(query.year_to)
 		.bind(query.department_id)
@@ -105,31 +104,40 @@ impl StatsRepository {
 		let mut wos_vals = Vec::new();
 
 		for r in &rows {
-			scopus_vals.push(YearValue { year: r.year, value: r.scopus.unwrap_or(0) });
-			wos_vals.push(YearValue { year: r.year, value: r.wos.unwrap_or(0) });
+			scopus_vals.push(YearValue {
+				year: r.year,
+				value: r.scopus.unwrap_or(0),
+			});
+			wos_vals.push(YearValue {
+				year: r.year,
+				value: r.wos.unwrap_or(0),
+			});
 		}
 
 		Ok(vec![
-			TimeSeriesStat { id: None, key: "scopus".into(), values: scopus_vals },
-			TimeSeriesStat { id: None, key: "wos".into(), values: wos_vals },
+			TimeSeriesStat {
+				id: None,
+				key: "scopus".into(),
+				values: scopus_vals,
+			},
+			TimeSeriesStat {
+				id: None,
+				key: "wos".into(),
+				values: wos_vals,
+			},
 		])
 	}
 
-	pub async fn stats_by_option(
-		&self,
-		query: &WorksStatsQuery,
-	) -> AppResult<Vec<TimeSeriesStat>> {
-		let rows = sqlx::query_as::<_, OptionRow>(
-			&format!(
-				r#"SELECT w.publication_year AS year,
+	pub async fn stats_by_option(&self, query: &WorksStatsQuery) -> AppResult<Vec<TimeSeriesStat>> {
+		let rows = sqlx::query_as::<_, OptionRow>(&format!(
+			r#"SELECT w.publication_year AS year,
 					COUNT(DISTINCT w.id) FILTER (WHERE aco.option = 'teaching')::bigint AS teaching,
 					COUNT(DISTINCT w.id) FILTER (WHERE aco.option = 'research')::bigint AS research
 				{}
 				GROUP BY w.publication_year
 				ORDER BY w.publication_year"#,
-				base_from()
-			),
-		)
+			base_from()
+		))
 		.bind(query.year_from.unwrap_or(1900))
 		.bind(query.year_to)
 		.bind(query.department_id)
@@ -142,13 +150,27 @@ impl StatsRepository {
 		let mut research_vals = Vec::new();
 
 		for r in &rows {
-			teaching_vals.push(YearValue { year: r.year, value: r.teaching.unwrap_or(0) });
-			research_vals.push(YearValue { year: r.year, value: r.research.unwrap_or(0) });
+			teaching_vals.push(YearValue {
+				year: r.year,
+				value: r.teaching.unwrap_or(0),
+			});
+			research_vals.push(YearValue {
+				year: r.year,
+				value: r.research.unwrap_or(0),
+			});
 		}
 
 		Ok(vec![
-			TimeSeriesStat { id: None, key: "teaching".into(), values: teaching_vals },
-			TimeSeriesStat { id: None, key: "research".into(), values: research_vals },
+			TimeSeriesStat {
+				id: None,
+				key: "teaching".into(),
+				values: teaching_vals,
+			},
+			TimeSeriesStat {
+				id: None,
+				key: "research".into(),
+				values: research_vals,
+			},
 		])
 	}
 
@@ -156,18 +178,16 @@ impl StatsRepository {
 		&self,
 		query: &WorksStatsQuery,
 	) -> AppResult<Vec<TimeSeriesStat>> {
-		let rows = sqlx::query_as::<_, DepartmentRow>(
-			&format!(
-				r#"SELECT w.publication_year AS year,
+		let rows = sqlx::query_as::<_, DepartmentRow>(&format!(
+			r#"SELECT w.publication_year AS year,
 					d.id AS department_id,
 					d.name AS department,
 					COUNT(DISTINCT w.id)::bigint AS count
 				{}
 				GROUP BY w.publication_year, d.id, d.name
 				ORDER BY d.name, w.publication_year"#,
-				base_from()
-			),
-		)
+			base_from()
+		))
 		.bind(query.year_from.unwrap_or(1900))
 		.bind(query.year_to)
 		.bind(query.department_id)
@@ -182,7 +202,10 @@ impl StatsRepository {
 		for r in &rows {
 			let entry = map.entry(r.department.clone()).or_default();
 			entry.0 = Some(r.department_id.to_string());
-			entry.1.push(YearValue { year: r.year, value: r.count.unwrap_or(0) });
+			entry.1.push(YearValue {
+				year: r.year,
+				value: r.count.unwrap_or(0),
+			});
 		}
 
 		let stats = map
@@ -239,6 +262,7 @@ impl StatsRepository {
 				COUNT(DISTINCT w.id)::bigint AS total,
 				COUNT(DISTINCT w.id) FILTER (WHERE ji.kind = 'scopus')::bigint AS scopus,
 				COUNT(DISTINCT w.id) FILTER (WHERE ji.kind = 'wos')::bigint AS wos,
+				COUNT(DISTINCT w.id) FILTER (WHERE ji.kind IS NULL)::bigint AS unindexed,
 				aco.option::text AS option
 			FROM works w
 			JOIN work_authorships wa ON w.id = wa.work_id AND wa.is_external = false
@@ -280,6 +304,7 @@ impl StatsRepository {
 				total: r.total.unwrap_or(0),
 				scopus: r.scopus.unwrap_or(0),
 				wos: r.wos.unwrap_or(0),
+				unindexed: r.unindexed.unwrap_or(0),
 				option: r.option,
 			})
 			.collect();

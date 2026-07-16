@@ -1,8 +1,12 @@
 import * as v from "valibot"
 
-export interface AcademicWorkPosition {
+export interface AcademicWorkPositionDTO {
 	id: string
 	name: string
+}
+
+export interface GetPositionsParams {
+	name?: string
 }
 
 export const createPositionSchema = v.object({
@@ -14,3 +18,7 @@ export const createPositionSchema = v.object({
 })
 
 export type CreatePositionDto = v.InferInput<typeof createPositionSchema>
+
+export const createPositionDTOInitialInput = {
+	name: "",
+}

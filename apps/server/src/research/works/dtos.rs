@@ -19,7 +19,7 @@ pub struct NewWork {
 }
 
 #[derive(Debug, Deserialize, Validate, Default)]
-#[serde(rename_all = "snake_case")]
+#[serde(rename_all = "camelCase")]
 pub struct GetWorksQuery {
 	pub academic_id: Option<Uuid>,
 	pub search: Option<String>,

@@ -1,12 +1,14 @@
 <script lang="ts">
-	import Label from "$lib/shared/components/ui/label.svelte"
-	import Select from "$lib/shared/components/ui/select.svelte"
-	import Button from "$lib/shared/components/ui/button.svelte"
+	import type { Career } from "$careers/entity"
+	import type { Department } from "$departments/entity"
+	import type { AcademicCategory } from "$categories/entity"
+
+	import { authStore } from "$auth/store.svelte"
 	import { Search, RotateCcw, Plus, Upload } from "@lucide/svelte"
-	import { authStore } from "$lib/auth/store.svelte"
-	import type { Department } from "$lib/university/departments/dtos"
-	import type { Career } from "$lib/university/careers/dtos"
-	import type { AcademicCategory } from "$lib/academic/categories/dtos"
+
+	import Label from "$shared/components/ui/label.svelte"
+	import Select from "$shared/components/ui/select.svelte"
+	import Button from "$shared/components/ui/button.svelte"
 
 	interface Props {
 		search: string
@@ -39,7 +41,6 @@
 	}: Props = $props()
 
 	const isAdmin = $derived(authStore.isAuthenticated())
-
 	let fileInput = $state<HTMLInputElement | null>(null)
 
 	const deptItems = $derived([

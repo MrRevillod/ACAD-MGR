@@ -10,8 +10,6 @@ import type {
 } from "./dtos"
 
 class AcademicsService {
-	constructor() {}
-
 	public list(params?: GetAcademicsParams): Promise<Academic[]> {
 		const academics = http.request<AcademicDTO[]>({
 			method: "GET",

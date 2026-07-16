@@ -1,13 +1,17 @@
 <script lang="ts">
+	import type { PlantaValue } from "$academics/value-objects/planta.value"
+	import type { TableFeatures } from "@tanstack/svelte-table"
+	import type { AcademicCategory } from "$categories/entity"
+
 	import { createQuery } from "@tanstack/svelte-query"
-	import { renderSnippet, createColumnHelper, type TableFeatures } from "@tanstack/svelte-table"
-	import { categoryService } from "$lib/academic/categories/service"
-	import CategoryDialog from "$lib/academic/categories/components/category-dialog.svelte"
-	import Button from "$lib/shared/components/ui/button.svelte"
-	import Badge from "$lib/shared/components/ui/badge.svelte"
-	import DataTable from "$lib/shared/components/ui/data-table.svelte"
-	import { Plus, Loader2, Pencil, Trash2 } from "@lucide/svelte"
-	import type { AcademicCategory } from "$lib/academic/categories/dtos"
+	import { categoryService } from "$categories/service"
+	import { Plus, Loader, Pencil, Trash2 } from "@lucide/svelte"
+	import { renderSnippet, createColumnHelper } from "@tanstack/svelte-table"
+
+	import Badge from "$shared/components/ui/badge.svelte"
+	import Button from "$shared/components/ui/button.svelte"
+	import DataTable from "$shared/components/ui/data-table.svelte"
+	import CategoryDialog from "$categories/components/category-dialog.svelte"
 
 	const query = createQuery(() => ({
 		queryKey: ["admin", "categories"],
@@ -48,16 +52,16 @@
 
 	{#if query.isPending}
 		<div class="flex items-center justify-center py-16">
-			<Loader2 class="size-6 animate-spin text-corp-gray" />
+			<Loader class="size-6 animate-spin text-corp-gray" />
 		</div>
 	{:else}
 		<DataTable data={query.data ?? []} {columns} pageSize={10} />
 	{/if}
 </div>
 
-{#snippet plantaBadge(params: { value: string })}
-	<Badge variant={params.value === "permanente" ? "advanced" : "base"}>
-		{params.value === "permanente" ? "Permanente" : "Adjunta"}
+{#snippet plantaBadge(params: { value: PlantaValue })}
+	<Badge variant={params.value.code === "permanente" ? "advanced" : "base"}>
+		{params.value.toDisplay()}
 	</Badge>
 {/snippet}
 

@@ -1,13 +1,23 @@
 <script lang="ts">
-	import { page } from "$app/state"
-	import { Loader2, AlertCircle } from "@lucide/svelte"
-	import { useSearchParams } from "runed/kit"
 	import * as v from "valibot"
 
-	import { useDepartmentDetailQuery } from "$lib/research/stats/queries"
-	import type { DepartmentDetailQuery } from "$lib/research/stats/types"
-	import DonutChart from "$lib/research/stats/components/donut-chart.svelte"
-	import PublishersTable from "$lib/research/stats/components/publishers-table.svelte"
+	import type { TableFeatures } from "@tanstack/svelte-table"
+	import type { DepartmentDetailQuery, TopPublisher } from "$stats/dtos"
+
+	import { page } from "$app/state"
+	import { goto } from "$app/navigation"
+	import { resolve } from "$app/paths"
+	import { FullName } from "$shared/value-objects/full-name.value"
+	import { useSearchParams } from "runed/kit"
+	import { useDepartmentDetailQuery } from "$stats/queries"
+	import { Loader, CircleAlert, Minus, RotateCcw } from "@lucide/svelte"
+	import { createColumnHelper, renderSnippet } from "@tanstack/svelte-table"
+
+	import Select from "$shared/components/ui/select.svelte"
+	import Badge from "$shared/components/ui/badge.svelte"
+	import Button from "$shared/components/ui/button.svelte"
+	import DataTable from "$shared/components/ui/data-table.svelte"
+	import DonutChart from "$stats/components/donut-chart.svelte"
 
 	const deptId = $derived(page.params.id ?? "")
 	const currentYear = new Date().getFullYear()
@@ -27,20 +37,37 @@
 	})
 
 	const queryParams = $derived<DepartmentDetailQuery>({
-		...(params.year_from && { year_from: Number(params.year_from) }),
-		...(params.year_to && { year_to: Number(params.year_to) }),
+		yearFrom: Number(params.year_from),
+		yearTo: Number(params.year_to),
 		...(params.option && {
 			option: params.option as "teaching" | "research",
 		}),
 		...(params.journal_kind && {
-			journal_kind: params.journal_kind as "wos" | "scopus",
+			journalKind: params.journal_kind as "wos" | "scopus",
 		}),
 	})
+
+	const optionItems = [
+		{ value: "", label: "Todas" },
+		{ value: "teaching", label: "Docencia" },
+		{ value: "research", label: "Investigación" },
+	]
+
+	const yearItems = Array.from({ length: currentYear - 2000 + 1 }, (_, i) => ({
+		value: String(2000 + i),
+		label: String(2000 + i),
+	}))
 
 	const detailQuery = useDepartmentDetailQuery(
 		() => deptId,
 		() => queryParams,
 	)
+
+	const unindexedCount = $derived.by(() => {
+		const d = detailQuery.data
+		if (!d) return 0
+		return d.totalWorks - d.scopusCount - d.wosCount
+	})
 
 	const indexSegments = $derived.by(() => {
 		const d = detailQuery.data
@@ -54,93 +81,124 @@
 				: []),
 		]
 	})
+
+	const optionLabel: Record<string, string> = {
+		teaching: "Docencia",
+		research: "Investigación",
+	}
+
+	const helper = createColumnHelper<TableFeatures, TopPublisher>()
+
+	const columns = [
+		helper.accessor((row) => FullName.fromFullString(row.name).toString(), {
+			id: "name",
+			header: "Nombre",
+			cell: (info) => renderSnippet(nameSnippet, { name: info.getValue() }),
+		}),
+		helper.accessor("total", {
+			id: "total",
+			header: "Total",
+			cell: (info) =>
+				renderSnippet(numberSnippet, {
+					value: info.getValue(),
+					cls: "font-semibold text-[#1A1A1A]",
+				}),
+		}),
+		helper.accessor("scopus", {
+			id: "scopus",
+			header: "Scopus",
+			cell: (info) =>
+				renderSnippet(numberSnippet, {
+					value: info.getValue(),
+					cls: "font-medium text-corp-yellow",
+				}),
+		}),
+		helper.accessor("wos", {
+			id: "wos",
+			header: "WoS",
+			cell: (info) =>
+				renderSnippet(numberSnippet, {
+					value: info.getValue(),
+					cls: "font-medium text-corp-blue",
+				}),
+		}),
+		helper.accessor("unindexed", {
+			id: "unindexed",
+			header: "Sin indexar",
+			cell: (info) =>
+				renderSnippet(numberSnippet, {
+					value: info.getValue(),
+					cls: "font-medium text-corp-gray",
+				}),
+		}),
+		helper.accessor("option", {
+			id: "option",
+			header: "Opción",
+			cell: (info) => renderSnippet(optionSnippet, { option: info.getValue() }),
+		}),
+	]
 </script>
 
 <div class="mx-auto flex h-full max-w-[1600px] flex-col overflow-y-auto px-4 py-8 sm:px-6 lg:px-8">
 	{#if detailQuery.isPending}
 		<div class="flex items-center justify-center py-16">
-			<Loader2 class="size-6 animate-spin text-corp-gray" />
+			<Loader class="size-6 animate-spin text-corp-gray" />
 		</div>
 	{:else if detailQuery.isError || !detailQuery.data}
 		<div class="flex flex-col items-center justify-center py-16 text-center">
-			<AlertCircle class="size-8 text-red-500" />
+			<CircleAlert class="size-8 text-red-500" />
 			<p class="mt-3 text-sm text-corp-gray">Error al cargar los datos del departamento.</p>
 		</div>
 	{:else}
 		{@const d = detailQuery.data}
 
-		<div
-			class="mb-6 flex flex-wrap items-center gap-4 rounded-xl border border-corp-gray/20 bg-white p-4"
-		>
-			<h1 class="text-lg font-semibold text-[#1A1A1A]">Departamento de {d.department}</h1>
+		<div class="mb-8 flex items-start justify-between gap-4">
+			<div class="min-w-0">
+				<h1 class="text-2xl font-semibold tracking-tight text-[#1A1A1A]">
+					{d.department}
+				</h1>
+				<p class="mt-1 text-sm text-corp-gray">
+					{d.totalWorks} publicaciones
+				</p>
+			</div>
 
-			<div class="ml-auto flex flex-wrap items-center gap-3">
-				<div class="flex items-center gap-2">
-					<span class="text-xs font-medium tracking-wide uppercase text-corp-gray"
-						>Año desde</span
-					>
-					<input
-						type="number"
-						bind:value={params.year_from}
-						min="1900"
-						max="2100"
-						class="h-8 w-20 rounded-lg border border-corp-gray/20 bg-white px-2 text-sm outline-none focus:border-corp-blue/50"
-					/>
-				</div>
-
-				<div class="flex items-center gap-2">
-					<span class="text-xs font-medium tracking-wide uppercase text-corp-gray"
-						>Año hasta</span
-					>
-					<input
-						type="number"
-						bind:value={params.year_to}
-						min="1900"
-						max="2100"
-						class="h-8 w-20 rounded-lg border border-corp-gray/20 bg-white px-2 text-sm outline-none focus:border-corp-blue/50"
-					/>
-				</div>
-
-				<div class="flex items-center gap-2">
-					<span class="text-xs font-medium tracking-wide uppercase text-corp-gray"
-						>Opción Académica</span
-					>
-
-					<select
-						bind:value={params.option}
-						class="h-8 rounded-lg border border-corp-gray/20 bg-white px-2 text-sm outline-none focus:border-corp-blue/50"
-					>
-						<option value="">Todas</option>
-						<option value="teaching">Docencia</option>
-						<option value="research">Investigación</option>
-					</select>
-				</div>
-
-				<div class="flex items-center gap-2">
-					<span class="text-xs font-medium tracking-wide uppercase text-corp-gray"
-						>Indexación</span
-					>
-
-					<select
-						bind:value={params.journal_kind}
-						class="h-8 rounded-lg border border-corp-gray/20 bg-white px-2 text-sm outline-none focus:border-corp-blue/50"
-					>
-						<option value="">Todas</option>
-						<option value="wos">WoS</option>
-						<option value="scopus">Scopus</option>
-					</select>
-				</div>
-
-				<button
-					class="rounded-lg px-2 py-1 text-xs font-medium text-corp-gray transition-colors hover:bg-corp-gray/5 hover:text-corp-blue"
-					onclick={() => params.reset()}
+			<div class="flex gap-3 flex-row">
+				<div
+					class="inline-flex h-10 items-center rounded-lg border border-corp-gray/20 bg-white focus-within:border-corp-blue/50 focus-within:ring-2 focus-within:ring-corp-blue/10"
+					aria-label="Rango de años"
+					role="group"
 				>
+					<Select
+						items={yearItems}
+						bind:value={params.year_from}
+						placeholder="Año"
+						class="rounded-none! border-0! bg-transparent! shadow-none! focus:ring-0! min-w-22.5"
+					/>
+					<div class="flex items-center px-1 text-corp-gray/40" aria-hidden="true">
+						<Minus class="size-3" />
+					</div>
+					<Select
+						items={yearItems}
+						bind:value={params.year_to}
+						placeholder="Año"
+						class="rounded-none! border-0! bg-transparent! shadow-none! focus:ring-0! min-w-22.5"
+					/>
+				</div>
+				<Select
+					items={optionItems}
+					bind:value={params.option}
+					placeholder="Opción Académica"
+					class="min-w-48"
+				/>
+
+				<Button variant="primary" onclick={() => params.reset()}>
+					<RotateCcw class="size-3.5" />
 					Limpiar
-				</button>
+				</Button>
 			</div>
 		</div>
 
-		<div class="mb-6 grid grid-cols-5 gap-3">
+		<div class="mb-6 grid grid-cols-6 gap-3">
 			<div class="rounded-lg border border-corp-gray/20 bg-white p-4">
 				<p class="text-xs font-medium tracking-wide uppercase text-corp-gray">Total</p>
 				<p class="mt-1 text-2xl font-bold text-[#1A1A1A]">{d.totalWorks}</p>
@@ -152,6 +210,12 @@
 			<div class="rounded-lg border border-corp-blue/30 bg-corp-blue/5 p-4">
 				<p class="text-xs font-medium tracking-wide uppercase text-corp-gray">WoS</p>
 				<p class="mt-1 text-2xl font-bold text-corp-blue">{d.wosCount}</p>
+			</div>
+			<div class="rounded-lg border border-corp-gray/20 bg-white p-4">
+				<p class="text-xs font-medium tracking-wide uppercase text-corp-gray">
+					Sin indexar
+				</p>
+				<p class="mt-1 text-2xl font-bold text-corp-gray">{unindexedCount}</p>
 			</div>
 			<div class="rounded-lg border border-corp-gray/20 bg-white p-4">
 				<p class="text-xs font-medium tracking-wide uppercase text-corp-gray">Docencia</p>
@@ -177,8 +241,28 @@
 				<h2 class="mb-4 text-sm font-semibold tracking-wide uppercase text-corp-blue">
 					Top Publicadores
 				</h2>
-				<PublishersTable publishers={d.topPublishers} />
+				<DataTable
+					data={d.topPublishers}
+					{columns}
+					pageSize={20}
+					onRowClick={(p: TopPublisher) =>
+						void goto(resolve(`/academics/${p.academicId}`))}
+				/>
 			</section>
 		</div>
 	{/if}
 </div>
+
+{#snippet nameSnippet({ name }: { name: string })}
+	<span>{name}</span>
+{/snippet}
+
+{#snippet numberSnippet({ value, cls }: { value: number; cls: string })}
+	<span class="text-right tabular-nums {cls}">{value}</span>
+{/snippet}
+
+{#snippet optionSnippet({ option }: { option: string })}
+	<Badge variant={option === "research" ? "advanced" : "base"}>
+		{optionLabel[option] ?? option}
+	</Badge>
+{/snippet}

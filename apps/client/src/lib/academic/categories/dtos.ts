@@ -1,14 +1,14 @@
 import * as v from "valibot"
 
-import { PlantaValue, type AcademicPlanta } from "$lib/academic/academics/value-objects/planta.value"
+import { PlantaValue, type AcademicPlanta } from "$academics/value-objects/planta.value"
 
-export interface AcademicCategory {
+export interface AcademicCategoryDTO {
 	id: string
 	name: string
 	planta: AcademicPlanta
 }
 
-export const createCategorySchema = v.object({
+export const createCategoryDTOSchema = v.object({
 	name: v.pipe(
 		v.string(),
 		v.minLength(1, "El nombre debe tener entre 1 y 255 caracteres"),
@@ -17,4 +17,4 @@ export const createCategorySchema = v.object({
 	planta: v.picklist(PlantaValue.PLANTA),
 })
 
-export type CreateCategoryDto = v.InferInput<typeof createCategorySchema>
+export type CreateCategoryDTO = v.InferInput<typeof createCategoryDTOSchema>

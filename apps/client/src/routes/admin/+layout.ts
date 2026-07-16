@@ -3,6 +3,6 @@ import { authStore } from "$lib/auth/store.svelte"
 
 export const load = async () => {
 	if (!authStore.isAuthenticated()) {
-		throw redirect(302, "/login")
+		redirect(302, "/login")
 	}
 }

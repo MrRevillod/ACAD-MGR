@@ -1,12 +1,7 @@
-export type AuthorshipPosition = "first" | "middle" | "last"
+import type { JournalKind } from "./value-objects/journal-kind.value"
+import type { AuthorshipPosition } from "./value-objects/position.value"
 
-export const POSITION_LABELS: Record<AuthorshipPosition, string> = {
-	first: "Primer autor",
-	middle: "Co-autor",
-	last: "Último autor",
-}
-
-export interface Work {
+export interface WorkDTO {
 	id: string
 	openalexId: string
 	title: string
@@ -22,41 +17,34 @@ export interface Work {
 	journalKind: string | null
 }
 
-export type JournalKind = "wos" | "scopus"
-
-export const JOURNAL_KIND_LABELS: Record<JournalKind, string> = {
-	wos: "WoS",
-	scopus: "Scopus",
-}
-
 export const WORK_TYPE_LABELS: Record<string, string> = {
-	article: "Artículo",
-	book: "Libro",
+	"article": "Artículo",
+	"book": "Libro",
 	"book-chapter": "Capítulo de libro",
 	"book-review": "Reseña de libro",
 	"conference-abstract": "Abstract de conferencia",
 	"conference-paper": "Paper de conferencia",
 	"data-paper": "Paper de datos",
-	dissertation: "Tesis",
-	editorial: "Editorial",
-	erratum: "Errata",
-	letter: "Carta",
-	libguide: "Guía",
-	other: "Otro",
-	paratext: "Paratexto",
+	"dissertation": "Tesis",
+	"editorial": "Editorial",
+	"erratum": "Errata",
+	"letter": "Carta",
+	"libguide": "Guía",
+	"other": "Otro",
+	"paratext": "Paratexto",
 	"peer-review": "Revisión por pares",
-	preprint: "Preprint",
+	"preprint": "Preprint",
 	"reference-entry": "Entrada de referencia",
-	report: "Reporte",
-	retraction: "Retracción",
-	review: "Revisión",
-	software: "Software",
+	"report": "Reporte",
+	"retraction": "Retracción",
+	"review": "Revisión",
+	"software": "Software",
 	"software-paper": "Paper de software",
-	standard: "Estándar",
+	"standard": "Estándar",
 	"supplementary-materials": "Materiales suplementarios",
 }
 
-export interface Source {
+export interface SourceDTO {
 	id: string
 	openalexId: string
 	displayName: string
@@ -66,7 +54,7 @@ export interface Source {
 	kind: JournalKind | null
 }
 
-export interface Authorship {
+export interface AuthorshipDTO {
 	orcid: string
 	name: string
 	isExternal: boolean
@@ -75,7 +63,7 @@ export interface Authorship {
 	position: AuthorshipPosition
 }
 
-export interface WorkTopic {
+export interface WorkTopicDTO {
 	topicId: string
 	name: string
 	score: number
@@ -87,17 +75,17 @@ export interface WorkTopic {
 	domainName: string
 }
 
-export interface WorkKeyword {
+export interface WorkKeywordDTO {
 	keywordId: string
 	name: string
 	score: number
 }
 
-export interface WorkDetail extends Work {
-	source: Source | null
-	authorships: Authorship[]
-	topics: WorkTopic[]
-	keywords: WorkKeyword[]
+export interface WorkDetailDTO extends WorkDTO {
+	source: SourceDTO | null
+	authorships: AuthorshipDTO[]
+	topics: WorkTopicDTO[]
+	keywords: WorkKeywordDTO[]
 }
 
 export interface GetWorksParams {
@@ -123,37 +111,4 @@ export interface SyncResult {
 	topicsLinked: number
 	keywordsLinked: number
 	errors: string[]
-}
-
-export interface ResearchDomain {
-	id: string
-	openalexId: string
-	name: string
-}
-
-export interface ResearchField {
-	id: string
-	openalexId: string
-	name: string
-	domainId: string
-}
-
-export interface ResearchSubfield {
-	id: string
-	openalexId: string
-	name: string
-	fieldId: string
-}
-
-export interface ResearchTopic {
-	id: string
-	openalexId: string
-	name: string
-	subfieldId: string
-}
-
-export interface ResearchKeyword {
-	id: string
-	openalexId: string
-	name: string
 }

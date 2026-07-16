@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Snippet } from "svelte"
-	import { page } from "$app/stores"
+
+	import { page } from "$app/state"
 	import {
 		BookOpen,
 		Tags,
@@ -22,6 +23,8 @@
 		{ href: "/works", label: "Publicaciones", icon: BookOpen },
 		{ href: "/admin/users", label: "Usuarios", icon: Users },
 	] as const
+
+	const currentPagePath = $derived(page.url.pathname)
 </script>
 
 <div class="mx-auto flex h-full max-w-[1600px] flex-col px-4 py-8 sm:px-6 lg:px-8">
@@ -36,8 +39,8 @@
 				{#each navItems as item (item.href)}
 					<a
 						href={item.href}
-						class="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors {$page
-							.url.pathname === item.href
+						class="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors {currentPagePath ===
+						item.href
 							? 'bg-corp-gray/10 text-[#1A1A1A]'
 							: 'text-corp-gray hover:bg-corp-gray/5 hover:text-[#1A1A1A]'}"
 					>

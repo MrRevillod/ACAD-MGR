@@ -1,12 +1,16 @@
 <script lang="ts">
-	import { createForm, Field, Form, reset } from "@formisch/svelte"
-	import { createMutation, useQueryClient } from "@tanstack/svelte-query"
-	import Dialog from "$lib/shared/components/ui/dialog.svelte"
-	import Button from "$lib/shared/components/ui/button.svelte"
-	import { usersService } from "$lib/users/service"
+	import type { User } from "$users/entity"
+	import type { CreateUserDTO, UpdateUserDTO } from "$users/dtos"
+
 	import { toast } from "svelte-sonner"
-	import { createUserDTOSchema, updateUserDTOSchema, type CreateUserDTO, type UpdateUserDTO } from "$lib/users/dtos"
-	import type { User } from "$lib/users/entity"
+	import { createForm, Field, Form, reset } from "@formisch/svelte"
+
+	import { usersService } from "$users/service"
+	import { useMutation, queryClient } from "$shared/http/tanstack"
+	import { createUserDTOSchema, updateUserDTOSchema } from "$users/dtos"
+
+	import Dialog from "$lib/shared/components/ui/dialog.svelte"
+	import TextInput from "$lib/shared/components/ui/form/text-input.svelte"
 
 	interface Props {
 		user?: User | null
@@ -43,9 +47,7 @@
 		}
 	})
 
-	const queryClient = useQueryClient()
-
-	const createUserMut = createMutation(() => ({
+	const createUserMut = useMutation(() => ({
 		mutationFn: (output: CreateUserDTO) => usersService.create(output),
 		onSuccess: () => {
 			void queryClient.invalidateQueries({ queryKey: ["users"] })
@@ -55,7 +57,7 @@
 		onError: () => toast.error("Error al crear el usuario"),
 	}))
 
-	const updateUserMut = createMutation(() => ({
+	const updateUserMut = useMutation(() => ({
 		mutationFn: ({ id, data }: { id: string; data: UpdateUserDTO }) =>
 			usersService.update(id, data),
 		onSuccess: () => {
@@ -92,78 +94,69 @@
 		<div class="grid gap-4">
 			<Field of={form} path={["name"]}>
 				{#snippet children(field)}
-					<label class="grid gap-1.5">
-						<span class="text-xs font-medium tracking-wide uppercase text-corp-gray"
-							>Nombre</span
-						>
-						<input
-							{...field.props}
-							value={field.input}
-							class="h-10 w-full rounded-lg border border-corp-gray/20 bg-white px-3 text-sm text-[#1A1A1A] outline-none transition-colors placeholder:text-corp-gray/50 focus:border-corp-blue/50 focus:ring-2 focus:ring-corp-blue/10"
-						/>
-						{#if field.errors}
-							<p class="text-xs text-red-600">{field.errors[0]}</p>
-						{/if}
-					</label>
+					<TextInput
+						{...field.props}
+						input={field.input}
+						errors={field.errors}
+						type="text"
+						label="Nombre"
+					/>
 				{/snippet}
 			</Field>
+
 			<Field of={form} path={["email"]}>
 				{#snippet children(field)}
-					<label class="grid gap-1.5">
-						<span class="text-xs font-medium tracking-wide uppercase text-corp-gray"
-							>Email</span
-						>
-						<input
-							{...field.props}
-							value={field.input}
-							type="email"
-							class="h-10 w-full rounded-lg border border-corp-gray/20 bg-white px-3 text-sm text-[#1A1A1A] outline-none transition-colors placeholder:text-corp-gray/50 focus:border-corp-blue/50 focus:ring-2 focus:ring-corp-blue/10"
-						/>
-						{#if field.errors}
-							<p class="text-xs text-red-600">{field.errors[0]}</p>
-						{/if}
-					</label>
+					<TextInput
+						{...field.props}
+						input={field.input}
+						errors={field.errors}
+						type="email"
+						label="Email"
+					/>
 				{/snippet}
 			</Field>
+
 			<Field of={form} path={["password"]}>
 				{#snippet children(field)}
-					<label class="grid gap-1.5">
-						<span class="text-xs font-medium tracking-wide uppercase text-corp-gray">
-							Contraseña
-							{#if user}
-								(dejar vacío para mantener){/if}
-						</span>
-						<input
-							{...field.props}
-							value={field.input ?? ""}
-							type="password"
-							placeholder={user ? "Sin cambios" : ""}
-							class="h-10 w-full rounded-lg border border-corp-gray/20 bg-white px-3 text-sm text-[#1A1A1A] outline-none transition-colors placeholder:text-corp-gray/50 focus:border-corp-blue/50 focus:ring-2 focus:ring-corp-blue/10"
-						/>
-						{#if field.errors}
-							<p class="text-xs text-red-600">{field.errors[0]}</p>
-						{/if}
-					</label>
+					<TextInput
+						{...field.props}
+						input={field.input ?? ""}
+						errors={field.errors}
+						type="password"
+						label={user ? "Contraseña (dejar vacío para mantener)" : "Contraseña"}
+						placeholder={user ? "Sin cambios" : ""}
+					/>
 				{/snippet}
 			</Field>
-			<div class="mt-2 flex items-center justify-between gap-2">
-				{#if user && onDelete}
-					<button
-						type="button"
-						class="rounded-lg px-3 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
-						onclick={() => onDelete(user)}
-					>
-						Eliminar usuario
-					</button>
-				{:else}
-					<span></span>
-				{/if}
-				<div class="flex gap-2">
-					<Button variant="secondary" type="button" onclick={onClose}>Cancelar</Button>
-					<Button type="submit" disabled={pending}>
-						{pending ? "Guardando..." : "Guardar"}
-					</Button>
-				</div>
+		</div>
+
+		<div class="flex items-center justify-between gap-2 border-t border-corp-gray/20 pt-4 mt-4">
+			{#if user && onDelete}
+				<button
+					type="button"
+					class="rounded-lg px-3 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
+					onclick={() => onDelete(user)}
+				>
+					Eliminar usuario
+				</button>
+			{:else}
+				<span></span>
+			{/if}
+			<div class="flex gap-2">
+				<button
+					type="button"
+					class="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border border-corp-gray/20 bg-white px-4 py-2 text-sm font-medium text-corp-gray outline-none transition-colors hover:bg-corp-gray/5 hover:text-[#1A1A1A] focus-visible:ring-2 focus-visible:ring-corp-gray/20 active:scale-[0.96] disabled:pointer-events-none disabled:opacity-50"
+					onclick={onClose}
+				>
+					Cancelar
+				</button>
+				<button
+					type="submit"
+					disabled={pending}
+					class="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-corp-blue px-4 py-2 text-sm font-medium text-white outline-none transition-colors hover:bg-corp-blue/90 focus-visible:ring-2 focus-visible:ring-corp-blue/30 active:scale-[0.96] disabled:pointer-events-none disabled:opacity-50"
+				>
+					{pending ? "Guardando..." : "Guardar"}
+				</button>
 			</div>
 		</div>
 	</Form>

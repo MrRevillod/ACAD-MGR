@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { TimeSeriesStat } from "../types"
+	import type { TimeSeriesStat } from "../dtos"
 
 	interface Props {
 		data: TimeSeriesStat[]
@@ -7,21 +7,27 @@
 
 	let { data }: Props = $props()
 
-	const allYears = $derived([
-		...new Set(data.flatMap((s) => s.values.map((v) => v.year))),
-	].sort((a, b) => a - b))
-
-	const maxVal = $derived(
-		Math.max(...data.flatMap((s) => s.values.map((v) => v.value)), 1),
+	const allYears = $derived(
+		[...new Set(data.flatMap((s) => s.values.map((v) => v.year)))].sort((a, b) => a - b),
 	)
 
+	const maxVal = $derived(Math.max(...data.flatMap((s) => s.values.map((v) => v.value)), 1))
+
 	const deptColors = [
-		"#0075B4", "#EDC500", "#2E86AB", "#A4243B", "#D8973C",
-		"#3C896D", "#8A4F7D", "#D16014", "#1B998B", "#6A4C93",
+		"#0075B4",
+		"#EDC500",
+		"#2E86AB",
+		"#A4243B",
+		"#D8973C",
+		"#3C896D",
+		"#8A4F7D",
+		"#D16014",
+		"#1B998B",
+		"#6A4C93",
 	]
 
 	function color(i: number): string {
-		return deptColors[i % deptColors.length]!
+		return deptColors[i % deptColors.length]
 	}
 
 	const pad = 50
@@ -44,9 +50,6 @@
 		const step = Math.ceil(maxVal / ticks)
 		return Array.from({ length: ticks + 1 }, (_, i) => i * step).filter((t) => t <= maxVal)
 	})
-
-	const legendRows = $derived(data.length > 5 ? 2 : 1)
-	const perRow = $derived(Math.ceil(data.length / legendRows))
 </script>
 
 {#if allYears.length === 0}
@@ -61,7 +64,9 @@
 				y2={y(tick)}
 				class="stroke-corp-gray/15"
 			/>
-			<text x={pad - 6} y={y(tick) + 4} text-anchor="end" class="fill-corp-gray text-[10px]">{tick}</text>
+			<text x={pad - 6} y={y(tick) + 4} text-anchor="end" class="fill-corp-gray text-[10px]"
+				>{tick}</text
+			>
 		{/each}
 
 		{#each allYears as year, yi (year)}
@@ -106,10 +111,13 @@
 		{/each}
 	</svg>
 
-	<div class="mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs font-medium text-corp-gray">
+	<div
+		class="mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs font-medium text-corp-gray"
+	>
 		{#each data as series, si (series.key)}
 			<span class="inline-flex items-center gap-1.5">
-				<span class="inline-block size-2.5 rounded-sm" style="background:{color(si)}"></span>
+				<span class="inline-block size-2.5 rounded-sm" style="background:{color(si)}"
+				></span>
 				{series.key}
 			</span>
 		{/each}

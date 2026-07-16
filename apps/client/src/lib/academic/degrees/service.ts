@@ -1,27 +1,36 @@
 import { http } from "$lib/shared/http/client"
-import type { Degree, CreateDegreeDto, UpdateDegreeDto } from "./dtos"
+import type { DegreeDTO, CreateDegreeDto, UpdateDegreeDto } from "./dtos"
+import { Degree } from "./entity"
 
-export const degreeService = {
-	listByAcademic(academicId: string): Promise<Degree[]> {
-		return http.request<Degree[]>({
+class DegreeService {
+	public async listByAcademic(academicId: string): Promise<Degree[]> {
+		const data = await http.request<DegreeDTO[]>({
 			method: "GET",
 			url: `/degrees/academic/${academicId}`,
 		})
-	},
 
-	create(data: CreateDegreeDto): Promise<Degree> {
-		return http.request<Degree>({
+		return data.map((dto) => Degree.fromDTO(dto))
+	}
+
+	public async create(data: CreateDegreeDto): Promise<Degree> {
+		const dto = await http.request<DegreeDTO>({
 			method: "POST",
 			url: "/degrees",
 			data,
 		})
-	},
 
-	update(id: string, data: UpdateDegreeDto): Promise<Degree> {
-		return http.request<Degree>({
+		return Degree.fromDTO(dto)
+	}
+
+	public async update(id: string, data: UpdateDegreeDto): Promise<Degree> {
+		const dto = await http.request<DegreeDTO>({
 			method: "PATCH",
 			url: `/degrees/${id}`,
 			data,
 		})
-	},
+
+		return Degree.fromDTO(dto)
+	}
 }
+
+export const degreeService = new DegreeService()

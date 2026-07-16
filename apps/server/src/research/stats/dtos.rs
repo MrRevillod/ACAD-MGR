@@ -6,12 +6,11 @@ use uuid::Uuid;
 use validator::Validate;
 
 #[derive(Debug, Deserialize, Validate, Default)]
-#[serde(rename_all = "snake_case")]
+#[serde(rename_all = "camelCase")]
 pub struct WorksStatsQuery {
 	pub journal_kind: Option<JournalKind>,
 
 	pub option: Option<AcademicOption>,
-
 	pub department_id: Option<Uuid>,
 
 	#[validate(range(min = 1900, max = 2100))]
@@ -45,7 +44,7 @@ pub struct WorksStatsResponse {
 }
 
 #[derive(Debug, Deserialize, Validate, Default)]
-#[serde(rename_all = "snake_case")]
+#[serde(rename_all = "camelCase")]
 pub struct DepartmentDetailQuery {
 	#[validate(range(min = 1900, max = 2100))]
 	pub year_from: Option<i16>,
@@ -66,6 +65,7 @@ pub struct TopPublisher {
 	pub total: i64,
 	pub scopus: i64,
 	pub wos: i64,
+	pub unindexed: i64,
 	pub option: String,
 }
 

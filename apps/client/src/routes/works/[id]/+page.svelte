@@ -1,24 +1,25 @@
 <script lang="ts">
-	import { page } from "$app/state"
 	import {
-		AlertCircle,
+		CircleAlert,
 		ArrowLeft,
 		Building2,
 		ExternalLink,
-		Loader2,
+		Loader,
 		Mail,
 		Network,
 		Tag,
 	} from "@lucide/svelte"
+
+	import { page } from "$app/state"
 	import { goto } from "$app/navigation"
-	import { resolve } from "$app/paths"
 	import { toast } from "svelte-sonner"
 
 	import Badge from "$lib/shared/components/ui/badge.svelte"
-	import { DateValue } from "$lib/shared/value-objects/date.value"
 
-	import { useWorkDetailQuery } from "$lib/research/queries"
-	import { POSITION_LABELS, WORK_TYPE_LABELS, JOURNAL_KIND_LABELS } from "$lib/research/types"
+	import { DateValue } from "$shared/value-objects/date.value"
+	import { WORK_TYPE_LABELS } from "$works/dtos"
+	import { useWorkDetailQuery } from "$works/queries"
+	import { AuthorshipPositionValue } from "$works/value-objects/position.value"
 
 	const id = $derived(page.params.id ?? "")
 
@@ -34,7 +35,7 @@
 	<div class="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
 		<button
 			type="button"
-			onclick={() => void goto(resolve("/works"))}
+			onclick={() => void goto("/works")}
 			class="inline-flex items-center gap-1 text-sm text-corp-blue transition-colors hover:text-corp-blue/80"
 		>
 			<ArrowLeft class="size-3.5" />
@@ -43,11 +44,11 @@
 
 		{#if query.isPending}
 			<div class="flex justify-center py-12">
-				<Loader2 class="size-6 animate-spin text-corp-gray" />
+				<Loader class="size-6 animate-spin text-corp-gray" />
 			</div>
 		{:else if query.isError || !query.data}
 			<div class="flex flex-col items-center py-12 text-center">
-				<AlertCircle class="size-8 text-red-500" />
+				<CircleAlert class="size-8 text-red-500" />
 				<p class="mt-3 text-sm text-corp-gray">Error al cargar la obra.</p>
 			</div>
 		{:else}
@@ -133,11 +134,13 @@
 							<p class="text-sm font-medium text-[#1A1A1A]">
 								{work.source.displayName}
 							</p>
-							{#if work.source.kind}
+							{#if work.source.kind.code}
 								<Badge
-									variant={work.source.kind === "scopus" ? "advanced" : "base"}
+									variant={work.source.kind.code === "scopus"
+										? "advanced"
+										: "base"}
 								>
-									{JOURNAL_KIND_LABELS[work.source.kind]}
+									{work.source.kind.toDisplay()}
 								</Badge>
 							{/if}
 							<span class="text-xs text-corp-gray">· {work.source.ty}</span>
@@ -190,7 +193,7 @@
 									</button>
 									<p class="mt-0.5 text-xs text-corp-gray">
 										Posición: <span class="font-medium text-[#1A1A1A]"
-											>{POSITION_LABELS[auth.position]}</span
+											>{AuthorshipPositionValue.LABELS[auth.position]}</span
 										>
 									</p>
 									{#if auth.affiliations.length > 0}

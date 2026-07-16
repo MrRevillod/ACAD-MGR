@@ -1,5 +1,4 @@
-const DEFAULT_ERROR_MESSAGE =
-	"Ocurrió un error inesperado, por favor intente nuevamente más tarde."
+const DEFAULT_ERROR_MESSAGE = "Ocurrió un error inesperado, por favor intente nuevamente más tarde."
 
 export class ApiResponse<T = unknown> {
 	constructor(
@@ -9,7 +8,7 @@ export class ApiResponse<T = unknown> {
 		public timestamp: string,
 		public data?: T | null,
 		public error?: unknown,
-		public errors?: ValidationErrors | null
+		public errors?: ValidationErrors | null,
 	) {}
 
 	static is(payload: unknown): payload is ApiResponse<unknown> {
@@ -37,7 +36,7 @@ export class ApiResponse<T = unknown> {
 			payload.timestamp,
 			payload.data,
 			payload.error,
-			payload.errors
+			payload.errors,
 		)
 	}
 

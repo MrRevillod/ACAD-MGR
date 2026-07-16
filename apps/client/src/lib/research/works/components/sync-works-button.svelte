@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { Loader2, RefreshCw, AlertCircle } from "@lucide/svelte"
 	import { toast } from "svelte-sonner"
+	import { Loader, RefreshCw, CircleAlert } from "@lucide/svelte"
 
-	import { authStore } from "$lib/auth/store.svelte"
-	import { useSyncWorksMutation } from "../queries"
+	import { authStore } from "$auth/store.svelte"
+	import { useSyncWorksMutation } from "$works/queries"
 
 	interface Props {
 		academicId: string
@@ -41,7 +41,7 @@
 			title="El académico no tiene ORCID asociado"
 			class="inline-flex h-8 cursor-not-allowed items-center gap-1.5 rounded-md border border-corp-gray/20 bg-white px-3 text-xs font-medium text-corp-gray/50 opacity-60"
 		>
-			<AlertCircle class="size-3.5" />
+			<CircleAlert class="size-3.5" />
 			Sin ORCID
 		</button>
 	{:else}
@@ -52,7 +52,7 @@
 			class="inline-flex h-8 items-center gap-1.5 rounded-md bg-corp-blue px-3 text-xs font-medium text-white shadow-sm transition-colors hover:bg-corp-blue/90 active:scale-[0.96] disabled:opacity-60"
 		>
 			{#if mutation.isPending}
-				<Loader2 class="size-3.5 animate-spin" />
+				<Loader class="size-3.5 animate-spin" />
 				Sincronizando...
 			{:else}
 				<RefreshCw class="size-3.5" />

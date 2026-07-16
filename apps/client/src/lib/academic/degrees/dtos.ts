@@ -1,13 +1,13 @@
 import * as v from "valibot"
-import { DEGREE_KIND, type DegreeKind } from "./enums"
+import { DegreeKindValue } from "./value-objects/kind.value"
 
-export interface Degree {
+export interface DegreeDTO {
 	id: string
 	academicId: string
 	name: string
 	university: string
 	obtainedAt: string
-	kind: DegreeKind
+	kind: string
 	countryCode: string
 }
 
@@ -24,7 +24,7 @@ export const createDegreeSchema = v.object({
 		v.maxLength(255, "La universidad debe tener entre 1 y 255 caracteres"),
 	),
 	obtainedAt: v.pipe(v.string(), v.nonEmpty("La fecha de obtención es obligatoria")),
-	kind: v.picklist(DEGREE_KIND, "Seleccione un tipo de grado"),
+	kind: v.picklist(DegreeKindValue.KINDS, "Seleccione un tipo de grado"),
 	countryCode: v.pipe(v.string(), v.length(2, "El código de país debe tener 2 caracteres")),
 })
 
@@ -52,3 +52,12 @@ export const updateDegreeSchema = v.object({
 })
 
 export type UpdateDegreeDto = v.InferInput<typeof updateDegreeSchema>
+
+export const createDegreeDTOInitialInput = {
+	academicId: "",
+	name: "",
+	university: "",
+	obtainedAt: "",
+	kind: "base" as const,
+	countryCode: "CL",
+}

@@ -1,6 +1,6 @@
 <script lang="ts">
+	import type { TimeSeriesStat } from "$stats/dtos"
 	import { LineChart } from "layerchart"
-	import type { TimeSeriesStat } from "../types"
 
 	interface Props {
 		journalKind: TimeSeriesStat[]
@@ -11,9 +11,9 @@
 	const scopusVals = $derived(journalKind.find((s) => s.key === "scopus")?.values ?? [])
 	const wosVals = $derived(journalKind.find((s) => s.key === "wos")?.values ?? [])
 
-	const allYears = $derived([
-		...new Set([...scopusVals, ...wosVals].map((v) => v.year)),
-	].sort((a, b) => a - b))
+	const allYears = $derived(
+		[...new Set([...scopusVals, ...wosVals].map((v) => v.year))].sort((a, b) => a - b),
+	)
 
 	const wideData = $derived(
 		allYears.map((year) => ({

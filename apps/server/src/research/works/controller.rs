@@ -32,6 +32,7 @@ impl WorksController {
 			academic_id: Some(academic_id),
 			..Default::default()
 		};
+
 		Ok(self.works.list(&query).await?)
 	}
 

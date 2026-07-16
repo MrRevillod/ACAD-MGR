@@ -118,12 +118,10 @@ impl WorkClassificationRepository {
 	}
 
 	pub async fn unknown_keyword_id(&self) -> AppResult<Option<ResearchKeyword>> {
-		sqlx::query_as::<_, ResearchKeyword>(
-			"SELECT * FROM keywords WHERE openalex_id = 'unknown'",
-		)
-		.fetch_optional(self.database.pool())
-		.await
-		.map_err(Into::into)
+		sqlx::query_as::<_, ResearchKeyword>("SELECT * FROM keywords WHERE openalex_id = 'unknown'")
+			.fetch_optional(self.database.pool())
+			.await
+			.map_err(Into::into)
 	}
 
 	pub async fn upsert_keyword(

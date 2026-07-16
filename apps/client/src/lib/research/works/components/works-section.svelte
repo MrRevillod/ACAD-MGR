@@ -1,13 +1,12 @@
 <script lang="ts">
-	import { AlertCircle, BookOpen, Loader2 } from "@lucide/svelte"
+	import type { Work } from "$works/entity"
+	import type { Academic } from "$academics/entity"
+	import { useWorksByAcademicQuery } from "$works/queries"
+	import { CircleAlert, BookOpen, Loader } from "@lucide/svelte"
 
-	import type { Academic } from "$lib/academic/academics/entity"
-
-	import { useWorksByAcademicQuery } from "../queries"
-	import type { Work } from "../types"
+	import WorksTable from "./works-table.svelte"
 	import SyncWorksButton from "./sync-works-button.svelte"
 	import WorkDetailDialog from "./work-detail-dialog.svelte"
-	import WorksTable from "./works-table.svelte"
 
 	interface Props {
 		academic: Academic
@@ -46,11 +45,11 @@
 
 	{#if worksQuery.isPending}
 		<div class="flex items-center justify-center py-8">
-			<Loader2 class="size-5 animate-spin text-corp-gray" />
+			<Loader class="size-5 animate-spin text-corp-gray" />
 		</div>
 	{:else if worksQuery.isError}
 		<div class="flex flex-col items-center py-8 text-center">
-			<AlertCircle class="size-6 text-red-500" />
+			<CircleAlert class="size-6 text-red-500" />
 			<p class="mt-2 text-sm text-corp-gray">Error al cargar las publicaciones.</p>
 		</div>
 	{:else if !worksQuery.data || worksQuery.data.length === 0}

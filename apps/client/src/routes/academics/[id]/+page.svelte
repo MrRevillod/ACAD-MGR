@@ -6,8 +6,8 @@
 		GraduationCap,
 		Briefcase,
 		BookOpen,
-		Loader2,
-		AlertCircle,
+		Loader,
+		CircleAlert,
 		Pencil,
 		Plus,
 		ExternalLink,
@@ -18,13 +18,11 @@
 	import { degreeService } from "$degrees/service"
 	import DegreeDialog from "$degrees/components/degree-dialog.svelte"
 	import AcademicEditDialog from "$academics/components/academic-edit-dialog.svelte"
-	import WorksSection from "$lib/research/components/works-section.svelte"
+	import WorksSection from "$works/components/works-section.svelte"
 	import Badge from "$shared/components/ui/badge.svelte"
 	import { CLf64Value } from "$shared/value-objects/cl-f64.value"
-	import { DateValue } from "$shared/value-objects/date.value"
-	import { CountryValue } from "$shared/value-objects/country.value"
-	import { DEGREE_KIND } from "$degrees/enums"
-	import type { Degree } from "$degrees/dtos"
+	import { DegreeKindValue } from "$degrees/value-objects/kind.value"
+	import type { Degree } from "$degrees/entity"
 
 	const id = $derived(page.params.id ?? "")
 
@@ -44,11 +42,11 @@
 	const degreeSlots = $derived.by<
 		Array<
 			| (Degree & { isPlaceholder: false })
-			| { kind: (typeof DEGREE_KIND)[number]; isPlaceholder: true }
+			| { kind: (typeof DegreeKindValue.KINDS)[number]; isPlaceholder: true }
 		>
 	>(() =>
-		DEGREE_KIND.map((kind) => {
-			const found = (degreesQuery.data ?? []).find((d) => d.kind === kind)
+		DegreeKindValue.KINDS.map((kind) => {
+			const found = (degreesQuery.data ?? []).find((d) => d.kind.code === kind)
 			return found
 				? { ...found, isPlaceholder: false as const }
 				: { kind, isPlaceholder: true as const }
@@ -67,9 +65,9 @@
 
 	let showDegreeDialog = $state(false)
 	let editingDegree = $state<Degree | null>(null)
-	let createKind = $state<(typeof DEGREE_KIND)[number]>("base")
+	let createKind = $state<(typeof DegreeKindValue.KINDS)[number]>("base")
 
-	function openCreate(k: (typeof DEGREE_KIND)[number]) {
+	function openCreate(k: (typeof DegreeKindValue.KINDS)[number]) {
 		editingDegree = null
 		createKind = k
 		showDegreeDialog = true
@@ -93,11 +91,11 @@
 <div class="h-full overflow-y-auto">
 	{#if academicQuery.isPending}
 		<div class="flex h-full items-center justify-center">
-			<Loader2 class="size-6 animate-spin text-corp-gray" />
+			<Loader class="size-6 animate-spin text-corp-gray" />
 		</div>
 	{:else if academicQuery.isError || !academic}
 		<div class="flex h-full flex-col items-center justify-center text-center">
-			<AlertCircle class="size-8 text-red-500" />
+			<CircleAlert class="size-8 text-red-500" />
 			<p class="mt-3 text-sm text-corp-gray">Académico no encontrado.</p>
 			<a href="/academics" class="mt-4 text-sm font-medium text-corp-blue hover:underline"
 				>Volver al listado</a
@@ -158,7 +156,7 @@
 									Fecha de Nacimiento
 								</p>
 								<p class="mt-1 text-sm font-semibold text-white">
-									{DateValue.formatDate(academic.birthDate.iso)}
+									{academic.birthDate.toDisplayDate()}
 								</p>
 							</div>
 							<div>
@@ -265,7 +263,7 @@
 											Ingreso
 										</p>
 										<p class="mt-1 text-[15px] font-medium text-[#1a1a1a]">
-											{DateValue.formatDate(academic.joinedAt.iso)}
+											{academic.joinedAt.toDisplayDate()}
 										</p>
 									</div>
 									<div>
@@ -363,7 +361,7 @@
 
 								{#if degreesQuery.isPending}
 									<div class="flex items-center justify-center py-8">
-										<Loader2 class="size-5 animate-spin text-corp-gray" />
+										<Loader class="size-5 animate-spin text-corp-gray" />
 									</div>
 								{:else}
 									<div class="relative">
@@ -378,7 +376,7 @@
 													<div
 														class="z-10 size-3 shrink-0 rounded-full {slot.isPlaceholder
 															? 'bg-corp-gray/30'
-															: slot.kind === 'base'
+															: slot.kind.code === 'base'
 																? 'bg-corp-blue'
 																: 'bg-corp-yellow'}"
 													></div>
@@ -428,15 +426,11 @@
 															<span class="mx-1.5 text-corp-gray/40"
 																>·</span
 															>
-															{CountryValue.format(
-																degree.countryCode,
-															)}
+															{degree.country.toDisplay()}
 															<span class="mx-1.5 text-corp-gray/40"
 																>·</span
 															>
-															{DateValue.formatDate(
-																degree.obtainedAt,
-															)}
+															{degree.obtainedAt.toDisplayDate()}
 														</p>
 													{/if}
 												</div>

@@ -1,12 +1,19 @@
 <script lang="ts">
-	import { createForm, Field, Form, reset } from "@formisch/svelte"
-	import { createMutation, createQuery, useQueryClient } from "@tanstack/svelte-query"
-	import Dialog from "$lib/shared/components/ui/dialog.svelte"
-	import Button from "$lib/shared/components/ui/button.svelte"
-	import { optionService } from "$lib/academic/options/service"
-	import { categoryService } from "$lib/academic/categories/service"
+	import type { CreateOptionDto } from "$options/dtos"
+
 	import { toast } from "svelte-sonner"
-	import { createOptionSchema, type CreateOptionDto } from "../dtos"
+	import { createForm, Field, Form, reset } from "@formisch/svelte"
+	import { queryClient, useMutation, useQuery } from "$shared/http/tanstack"
+
+	import { optionService } from "$options/service"
+	import { categoryService } from "$categories/service"
+	import { AcademicOptionValue } from "$options/value-objects/option.value"
+	import { createOptionSchema, createOptionDTOInitialInput } from "$options/dtos"
+
+	import Dialog from "$shared/components/ui/dialog.svelte"
+	import Select from "$shared/components/ui/form/select.svelte"
+	import TextInput from "$shared/components/ui/form/text-input.svelte"
+	import FormFooter from "$shared/components/ui/form/footer.svelte"
 
 	interface Props {
 		open: boolean
@@ -18,12 +25,10 @@
 	const form = createForm({ schema: createOptionSchema })
 
 	$effect(() => {
-		if (open) reset(form, { initialInput: { categoryId: "", option: "teaching", hours: null } })
+		if (open) reset(form, { initialInput: createOptionDTOInitialInput })
 	})
 
-	const queryClient = useQueryClient()
-
-	const createOpt = createMutation(() => ({
+	const createOpt = useMutation(() => ({
 		mutationFn: (output: CreateOptionDto) => optionService.create(output),
 		onSuccess: () => {
 			void queryClient.invalidateQueries({ queryKey: ["admin", "options"] })
@@ -33,12 +38,21 @@
 		onError: () => toast.error("Error al crear la opción"),
 	}))
 
-	const categoriesQuery = createQuery(() => ({
+	const categoriesQuery = useQuery(() => ({
 		queryKey: ["admin", "categories"],
 		queryFn: () => categoryService.list(),
 	}))
 
 	const categories = $derived(categoriesQuery.data ?? [])
+
+	const optionValues = $derived(
+		AcademicOptionValue.OPTIONS.map((v) => ({
+			label: AcademicOptionValue.LABELS[v],
+			value: v,
+		})),
+	)
+
+	const categoryOptions = $derived(categories.map((c) => ({ label: c.name, value: c.id })))
 
 	function handleClose() {
 		open = false
@@ -51,67 +65,43 @@
 		<div class="grid gap-4">
 			<Field of={form} path={["categoryId"]}>
 				{#snippet children(field)}
-					<label class="grid gap-1.5">
-						<span class="text-xs font-medium tracking-wide uppercase text-corp-gray"
-							>Categoría</span
-						>
-						<select
-							{...field.props}
-							value={field.input}
-							class="h-10 w-full rounded-lg border border-corp-gray/20 bg-white px-3 text-sm text-[#1A1A1A] outline-none transition-colors placeholder:text-corp-gray/50 focus:border-corp-blue/50 focus:ring-2 focus:ring-corp-blue/10"
-						>
-							<option value="">Seleccionar categoría...</option>
-							{#each categories as c (c.id)}
-								<option value={c.id}>{c.name}</option>
-							{/each}
-						</select>
-						{#if field.errors}
-							<p class="text-xs text-red-600">{field.errors[0]}</p>
-						{/if}
-					</label>
+					<Select
+						{...field.props}
+						input={field.input}
+						errors={field.errors}
+						label="Categoría"
+						placeholder="Seleccionar categoría..."
+						options={categoryOptions}
+					/>
 				{/snippet}
 			</Field>
+
 			<Field of={form} path={["option"]}>
 				{#snippet children(field)}
-					<label class="grid gap-1.5">
-						<span class="text-xs font-medium tracking-wide uppercase text-corp-gray"
-							>Opción</span
-						>
-						<select
-							{...field.props}
-							value={field.input}
-							class="h-10 w-full rounded-lg border border-corp-gray/20 bg-white px-3 text-sm text-[#1A1A1A] outline-none transition-colors placeholder:text-corp-gray/50 focus:border-corp-blue/50 focus:ring-2 focus:ring-corp-blue/10"
-						>
-							<option value="teaching">Docencia</option>
-							<option value="research">Investigación</option>
-						</select>
-					</label>
+					<Select
+						{...field.props}
+						input={field.input}
+						errors={field.errors}
+						label="Opción"
+						options={optionValues}
+					/>
 				{/snippet}
 			</Field>
+
 			<Field of={form} path={["hours"]}>
 				{#snippet children(field)}
-					<label class="grid gap-1.5">
-						<span class="text-xs font-medium tracking-wide uppercase text-corp-gray"
-							>Horas</span
-						>
-						<input
-							{...field.props}
-							value={field.input ?? ""}
-							type="number"
-							step="any"
-							min="0"
-							placeholder="Opcional"
-							class="h-10 w-full rounded-lg border border-corp-gray/20 bg-white px-3 text-sm text-[#1A1A1A] outline-none transition-colors placeholder:text-corp-gray/50 focus:border-corp-blue/50 focus:ring-2 focus:ring-corp-blue/10"
-						/>
-					</label>
+					<TextInput
+						{...field.props}
+						input={field.input}
+						errors={field.errors}
+						type="number"
+						label="Horas"
+						placeholder="Opcional"
+					/>
 				{/snippet}
 			</Field>
-			<div class="mt-2 flex justify-end gap-2">
-				<Button variant="secondary" type="button" onclick={handleClose}>Cancelar</Button>
-				<Button type="submit" disabled={createOpt.isPending}>
-					{createOpt.isPending ? "Creando..." : "Crear"}
-				</Button>
-			</div>
 		</div>
+
+		<FormFooter onCancel={handleClose} submitLabel="Crear" isPending={createOpt.isPending} />
 	</Form>
 </Dialog>

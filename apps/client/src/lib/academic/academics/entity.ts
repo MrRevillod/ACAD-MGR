@@ -3,9 +3,9 @@ import type { AcademicDTO } from "./dtos"
 import { SexValue } from "$shared/value-objects/sex.value"
 import { DateValue } from "$shared/value-objects/date.value"
 import { CLf64Value } from "$shared/value-objects/cl-f64.value"
+import { PlantaValue } from "./value-objects/planta.value"
 import { CountryValue } from "$shared/value-objects/country.value"
 import { AcademicOptionValue } from "./value-objects/option.value"
-import { PlantaValue } from "./value-objects/planta.value"
 
 export class Academic {
 	constructor(

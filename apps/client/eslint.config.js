@@ -33,7 +33,7 @@ export default defineConfig(
 				},
 			],
 			"@typescript-eslint/consistent-type-imports": "error",
-			"@typescript-eslint/no-non-null-assertion": "warn",
+			"@typescript-eslint/no-non-null-assertion": "off",
 		},
 	},
 	{

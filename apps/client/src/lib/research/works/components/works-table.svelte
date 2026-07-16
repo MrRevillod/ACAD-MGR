@@ -1,15 +1,12 @@
 <script lang="ts" generics="_TData extends RowData">
-	import {
-		createColumnHelper,
-		renderSnippet,
-		type RowData,
-		type TableFeatures,
-	} from "@tanstack/svelte-table"
+	import type { Work } from "$works/entity"
+	import type { JournalKindValue } from "$works/value-objects/journal-kind.value"
+	import type { RowData, TableFeatures } from "@tanstack/svelte-table"
+
 	import { ExternalLink } from "@lucide/svelte"
+	import { createColumnHelper, renderSnippet } from "@tanstack/svelte-table"
 
-	import DataTable from "$lib/shared/components/ui/data-table.svelte"
-
-	import type { Work } from "../types"
+	import DataTable from "$shared/components/ui/data-table.svelte"
 
 	interface Props {
 		works: Work[]
@@ -67,14 +64,14 @@
 	<span class="tabular-nums text-corp-gray">{year ?? "—"}</span>
 {/snippet}
 
-{#snippet journalKindSnippet({ kind }: { kind: string | null })}
-	{#if kind === "wos"}
+{#snippet journalKindSnippet({ kind }: { kind: JournalKindValue })}
+	{#if kind.code === "wos"}
 		<span
 			class="inline-flex items-center rounded-full bg-corp-blue/10 px-2 py-0.5 text-xs font-semibold text-corp-blue uppercase"
 		>
 			WoS
 		</span>
-	{:else if kind === "scopus"}
+	{:else if kind.code === "scopus"}
 		<span
 			class="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700 uppercase"
 		>

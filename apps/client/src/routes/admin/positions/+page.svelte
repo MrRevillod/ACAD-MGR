@@ -1,12 +1,15 @@
 <script lang="ts">
+	import type { TableFeatures } from "@tanstack/svelte-table"
+	import type { AcademicWorkPosition } from "$work-positions/entity"
+
 	import { createQuery } from "@tanstack/svelte-query"
-	import { renderSnippet, createColumnHelper, type TableFeatures } from "@tanstack/svelte-table"
-	import { positionService } from "$lib/university/work-positions/service"
-	import PositionDialog from "$lib/university/work-positions/components/position-dialog.svelte"
-	import Button from "$lib/shared/components/ui/button.svelte"
-	import DataTable from "$lib/shared/components/ui/data-table.svelte"
-	import { Plus, Loader2, Pencil, Trash2 } from "@lucide/svelte"
-	import type { AcademicWorkPosition } from "$lib/university/work-positions/dtos"
+	import { positionService } from "$work-positions/service"
+	import { Plus, Loader, Pencil, Trash2 } from "@lucide/svelte"
+	import { renderSnippet, createColumnHelper } from "@tanstack/svelte-table"
+
+	import Button from "$shared/components/ui/button.svelte"
+	import DataTable from "$shared/components/ui/data-table.svelte"
+	import PositionDialog from "$work-positions/components/position-dialog.svelte"
 
 	const query = createQuery(() => ({
 		queryKey: ["admin", "positions"],
@@ -43,7 +46,7 @@
 
 	{#if query.isPending}
 		<div class="flex items-center justify-center py-16">
-			<Loader2 class="size-6 animate-spin text-corp-gray" />
+			<Loader class="size-6 animate-spin text-corp-gray" />
 		</div>
 	{:else}
 		<DataTable data={query.data ?? []} {columns} pageSize={10} />

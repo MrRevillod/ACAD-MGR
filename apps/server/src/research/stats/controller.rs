@@ -16,7 +16,10 @@ impl StatsController {
 	pub async fn get_works_stats(&self, req: Request) -> WebResult<WorksStatsResponse> {
 		let query = req.query_validator::<WorksStatsQuery>()?;
 
-		Ok(self.stats.get_works_stats(query.unwrap_or_default()).await?)
+		Ok(self
+			.stats
+			.get_works_stats(query.unwrap_or_default())
+			.await?)
 	}
 
 	#[get("/department/{id}")]

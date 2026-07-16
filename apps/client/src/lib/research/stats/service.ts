@@ -4,10 +4,10 @@ import type {
 	DepartmentDetailQuery,
 	StatsQuery,
 	WorksStatsResponse,
-} from "./types"
+} from "$stats/dtos"
 
 class StatsService {
-	getWorksStats(params?: StatsQuery): Promise<WorksStatsResponse> {
+	public getWorksStats(params?: StatsQuery): Promise<WorksStatsResponse> {
 		return http.request<WorksStatsResponse>({
 			method: "GET",
 			url: "/stats/works",
@@ -15,7 +15,7 @@ class StatsService {
 		})
 	}
 
-	getDepartmentDetail(
+	public getDepartmentDetail(
 		id: string,
 		params?: DepartmentDetailQuery,
 	): Promise<DepartmentDetail> {

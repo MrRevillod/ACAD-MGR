@@ -1,11 +1,12 @@
 <script lang="ts">
 	import { Filter, RotateCcw, Search } from "@lucide/svelte"
 
-	import Button from "$lib/shared/components/ui/button.svelte"
-	import Label from "$lib/shared/components/ui/label.svelte"
-	import Select from "$lib/shared/components/ui/select.svelte"
+	import Button from "$shared/components/ui/button.svelte"
+	import Label from "$shared/components/ui/label.svelte"
+	import Select from "$shared/components/ui/select.svelte"
 
-	import { useCareersQuery, useDepartmentsQuery } from "../queries"
+	import { useCareersQuery } from "$careers/queries"
+	import { useDepartmentsQuery } from "$departments/queries"
 
 	interface Props {
 		search: string

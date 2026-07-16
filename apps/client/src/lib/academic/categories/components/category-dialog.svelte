@@ -1,12 +1,18 @@
 <script lang="ts">
-	import { createForm, Field, Form, reset } from "@formisch/svelte"
-	import { createMutation, useQueryClient } from "@tanstack/svelte-query"
-	import Dialog from "$lib/shared/components/ui/dialog.svelte"
-	import Button from "$lib/shared/components/ui/button.svelte"
-	import { categoryService } from "$lib/academic/categories/service"
+	import type { CreateCategoryDTO } from "$categories/dtos"
+
 	import { toast } from "svelte-sonner"
-	import { PlantaValue } from "$lib/academic/academics/value-objects/planta.value"
-	import { createCategorySchema, type CreateCategoryDto } from "../dtos"
+	import { useMutation, useQueryClient } from "$shared/http/tanstack"
+	import { createForm, Field, Form, reset } from "@formisch/svelte"
+
+	import { PlantaValue } from "$academics/value-objects/planta.value"
+	import { categoryService } from "$categories/service"
+	import { createCategoryDTOSchema } from "$categories/dtos"
+
+	import Dialog from "$shared/components/ui/dialog.svelte"
+	import Select from "$shared/components/ui/form/select.svelte"
+	import TextInput from "$shared/components/ui/form/text-input.svelte"
+	import FormFooter from "$shared/components/ui/form/footer.svelte"
 
 	interface Props {
 		open: boolean
@@ -15,7 +21,7 @@
 
 	let { open = $bindable(), onClose }: Props = $props()
 
-	const form = createForm({ schema: createCategorySchema })
+	const form = createForm({ schema: createCategoryDTOSchema })
 
 	$effect(() => {
 		if (open) reset(form, { initialInput: { name: "", planta: "permanente" } })
@@ -23,8 +29,8 @@
 
 	const queryClient = useQueryClient()
 
-	const createCat = createMutation(() => ({
-		mutationFn: (output: CreateCategoryDto) => categoryService.create(output),
+	const createCat = useMutation(() => ({
+		mutationFn: (output: CreateCategoryDTO) => categoryService.create(output),
 		onSuccess: () => {
 			void queryClient.invalidateQueries({ queryKey: ["admin", "categories"] })
 			toast.success("Categoría creada")
@@ -32,6 +38,10 @@
 		},
 		onError: () => toast.error("Error al crear la categoría"),
 	}))
+
+	const plantaOptions = $derived(
+		PlantaValue.PLANTA.map((p) => ({ label: PlantaValue.LABELS[p], value: p })),
+	)
 
 	function handleClose() {
 		open = false
@@ -44,46 +54,30 @@
 		<div class="grid gap-4">
 			<Field of={form} path={["name"]}>
 				{#snippet children(field)}
-					<label class="grid gap-1.5">
-						<span class="text-xs font-medium tracking-wide uppercase text-corp-gray"
-							>Nombre</span
-						>
-						<input
-							{...field.props}
-							value={field.input}
-							placeholder="Ej: Profesor Titular"
-							class="h-10 w-full rounded-lg border border-corp-gray/20 bg-white px-3 text-sm text-[#1A1A1A] outline-none transition-colors placeholder:text-corp-gray/50 focus:border-corp-blue/50 focus:ring-2 focus:ring-corp-blue/10"
-						/>
-						{#if field.errors}
-							<p class="text-xs text-red-600">{field.errors[0]}</p>
-						{/if}
-					</label>
+					<TextInput
+						{...field.props}
+						input={field.input}
+						errors={field.errors}
+						type="text"
+						label="Nombre"
+						placeholder="Ej: Profesor Titular"
+					/>
 				{/snippet}
 			</Field>
+
 			<Field of={form} path={["planta"]}>
 				{#snippet children(field)}
-					<label class="grid gap-1.5">
-						<span class="text-xs font-medium tracking-wide uppercase text-corp-gray"
-							>Planta</span
-						>
-						<select
-							{...field.props}
-							value={field.input}
-							class="h-10 w-full rounded-lg border border-corp-gray/20 bg-white px-3 text-sm text-[#1A1A1A] outline-none transition-colors placeholder:text-corp-gray/50 focus:border-corp-blue/50 focus:ring-2 focus:ring-corp-blue/10"
-						>
-							{#each PlantaValue.PLANTA as p (p)}
-								<option value={p}>{PlantaValue.LABELS[p]}</option>
-							{/each}
-						</select>
-					</label>
+					<Select
+						{...field.props}
+						input={field.input}
+						errors={field.errors}
+						label="Planta"
+						options={plantaOptions}
+					/>
 				{/snippet}
 			</Field>
-			<div class="mt-2 flex justify-end gap-2">
-				<Button variant="secondary" type="button" onclick={handleClose}>Cancelar</Button>
-				<Button type="submit" disabled={createCat.isPending}>
-					{createCat.isPending ? "Creando..." : "Crear"}
-				</Button>
-			</div>
 		</div>
+
+		<FormFooter onCancel={handleClose} submitLabel="Crear" isPending={createCat.isPending} />
 	</Form>
 </Dialog>

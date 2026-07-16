@@ -123,6 +123,26 @@ export const createAcademicDTOSchema = v.object({
 export type CreateAcademicDTOSchema = typeof createAcademicDTOSchema
 export type CreateAcademicDTO = v.InferInput<typeof createAcademicDTOSchema>
 
+export const createAcademicDTOInitialInput: CreateAcademicDTO = {
+	rut: "",
+	names: "",
+	paternalSurname: "",
+	maternalSurname: "",
+	email: "",
+	orcid: null,
+	sex: "H",
+	birthDate: "",
+	joinedAt: "",
+	workPositionId: "",
+	departmentId: "",
+	careerId: null,
+	acadCategoryOptionsId: "",
+	jce: 0,
+	annualDiscountHours: 0,
+	nationalityCode: "CL",
+	city: "",
+}
+
 // Update Academic DTOs ------------------------------------------------
 
 export const updateAcademicDTOSchema = v.object({

@@ -1,8 +1,16 @@
 import { http } from "$lib/shared/http/client"
-import type { Faculty } from "./dtos"
+import type { FacultyDTO, GetFacultiesParams } from "./dtos"
+import { Faculty } from "./entity"
 
-export const facultyService = {
-	list(): Promise<Faculty[]> {
-		return http.request<Faculty[]>({ method: "GET", url: "/faculties" })
-	},
+class FacultyService {
+	public async list(params?: GetFacultiesParams): Promise<Faculty[]> {
+		const data = await http.request<FacultyDTO[]>({
+			method: "GET",
+			url: "/faculties",
+			params,
+		})
+		return data.map((dto) => Faculty.fromDTO(dto))
+	}
 }
+
+export const facultyService = new FacultyService()

@@ -147,12 +147,11 @@ async fn upsert_eissn_scopus(
 		return Ok(0);
 	}
 
-	let result = sqlx::query(
-		"INSERT INTO journal_issn (eissn, kind) VALUES ($1, 'scopus'::journal_kind)",
-	)
-	.bind(eissn)
-	.execute(&mut **tx)
-	.await?;
+	let result =
+		sqlx::query("INSERT INTO journal_issn (eissn, kind) VALUES ($1, 'scopus'::journal_kind)")
+			.bind(eissn)
+			.execute(&mut **tx)
+			.await?;
 	Ok(result.rows_affected())
 }
 

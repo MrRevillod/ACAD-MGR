@@ -1,8 +1,16 @@
 import { http } from "$lib/shared/http/client"
-import type { Career } from "./dtos"
+import type { CareerDTO, GetCareersParams } from "./dtos"
+import { Career } from "./entity"
 
-export const careerService = {
-	list(params?: { department_id?: string }): Promise<Career[]> {
-		return http.request<Career[]>({ method: "GET", url: "/careers", params })
-	},
+class CareerService {
+	public async list(params?: GetCareersParams): Promise<Career[]> {
+		const data = await http.request<CareerDTO[]>({
+			method: "GET",
+			url: "/careers",
+			params,
+		})
+		return data.map((dto) => Career.fromDTO(dto))
+	}
 }
+
+export const careerService = new CareerService()

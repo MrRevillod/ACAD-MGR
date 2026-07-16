@@ -1,6 +1,7 @@
 import { createQuery } from "@tanstack/svelte-query"
 import { statsService } from "./service"
-import type { DepartmentDetailQuery, StatsQuery } from "./types"
+
+import type { DepartmentDetailQuery, StatsQuery } from "./dtos"
 
 const STALE_TIME = 5 * 60 * 1000
 const GC_TIME = 10 * 60 * 1000

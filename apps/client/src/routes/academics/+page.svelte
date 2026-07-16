@@ -1,22 +1,25 @@
 <script lang="ts">
-	import { createMutation, createQuery, useQueryClient } from "@tanstack/svelte-query"
-	import { goto } from "$app/navigation"
-	import { resolve } from "$app/paths"
-	import { Loader2, AlertCircle } from "@lucide/svelte"
-	import { toast } from "svelte-sonner"
-	import { createColumnHelper, type TableFeatures } from "@tanstack/svelte-table"
-	import { useSearchParams } from "runed/kit"
 	import * as v from "valibot"
-	import { academicService } from "$lib/academic/academics/service"
-	import { departmentService } from "$lib/university/departments/service"
-	import { careerService } from "$lib/university/careers/service"
-	import { categoryService } from "$lib/academic/categories/service"
-	import DataTable from "$lib/shared/components/ui/data-table.svelte"
-	import AcademicsFilters from "$lib/academic/academics/components/academics-filters.svelte"
-	import AcademicCreateDialog from "$lib/academic/academics/components/academic-create-dialog.svelte"
-	import type { GetAcademicsParams } from "$lib/academic/academics/dtos"
-	import type { Academic } from "$lib/academic/academics/entity"
-	import { FullName } from "$lib/shared/value-objects/full-name.value"
+	import type { Academic } from "$academics/entity"
+	import type { TableFeatures } from "@tanstack/svelte-table"
+	import type { GetAcademicsParams } from "$academics/dtos"
+
+	import { toast } from "svelte-sonner"
+	import { goto } from "$app/navigation"
+	import { Loader, CircleAlert } from "@lucide/svelte"
+	import { useSearchParams } from "runed/kit"
+	import { createColumnHelper } from "@tanstack/svelte-table"
+	import { createMutation, createQuery, useQueryClient } from "@tanstack/svelte-query"
+
+	import { FullName } from "$shared/value-objects/full-name.value"
+	import { careerService } from "$careers/service"
+	import { academicService } from "$academics/service"
+	import { departmentService } from "$departments/service"
+	import { categoryService } from "$categories/service"
+
+	import DataTable from "$shared/components/ui/data-table.svelte"
+	import AcademicsFilters from "$academics/components/academics-filters.svelte"
+	import AcademicCreateDialog from "$academics/components/academic-create-dialog.svelte"
 
 	const searchParamsSchema = v.object({
 		search: v.optional(v.fallback(v.string(), ""), ""),
@@ -128,18 +131,18 @@
 		<main class="min-w-0 flex-1 overflow-y-auto">
 			{#if query.isPending}
 				<div class="flex items-center justify-center py-16">
-					<Loader2 class="size-6 animate-spin text-corp-gray" />
+					<Loader class="size-6 animate-spin text-corp-gray" />
 				</div>
 			{:else if query.isError}
 				<div class="flex flex-col items-center justify-center py-16 text-center">
-					<AlertCircle class="size-8 text-red-500" />
+					<CircleAlert class="size-8 text-red-500" />
 					<p class="mt-3 text-sm text-corp-gray">Error al cargar los académicos.</p>
 				</div>
 			{:else}
 				<DataTable
 					data={query.data ?? []}
 					{columns}
-					onRowClick={(row: Academic) => void goto(resolve(`/academics/${row.id}`))}
+					onRowClick={(row: Academic) => void goto(`/academics/${row.id}`)}
 				/>
 			{/if}
 		</main>

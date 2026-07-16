@@ -1,9 +1,9 @@
 export interface StatsQuery {
-	journal_kind?: "wos" | "scopus"
+	journalKind?: "wos" | "scopus"
 	option?: "teaching" | "research"
-	department_id?: string
-	year_from?: number
-	year_to?: number
+	departmentId?: string
+	yearFrom?: number
+	yearTo?: number
 }
 
 export interface YearValue {
@@ -29,6 +29,7 @@ export interface TopPublisher {
 	total: number
 	scopus: number
 	wos: number
+	unindexed: number
 	option: string
 }
 
@@ -43,8 +44,8 @@ export interface DepartmentDetail {
 }
 
 export interface DepartmentDetailQuery {
-	year_from?: number
-	year_to?: number
+	yearFrom?: number
+	yearTo?: number
 	option?: "teaching" | "research"
-	journal_kind?: "wos" | "scopus"
+	journalKind?: "wos" | "scopus"
 }
