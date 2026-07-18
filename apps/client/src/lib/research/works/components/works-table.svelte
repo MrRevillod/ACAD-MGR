@@ -44,7 +44,13 @@
 
 {#snippet titleSnippet({ work }: { work: Work })}
 	<div class="min-w-0">
-		<p class="line-clamp-2 text-[15px] font-medium text-[#1A1A1A]">{work.title}</p>
+		<p
+			style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 750px;"
+			class="text-[15px] font-medium text-[#1A1A1A]"
+			title={work.title}
+		>
+			{work.title}
+		</p>
 		{#if work.doi}
 			<a
 				href={work.doi}

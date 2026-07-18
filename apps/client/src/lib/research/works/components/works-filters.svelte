@@ -51,7 +51,7 @@
 </script>
 
 <aside
-	class="hidden w-80 shrink-0 overflow-y-auto rounded-xl border border-corp-gray/20 bg-white p-4 lg:block"
+	class="hidden w-80 shrink-0 self-start rounded-xl border border-corp-gray/20 bg-white p-4 lg:block"
 >
 	<div class="mb-5 border-b border-corp-gray/20 pb-5">
 		<div class="flex items-center gap-3">

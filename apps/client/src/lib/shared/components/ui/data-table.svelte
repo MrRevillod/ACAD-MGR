@@ -30,6 +30,7 @@
 		searchFields?: string[]
 		pageSize?: number
 		class?: string
+		tableClass?: string
 	}
 
 	let {
@@ -40,6 +41,7 @@
 		searchFields = [] as string[],
 		pageSize = 15,
 		class: className = "",
+		tableClass = "",
 	}: DataTableProps<TData> = $props()
 
 	const filtered = $derived.by(() => {
@@ -85,7 +87,7 @@
 </script>
 
 <div class="w-full rounded-xl border border-corp-gray/20 bg-white {className}">
-	<table class="w-full caption-bottom text-sm">
+	<table class="w-full caption-bottom text-sm {tableClass}">
 		<thead>
 			{#each table.getHeaderGroups() as headerGroup (headerGroup.id)}
 				<tr class="border-b border-corp-gray/20 bg-gray-100">

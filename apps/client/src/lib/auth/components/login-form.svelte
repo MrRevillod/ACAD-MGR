@@ -74,7 +74,7 @@
 						{#snippet rightIcon()}
 							<button
 								type="button"
-								class="text-corp-gray/50 transition-colors hover:text-corp-gray"
+								class="flex items-center justify-center size-8 text-corp-gray/50 transition-colors hover:text-corp-gray"
 								onclick={() => (showPassword = !showPassword)}
 								tabindex={-1}
 							>

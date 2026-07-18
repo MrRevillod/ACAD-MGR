@@ -6,6 +6,7 @@ use crate::shared::AppResult;
 
 pub use openalex::*;
 
+use html_escape::decode_html_entities;
 use papers_openalex::Work as OpenAlexWork;
 use std::str::FromStr;
 use std::sync::Arc;
@@ -251,7 +252,13 @@ impl WorksService {
 					name,
 					is_external,
 					is_corresponding: auth.is_corresponding.unwrap_or(false),
-					affiliations: auth.raw_affiliation_strings.clone().unwrap_or_default(),
+					affiliations: auth
+					.raw_affiliation_strings
+					.clone()
+					.unwrap_or_default()
+					.into_iter()
+					.map(|s| decode_html_entities(&s).to_string())
+					.collect(),
 					position,
 				};
 				self.authorships.insert(&new_authorship).await?;

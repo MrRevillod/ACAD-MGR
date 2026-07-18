@@ -231,11 +231,11 @@
 		</div>
 
 		<div class="grid grid-cols-1 gap-6 lg:grid-cols-[280px_1fr]">
-			<section class="rounded-xl border border-corp-gray/20 bg-white p-6">
-				<h2 class="mb-4 text-sm font-semibold tracking-wide uppercase text-corp-blue">
-					Indexación
-				</h2>
-				<DonutChart segments={indexSegments} total={d.totalWorks} />
+		<section class="flex flex-col justify-center rounded-xl border border-corp-gray/20 bg-white p-6">
+			<h2 class="text-sm font-semibold tracking-wide uppercase text-corp-blue">
+				Indexación
+			</h2>
+			<DonutChart segments={indexSegments} total={d.totalWorks} class="mt-4" />
 			</section>
 
 			<section class="rounded-xl border border-corp-gray/20 bg-white p-6">

@@ -132,17 +132,25 @@
 					<h3 class="mb-2 text-xs font-semibold tracking-widest uppercase text-corp-blue">
 						Publicado en
 					</h3>
-					<div class="flex items-center gap-2">
-						<p class="text-sm font-medium text-[#1A1A1A]">{work.source.displayName}</p>
+					<p class="text-sm font-medium text-[#1A1A1A]">
+						{work.source.displayName}
+						<span class="text-corp-gray">· {work.source.ty}</span>
+						<span class="mx-1.5 text-corp-gray/40">|</span>
+						Indexación:
 						{#if work.source.kind.code}
 							<Badge
 								variant={work.source.kind.code === "scopus" ? "advanced" : "base"}
 							>
 								{work.source.kind.toDisplay()}
 							</Badge>
+						{:else}
+							<span
+								class="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-semibold tracking-wide text-red-700 uppercase ml-1"
+							>
+								Desconocida
+							</span>
 						{/if}
-						<span class="text-xs text-corp-gray">· {work.source.ty}</span>
-					</div>
+					</p>
 				</div>
 			{/if}
 
