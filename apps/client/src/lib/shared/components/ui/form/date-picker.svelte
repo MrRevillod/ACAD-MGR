@@ -13,7 +13,6 @@
 		class?: string
 		label?: string
 		hint?: string
-		placeholder?: string
 		required?: boolean
 		input: unknown
 		errors: [string, ...string[]] | null
@@ -23,7 +22,6 @@
 		class: className,
 		label,
 		hint,
-		placeholder = "Seleccionar fecha",
 		name,
 		required,
 		input,
