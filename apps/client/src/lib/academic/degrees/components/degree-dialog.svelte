@@ -170,7 +170,12 @@
 
 			<Field of={form} path={["countryCode"]}>
 				{#snippet children(field)}
-					<CountrySelect {...field.props} input={field.input} errors={field.errors} label="País" />
+					<CountrySelect
+						{...field.props}
+						input={field.input}
+						errors={field.errors}
+						label="País"
+					/>
 				{/snippet}
 			</Field>
 		</div>

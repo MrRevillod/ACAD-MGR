@@ -1,7 +1,7 @@
 <script lang="ts">
+	import * as v from "valibot"
 	import type { Degree } from "$degrees/entity"
 
-	import * as v from "valibot"
 	import { page } from "$app/state"
 	import { useSearchParams } from "runed/kit"
 	import {
@@ -353,10 +353,10 @@
 							</section>
 						{:else}
 							<WorksSection
-							{academic}
-							bind:yearFrom={yearParams.yearFrom}
-							bind:yearTo={yearParams.yearTo}
-						/>
+								{academic}
+								bind:yearFrom={yearParams.yearFrom}
+								bind:yearTo={yearParams.yearTo}
+							/>
 						{/if}
 					</div>
 				</div>

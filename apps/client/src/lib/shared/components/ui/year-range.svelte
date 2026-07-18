@@ -42,7 +42,12 @@
 			{#if showLabels}
 				<span class="block text-xs font-medium text-corp-gray">{labelFrom}</span>
 			{/if}
-			<Select items={years} bind:value={yearFrom} placeholder={placeholderFrom} class="w-full" />
+			<Select
+				items={years}
+				bind:value={yearFrom}
+				placeholder={placeholderFrom}
+				class="w-full"
+			/>
 		</div>
 		<div class="flex items-center pb-3 px-0.5 text-corp-gray/40" aria-hidden="true">
 			<Minus class="size-3" />

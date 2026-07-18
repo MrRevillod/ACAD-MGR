@@ -23,9 +23,9 @@
 
 	const searchParamsSchema = v.object({
 		search: v.optional(v.fallback(v.string(), ""), ""),
-		department_id: v.optional(v.fallback(v.string(), ""), ""),
-		career_id: v.optional(v.fallback(v.string(), ""), ""),
-		category_id: v.optional(v.fallback(v.string(), ""), ""),
+		departmentId: v.optional(v.fallback(v.string(), ""), ""),
+		careerId: v.optional(v.fallback(v.string(), ""), ""),
+		categoryId: v.optional(v.fallback(v.string(), ""), ""),
 		planta: v.optional(v.fallback(v.string(), ""), ""),
 		option: v.optional(v.fallback(v.string(), ""), ""),
 	})
@@ -41,10 +41,10 @@
 	}))
 
 	const careersQuery = createQuery(() => ({
-		queryKey: ["careers", params.department_id],
+		queryKey: ["careers", params.departmentId],
 		queryFn: () =>
 			careerService.list(
-				params.department_id ? { department_id: params.department_id } : undefined,
+				params.departmentId ? { department_id: params.departmentId } : undefined,
 			),
 	}))
 
@@ -55,9 +55,9 @@
 
 	let filters = $derived<GetAcademicsParams>({
 		...(params.search && { search: params.search }),
-		...(params.department_id && { department_id: params.department_id }),
-		...(params.career_id && { career_id: params.career_id }),
-		...(params.category_id && { category_id: params.category_id }),
+		...(params.departmentId && { departmentId: params.departmentId }),
+		...(params.careerId && { careerId: params.careerId }),
+		...(params.categoryId && { categoryId: params.categoryId }),
 		...(params.planta && { planta: params.planta as GetAcademicsParams["planta"] }),
 		...(params.option && { option: params.option as GetAcademicsParams["option"] }),
 	})
@@ -115,9 +115,9 @@
 	<div class="flex min-h-0 flex-1 gap-8">
 		<AcademicsFilters
 			bind:search={params.search}
-			bind:deptFilter={params.department_id}
-			bind:careerFilter={params.career_id}
-			bind:catFilter={params.category_id}
+			bind:deptFilter={params.departmentId}
+			bind:careerFilter={params.careerId}
+			bind:catFilter={params.categoryId}
 			bind:plantaFilter={params.planta}
 			bind:optionFilter={params.option}
 			departments={departmentsQuery.data}

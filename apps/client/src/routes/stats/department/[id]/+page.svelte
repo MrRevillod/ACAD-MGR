@@ -6,11 +6,10 @@
 
 	import { page } from "$app/state"
 	import { goto } from "$app/navigation"
-	import { resolve } from "$app/paths"
 	import { FullName } from "$shared/value-objects/full-name.value"
+	import { authStore } from "$lib/auth/store.svelte"
 	import { useSearchParams } from "runed/kit"
 	import { useDepartmentDetailQuery } from "$stats/queries"
-	import { authStore } from "$lib/auth/store.svelte"
 	import { Loader, CircleAlert, RotateCcw } from "@lucide/svelte"
 	import { createColumnHelper, renderSnippet } from "@tanstack/svelte-table"
 
@@ -27,10 +26,10 @@
 	const defaultYearTo = String(currentYear)
 
 	const searchParamsSchema = v.object({
-		year_from: v.optional(v.fallback(v.string(), defaultYearFrom), defaultYearFrom),
-		year_to: v.optional(v.fallback(v.string(), defaultYearTo), defaultYearTo),
+		yearFrom: v.optional(v.fallback(v.string(), defaultYearFrom), defaultYearFrom),
+		yearTo: v.optional(v.fallback(v.string(), defaultYearTo), defaultYearTo),
 		option: v.optional(v.fallback(v.string(), ""), ""),
-		journal_kind: v.optional(v.fallback(v.string(), ""), ""),
+		journalKind: v.optional(v.fallback(v.string(), ""), ""),
 	})
 
 	const params = useSearchParams(searchParamsSchema, {
@@ -39,13 +38,13 @@
 	})
 
 	const queryParams = $derived<DepartmentDetailQuery>({
-		yearFrom: Number(params.year_from),
-		yearTo: Number(params.year_to),
+		yearFrom: Number(params.yearFrom),
+		yearTo: Number(params.yearTo),
 		...(params.option && {
 			option: params.option as "teaching" | "research",
 		}),
-		...(params.journal_kind && {
-			journalKind: params.journal_kind as "wos" | "scopus",
+		...(params.journalKind && {
+			journalKind: params.journalKind as "wos" | "scopus",
 		}),
 	})
 
@@ -161,12 +160,13 @@
 
 			<div class="flex items-end gap-3">
 				<div class="space-y-2.5">
-				<span class="block text-xs font-medium tracking-wide uppercase text-corp-gray whitespace-nowrap"
-					>Rango anual de publicación</span
-				>
+					<span
+						class="block text-xs font-medium tracking-wide uppercase text-corp-gray whitespace-nowrap"
+						>Rango anual de publicación</span
+					>
 					<YearRange
-						bind:yearFrom={params.year_from}
-						bind:yearTo={params.year_to}
+						bind:yearFrom={params.yearFrom}
+						bind:yearTo={params.yearTo}
 						labelFrom="Desde"
 						labelTo="Hasta"
 						showLabels={false}
@@ -237,8 +237,8 @@
 					pageSize={20}
 					onRowClick={(p: TopPublisher) => {
 						const dest = authStore.isAuthenticated()
-							? resolve(`/academics/${p.academicId}`)
-							: resolve(`/public/academics/${p.academicId}`)
+							? `/academics/${p.academicId}`
+							: `/public/academics/${p.academicId}`
 						void goto(dest)
 					}}
 				/>

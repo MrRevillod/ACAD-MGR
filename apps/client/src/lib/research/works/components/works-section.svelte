@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Work } from "$works/entity"
 	import type { Academic } from "$academics/entity"
+
 	import { useWorksByAcademicQuery } from "$works/queries"
 	import { CircleAlert, BookOpen, Loader } from "@lucide/svelte"
 
@@ -15,11 +16,7 @@
 		yearTo?: string
 	}
 
-	let {
-		academic,
-		yearFrom = $bindable(""),
-		yearTo = $bindable(""),
-	}: Props = $props()
+	let { academic, yearFrom = $bindable(""), yearTo = $bindable("") }: Props = $props()
 
 	function worksParams() {
 		return {

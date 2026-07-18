@@ -45,7 +45,7 @@
 			</a>
 
 			{#if authStore.isAuthenticated()}
-				<a href="/academics" class={navClass("/academics")}>
+				<a href="/public/academics" class={navClass("/academics")}>
 					<Users class="size-4" />
 					<span class="hidden sm:inline">Académicos</span>
 				</a>

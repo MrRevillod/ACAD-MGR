@@ -4,10 +4,10 @@
 
 	import { useSearchParams } from "runed/kit"
 	import { useWorksStatsQuery } from "$stats/queries"
-	import { Loader, CircleAlert, BarChart, TrendingUp, RotateCcw } from "@lucide/svelte"
+	import { Loader, CircleAlert, ChartBar, TrendingUp, RotateCcw } from "@lucide/svelte"
 
-	import YearRange from "$lib/shared/components/ui/year-range.svelte"
-	import Button from "$lib/shared/components/ui/button.svelte"
+	import Button from "$shared/components/ui/button.svelte"
+	import YearRange from "$shared/components/ui/year-range.svelte"
 
 	import TrendLine from "$stats/components/trend-line.svelte"
 	import DepartmentList from "$stats/components/department-bars.svelte"
@@ -17,8 +17,8 @@
 	const defaultYearTo = String(currentYear)
 
 	const searchParamsSchema = v.object({
-		year_from: v.optional(v.fallback(v.string(), defaultYearFrom), defaultYearFrom),
-		year_to: v.optional(v.fallback(v.string(), defaultYearTo), defaultYearTo),
+		yearFrom: v.optional(v.fallback(v.string(), defaultYearFrom), defaultYearFrom),
+		yearTo: v.optional(v.fallback(v.string(), defaultYearTo), defaultYearTo),
 	})
 
 	const params = useSearchParams(searchParamsSchema, {
@@ -27,8 +27,8 @@
 	})
 
 	const queryParams = $derived<StatsQuery>({
-		yearFrom: Number(params.year_from),
-		yearTo: Number(params.year_to),
+		yearFrom: Number(params.yearFrom),
+		yearTo: Number(params.yearTo),
 	})
 
 	const statsQuery = useWorksStatsQuery(() => queryParams)
@@ -87,8 +87,8 @@
 						>Rango anual de publicación</span
 					>
 					<YearRange
-						bind:yearFrom={params.year_from}
-						bind:yearTo={params.year_to}
+						bind:yearFrom={params.yearFrom}
+						bind:yearTo={params.yearTo}
 						labelFrom="Desde"
 						labelTo="Hasta"
 						showLabels={false}
@@ -129,7 +129,7 @@
 		<div class="grid grid-cols-1 gap-6 lg:grid-cols-[3fr_7fr]">
 			<section class="rounded-xl border border-corp-gray/20 bg-white p-6">
 				<div class="mb-4 flex items-center gap-2">
-					<BarChart class="size-4 text-corp-blue" />
+					<ChartBar class="size-4 text-corp-blue" />
 					<h2 class="text-sm font-semibold tracking-wide uppercase text-corp-blue">
 						Publicaciones por Departamento
 					</h2>
