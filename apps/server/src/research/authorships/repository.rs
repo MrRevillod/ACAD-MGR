@@ -12,8 +12,11 @@ pub struct AuthorshipsRepository {
 impl AuthorshipsRepository {
 	pub async fn list(&self, work_id: &WorkId) -> AppResult<Vec<Authorship>> {
 		sqlx::query_as::<_, Authorship>(
-			"SELECT * FROM work_authorships WHERE work_id = $1
-            ORDER BY CASE position WHEN 'first' THEN 0 WHEN 'middle' THEN 1 WHEN 'last' THEN 2 END",
+			r#"SELECT wa.*, a.id as academic_id
+            FROM work_authorships wa
+            LEFT JOIN academics a ON a.orcid = wa.orcid
+            WHERE wa.work_id = $1
+            ORDER BY CASE wa.position WHEN 'first' THEN 0 WHEN 'middle' THEN 1 WHEN 'last' THEN 2 END"#,
 		)
 		.bind(work_id)
 		.fetch_all(self.database.pool())

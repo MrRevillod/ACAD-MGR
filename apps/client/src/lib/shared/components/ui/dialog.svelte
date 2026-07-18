@@ -9,6 +9,7 @@
 		class?: string
 		contentProps?: WithoutChild<DialogPrimitive.ContentProps>
 		children: Snippet
+		actions?: Snippet
 	}
 
 	let {
@@ -18,6 +19,7 @@
 		class: className = "max-w-lg",
 		contentProps = {},
 		children,
+		actions,
 		...restProps
 	}: Props = $props()
 </script>
@@ -42,11 +44,16 @@
 						</DialogPrimitive.Description>
 					{/if}
 				</div>
-				<DialogPrimitive.Close
-					class="flex size-8 items-center justify-center rounded-lg text-corp-gray transition-colors hover:bg-corp-gray/5 hover:text-[#1A1A1A]"
-				>
-					<X class="size-4" />
-				</DialogPrimitive.Close>
+				<div class="flex items-center gap-1">
+					{#if actions}
+						{@render actions()}
+					{/if}
+					<DialogPrimitive.Close
+						class="flex size-8 items-center justify-center rounded-lg text-corp-gray transition-colors hover:bg-corp-gray/5 hover:text-[#1A1A1A]"
+					>
+						<X class="size-4" />
+					</DialogPrimitive.Close>
+				</div>
 			</div>
 			{@render children?.()}
 		</DialogPrimitive.Content>

@@ -1,17 +1,16 @@
 <script lang="ts">
 	import { page } from "$app/state"
+	import { goto } from "$app/navigation"
 	import { authStore } from "$lib/auth/store.svelte"
 	import { authService } from "$lib/auth/service"
-	import { goto } from "$app/navigation"
-	import { resolve } from "$app/paths"
-	import { Users, Settings, LogOut, LogIn, BookOpen, BarChart3 } from "@lucide/svelte"
-	import { createMutation } from "@tanstack/svelte-query"
+	import { useMutation } from "$shared/http/tanstack"
+	import { Users, Settings, LogOut, LogIn, BookOpen, ChartBar } from "@lucide/svelte"
 
-	const logoutMutation = createMutation(() => ({
+	const logoutMutation = useMutation(() => ({
 		mutationFn: () => authService.logout(),
 		onSuccess: () => {
 			authStore.clearSession()
-			void goto(resolve("/"))
+			void goto("/")
 		},
 	}))
 
@@ -41,14 +40,16 @@
 			</a>
 
 			<a href="/stats" class={navClass("/stats")}>
-				<BarChart3 class="size-4" />
+				<ChartBar class="size-4" />
 				<span class="hidden sm:inline">Estadísticas</span>
 			</a>
 
-			<a href="/academics" class={navClass("/academics")}>
-				<Users class="size-4" />
-				<span class="hidden sm:inline">Académicos</span>
-			</a>
+			{#if authStore.isAuthenticated()}
+				<a href="/academics" class={navClass("/academics")}>
+					<Users class="size-4" />
+					<span class="hidden sm:inline">Académicos</span>
+				</a>
+			{/if}
 
 			{#if authStore.isAuthenticated()}
 				<a href="/admin" class={navClass("/admin")}>

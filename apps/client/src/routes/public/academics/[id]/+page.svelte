@@ -1,0 +1,40 @@
+<script lang="ts">
+	import { page } from "$app/state"
+	import { useQuery } from "$shared/http/tanstack"
+	import { academicService } from "$academics/service"
+	import { Loader, CircleAlert } from "@lucide/svelte"
+	import WorksSection from "$works/components/works-section.svelte"
+	import AcademicSidebar from "$academics/components/academic-sidebar.svelte"
+
+	const id = $derived(page.params.id ?? "")
+
+	const academicQuery = useQuery(() => ({
+		queryKey: ["public-academic", id],
+		queryFn: () => academicService.get(id),
+		enabled: Boolean(id),
+	}))
+
+	const academic = $derived(academicQuery.data)
+</script>
+
+<div class="h-full overflow-y-auto">
+	{#if academicQuery.isPending}
+		<div class="flex h-full items-center justify-center">
+			<Loader class="size-6 animate-spin text-corp-gray" />
+		</div>
+	{:else if academicQuery.isError || !academic}
+		<div class="flex h-full flex-col items-center justify-center text-center">
+			<CircleAlert class="size-8 text-red-500" />
+			<p class="mt-3 text-sm text-corp-gray">Académico no encontrado.</p>
+		</div>
+	{:else}
+		<div class="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8">
+			<div class="grid grid-cols-1 gap-6 lg:grid-cols-[320px_1fr]">
+				<AcademicSidebar {academic} readonly />
+				<div class="min-h-0">
+					<WorksSection {academic} />
+				</div>
+			</div>
+		</div>
+	{/if}
+</div>

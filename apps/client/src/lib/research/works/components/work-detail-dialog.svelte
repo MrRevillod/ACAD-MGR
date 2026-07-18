@@ -6,14 +6,17 @@
 		Building2,
 		Tag,
 		Network,
-		ExternalLink as LinkIcon,
 	} from "@lucide/svelte"
 	import { toast } from "svelte-sonner"
 
 	import { DateValue } from "$shared/value-objects/date.value"
+	import { FullName } from "$shared/value-objects/full-name.value"
 	import { WORK_TYPE_LABELS } from "$works/dtos"
 	import { useWorkDetailQuery } from "$works/queries"
 	import { AuthorshipPositionValue } from "$works/value-objects/position.value"
+	import { authStore } from "$lib/auth/store.svelte"
+	import { goto } from "$app/navigation"
+	import { resolve } from "$app/paths"
 
 	import Badge from "$shared/components/ui/badge.svelte"
 	import Dialog from "$shared/components/ui/dialog.svelte"
@@ -33,7 +36,19 @@
 	}
 </script>
 
-<Dialog bind:open title="Detalle de la publicación" class="max-w-3xl">
+{#snippet headerActions()}
+	{#if query.data}
+		<button
+			class="flex size-8 items-center justify-center rounded-lg text-corp-blue transition-colors hover:bg-corp-blue/5"
+			onclick={() => void goto(resolve(`/works/${query.data.id}`))}
+			title="Ver página completa"
+		>
+			<ExternalLink class="size-4" />
+		</button>
+	{/if}
+{/snippet}
+
+<Dialog bind:open title="Detalle de la publicación" class="max-w-3xl" actions={headerActions}>
 	{#if !workId}
 		<p class="py-8 text-center text-sm text-corp-gray">
 			Selecciona una publicación para ver detalles.
@@ -95,7 +110,7 @@
 						class="inline-flex items-center gap-1 text-corp-blue hover:underline"
 					>
 						<span>OpenAlex</span>
-						<LinkIcon class="size-3" />
+						<ExternalLink class="size-3" />
 					</a>
 					<span>Idioma: {work.lang}</span>
 				</div>
@@ -146,22 +161,36 @@
 					<div class="space-y-2">
 						{#each work.authorships as auth (auth.orcid)}
 							<div
-								class="rounded-lg border border-corp-gray/10 bg-white p-3 transition-colors hover:border-corp-blue/30"
+								class="rounded-lg border border-corp-gray/10 bg-white p-3"
 							>
-								<div class="flex items-center gap-2">
-									<p class="text-sm font-medium text-[#1A1A1A]">{auth.name}</p>
-									{#if auth.isCorresponding}
-										<Badge variant="default">
-											<Mail class="mr-1 size-3" />
-											Corresponding
-										</Badge>
-									{/if}
-									{#if auth.isExternal}
-										<span
-											class="inline-flex items-center rounded-full bg-corp-gray/10 px-2 py-0.5 text-[11px] font-semibold tracking-wide text-corp-gray uppercase"
+								<div class="flex items-center justify-between gap-2">
+									<div class="flex items-center gap-2">
+										<p class="text-sm font-medium text-[#1A1A1A]">
+											{FullName.fromFullString(auth.name)}
+										</p>
+										{#if auth.isCorresponding}
+											<Badge variant="default">
+												<Mail class="mr-1 size-3" />
+												Corresponding
+											</Badge>
+										{/if}
+										{#if auth.isExternal}
+											<span
+												class="inline-flex items-center rounded-full bg-corp-gray/10 px-2 py-0.5 text-[11px] font-semibold tracking-wide text-corp-gray uppercase"
+											>
+												Externo
+											</span>
+										{/if}
+									</div>
+									{#if !auth.isExternal && auth.academicId}
+										<a
+											href={authStore.isAuthenticated()
+												? resolve(`/academics/${auth.academicId}`)
+												: resolve(`/public/academics/${auth.academicId}`)}
+											class="shrink-0 text-xs font-medium text-corp-blue hover:underline"
 										>
-											Externo
-										</span>
+											Ir al perfil académico →
+										</a>
 									{/if}
 								</div>
 								<button

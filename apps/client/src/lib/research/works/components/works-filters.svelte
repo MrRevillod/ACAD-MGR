@@ -1,12 +1,11 @@
 <script lang="ts">
-	import { Filter, RotateCcw, Search } from "@lucide/svelte"
+	import { useCareersQuery } from "$careers/queries"
+	import { useDepartmentsQuery } from "$departments/queries"
+	import { RotateCcw, Search, BookOpen, Funnel } from "@lucide/svelte"
 
 	import Button from "$shared/components/ui/button.svelte"
 	import Label from "$shared/components/ui/label.svelte"
 	import Select from "$shared/components/ui/select.svelte"
-
-	import { useCareersQuery } from "$careers/queries"
-	import { useDepartmentsQuery } from "$departments/queries"
 
 	interface Props {
 		search: string
@@ -54,8 +53,18 @@
 <aside
 	class="hidden w-80 shrink-0 overflow-y-auto rounded-xl border border-corp-gray/20 bg-white p-4 lg:block"
 >
+	<div class="mb-5 border-b border-corp-gray/20 pb-5">
+		<div class="flex items-center gap-3">
+			<BookOpen class="size-4 mt-1 text-corp-blue" />
+			<h1 class="text-lg font-semibold text-[#1A1A1A]">Publicaciones</h1>
+		</div>
+		<p class="mt-1.5 text-sm text-corp-gray">
+			Catálogo de publicaciones académicas de la Facultad de Ingeniería UCT
+		</p>
+	</div>
+
 	<div class="flex items-center gap-2">
-		<Filter class="size-4 text-corp-blue" />
+		<Funnel class="size-4 text-corp-blue" />
 		<h2 class="text-xs font-semibold tracking-widest text-[#1A1A1A] uppercase">Filtros</h2>
 	</div>
 

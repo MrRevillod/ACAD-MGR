@@ -108,7 +108,7 @@
 						class="rounded-none! border-0! bg-transparent! shadow-none! focus:ring-0! min-w-22.5"
 					/>
 				</div>
-				<Button variant="ghost" onclick={() => params.reset()}>
+				<Button variant="secondary" onclick={() => params.reset()}>
 					<RotateCcw class="size-3.5" />
 					Limpiar
 				</Button>

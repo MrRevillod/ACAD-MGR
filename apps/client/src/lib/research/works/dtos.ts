@@ -61,6 +61,7 @@ export interface AuthorshipDTO {
 	isCorresponding: boolean
 	affiliations: string[]
 	position: AuthorshipPosition
+	academicId?: string
 }
 
 export interface WorkTopicDTO {

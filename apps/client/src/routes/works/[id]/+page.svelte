@@ -17,9 +17,12 @@
 	import Badge from "$lib/shared/components/ui/badge.svelte"
 
 	import { DateValue } from "$shared/value-objects/date.value"
+	import { FullName } from "$shared/value-objects/full-name.value"
 	import { WORK_TYPE_LABELS } from "$works/dtos"
 	import { useWorkDetailQuery } from "$works/queries"
 	import { AuthorshipPositionValue } from "$works/value-objects/position.value"
+	import { authStore } from "$lib/auth/store.svelte"
+	import { resolve } from "$app/paths"
 
 	const id = $derived(page.params.id ?? "")
 
@@ -163,24 +166,36 @@
 						<div class="space-y-2">
 							{#each work.authorships as auth (auth.orcid)}
 								<div
-									class="rounded-lg border border-corp-gray/10 bg-white p-3 transition-colors hover:border-corp-blue/30"
+									class="rounded-lg border border-corp-gray/10 bg-white p-3"
 								>
-									<div class="flex items-center gap-2">
-										<p class="text-sm font-medium text-[#1A1A1A]">
-											{auth.name}
-										</p>
-										{#if auth.isCorresponding}
-											<Badge variant="default">
-												<Mail class="mr-1 size-3" />
-												Corresponding
-											</Badge>
-										{/if}
-										{#if auth.isExternal}
-											<span
-												class="inline-flex items-center rounded-full bg-corp-gray/10 px-2 py-0.5 text-[11px] font-semibold tracking-wide text-corp-gray uppercase"
+									<div class="flex items-center justify-between gap-2">
+										<div class="flex items-center gap-2">
+											<p class="text-sm font-medium text-[#1A1A1A]">
+												{FullName.fromFullString(auth.name)}
+											</p>
+											{#if auth.isCorresponding}
+												<Badge variant="default">
+													<Mail class="mr-1 size-3" />
+													Corresponding
+												</Badge>
+											{/if}
+											{#if auth.isExternal}
+												<span
+													class="inline-flex items-center rounded-full bg-corp-gray/10 px-2 py-0.5 text-[11px] font-semibold tracking-wide text-corp-gray uppercase"
+												>
+													Externo
+												</span>
+											{/if}
+										</div>
+										{#if !auth.isExternal && auth.academicId}
+											<a
+												href={authStore.isAuthenticated()
+													? resolve(`/academics/${auth.academicId}`)
+													: resolve(`/public/academics/${auth.academicId}`)}
+												class="shrink-0 text-xs font-medium text-corp-blue hover:underline"
 											>
-												Externo
-											</span>
+												Ir al perfil académico →
+											</a>
 										{/if}
 									</div>
 									<button

@@ -10,9 +10,9 @@ export class JournalKindValue {
 
 	static from(value?: string | null): JournalKindValue {
 		if (!value || typeof value !== "string" || value.trim() === "") {
-			console.warn("Invalid JournalKindValue:", value)
 			return new JournalKindValue("")
 		}
+
 		return new JournalKindValue(value)
 	}
 

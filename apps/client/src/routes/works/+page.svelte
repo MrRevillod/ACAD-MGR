@@ -7,6 +7,7 @@
 	import { useWorksQuery } from "$works/queries"
 	import { useSearchParams } from "runed/kit"
 	import { CircleAlert, BookOpen, Loader } from "@lucide/svelte"
+
 	import WorksTable from "$works/components/works-table.svelte"
 	import WorksFilters from "$works/components/works-filters.svelte"
 	import WorkDetailDialog from "$works/components/work-detail-dialog.svelte"
@@ -47,26 +48,13 @@
 	function clearFilters() {
 		params.reset()
 	}
+
 	$effect(() => {
 		if (!dialogOpen) selectedWorkId = null
 	})
 </script>
 
 <div class="mx-auto flex h-full max-w-[1600px] flex-col px-4 py-8 sm:px-6 lg:px-8">
-	<header class="mb-6 shrink-0">
-		<div class="flex items-center gap-3">
-			<div class="flex size-10 items-center justify-center rounded-xl bg-corp-blue/10">
-				<BookOpen class="size-5 text-corp-blue" />
-			</div>
-			<div>
-				<h1 class="text-lg font-semibold text-[#1A1A1A]">Publicaciones</h1>
-				<p class="text-sm text-corp-gray">
-					Catálogo global de obras académicas importadas desde OpenAlex.
-				</p>
-			</div>
-		</div>
-	</header>
-
 	<div class="flex min-h-0 flex-1 gap-8">
 		<WorksFilters
 			bind:search={params.search}

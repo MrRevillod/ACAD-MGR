@@ -24,7 +24,6 @@ api.interceptors.response.use(
 
 		if (config._retry) {
 			authStore.clearSession()
-			window.location.href = "/login"
 			return Promise.reject(error)
 		}
 
@@ -38,7 +37,6 @@ api.interceptors.response.use(
 			return await api.request(config)
 		} catch {
 			authStore.clearSession()
-			window.location.href = "/login"
 			return Promise.reject(error)
 		}
 	},

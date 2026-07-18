@@ -1,6 +1,7 @@
 use crate::research::works::WorkId;
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, Type};
+use uuid::Uuid;
 
 #[derive(Debug, Clone, Copy, Type, Serialize, Deserialize, Eq, PartialEq)]
 #[sqlx(type_name = "authorship_position", rename_all = "lowercase")]
@@ -21,4 +22,5 @@ pub struct Authorship {
 	pub is_corresponding: bool,
 	pub affiliations: Vec<String>,
 	pub position: AuthorshipPosition,
+	pub academic_id: Option<Uuid>,
 }

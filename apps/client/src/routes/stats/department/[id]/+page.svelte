@@ -10,6 +10,7 @@
 	import { FullName } from "$shared/value-objects/full-name.value"
 	import { useSearchParams } from "runed/kit"
 	import { useDepartmentDetailQuery } from "$stats/queries"
+	import { authStore } from "$lib/auth/store.svelte"
 	import { Loader, CircleAlert, Minus, RotateCcw } from "@lucide/svelte"
 	import { createColumnHelper, renderSnippet } from "@tanstack/svelte-table"
 
@@ -245,8 +246,12 @@
 					data={d.topPublishers}
 					{columns}
 					pageSize={20}
-					onRowClick={(p: TopPublisher) =>
-						void goto(resolve(`/academics/${p.academicId}`))}
+					onRowClick={(p: TopPublisher) => {
+						const dest = authStore.isAuthenticated()
+							? resolve(`/academics/${p.academicId}`)
+							: resolve(`/public/academics/${p.academicId}`)
+						void goto(dest)
+					}}
 				/>
 			</section>
 		</div>
