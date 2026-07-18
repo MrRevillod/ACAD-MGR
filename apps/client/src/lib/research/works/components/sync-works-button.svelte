@@ -56,7 +56,7 @@
 				Sincronizando...
 			{:else}
 				<RefreshCw class="size-3.5" />
-				Sincronizar desde OpenAlex
+				Sincronizar Publicaciones
 			{/if}
 		</button>
 	{/if}

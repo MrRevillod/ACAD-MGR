@@ -4,9 +4,9 @@
 
 	import { useSearchParams } from "runed/kit"
 	import { useWorksStatsQuery } from "$stats/queries"
-	import { Loader, CircleAlert, BarChart, TrendingUp, Minus, RotateCcw } from "@lucide/svelte"
+	import { Loader, CircleAlert, BarChart, TrendingUp, RotateCcw } from "@lucide/svelte"
 
-	import Select from "$lib/shared/components/ui/select.svelte"
+	import YearRange from "$lib/shared/components/ui/year-range.svelte"
 	import Button from "$lib/shared/components/ui/button.svelte"
 
 	import TrendLine from "$stats/components/trend-line.svelte"
@@ -25,11 +25,6 @@
 		debounce: 300,
 		pushHistory: false,
 	})
-
-	const yearItems = Array.from({ length: currentYear - 2000 + 1 }, (_, i) => ({
-		value: String(2000 + i),
-		label: String(2000 + i),
-	}))
 
 	const queryParams = $derived<StatsQuery>({
 		yearFrom: Number(params.year_from),
@@ -86,26 +81,17 @@
 				<h1 class="text-xl font-semibold text-[#1A1A1A]">Estadísticas de Publicaciones</h1>
 				<p class="mt-1 text-sm text-corp-gray">Facultad de Ingeniería</p>
 			</div>
-			<div class="flex items-center gap-3">
-				<div
-					class="inline-flex h-10 items-center rounded-lg border border-corp-gray/20 bg-white focus-within:border-corp-blue/50 focus-within:ring-2 focus-within:ring-corp-blue/10"
-					aria-label="Rango de años"
-					role="group"
-				>
-					<Select
-						items={yearItems}
-						bind:value={params.year_from}
-						placeholder="Año"
-						class="rounded-none! border-0! bg-transparent! shadow-none! focus:ring-0! min-w-22.5"
-					/>
-					<div class="flex items-center px-1 text-corp-gray/40" aria-hidden="true">
-						<Minus class="size-3" />
-					</div>
-					<Select
-						items={yearItems}
-						bind:value={params.year_to}
-						placeholder="Año"
-						class="rounded-none! border-0! bg-transparent! shadow-none! focus:ring-0! min-w-22.5"
+			<div class="flex items-end gap-3">
+				<div class="space-y-2.5">
+					<span class="block text-xs font-medium tracking-wide uppercase text-corp-gray"
+						>Rango anual de publicación</span
+					>
+					<YearRange
+						bind:yearFrom={params.year_from}
+						bind:yearTo={params.year_to}
+						labelFrom="Desde"
+						labelTo="Hasta"
+						showLabels={false}
 					/>
 				</div>
 				<Button variant="secondary" onclick={() => params.reset()}>
@@ -140,7 +126,7 @@
 			</div>
 		</div>
 
-		<div class="space-y-6">
+		<div class="grid grid-cols-1 gap-6 lg:grid-cols-[3fr_7fr]">
 			<section class="rounded-xl border border-corp-gray/20 bg-white p-6">
 				<div class="mb-4 flex items-center gap-2">
 					<BarChart class="size-4 text-corp-blue" />

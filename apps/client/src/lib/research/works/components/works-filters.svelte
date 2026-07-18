@@ -6,6 +6,7 @@
 	import Button from "$shared/components/ui/button.svelte"
 	import Label from "$shared/components/ui/label.svelte"
 	import Select from "$shared/components/ui/select.svelte"
+	import YearRange from "$shared/components/ui/year-range.svelte"
 
 	interface Props {
 		search: string
@@ -94,29 +95,9 @@
 			<Select items={journalKindItems} bind:value={journalKind} />
 		</div>
 
-		<div class="grid grid-cols-2 gap-2">
-			<div class="space-y-2.5">
-				<Label>Año desde</Label>
-				<input
-					type="number"
-					min="1900"
-					max="2100"
-					bind:value={yearFrom}
-					placeholder="1900"
-					class="h-10 w-full rounded-lg border border-corp-gray/20 bg-white px-3 text-sm tabular-nums text-[#1A1A1A] outline-none transition-colors placeholder:text-corp-gray/50 focus:border-corp-blue/50 focus:ring-2 focus:ring-corp-blue/10"
-				/>
-			</div>
-			<div class="space-y-2.5">
-				<Label>Año hasta</Label>
-				<input
-					type="number"
-					min="1900"
-					max="2100"
-					bind:value={yearTo}
-					placeholder="2100"
-					class="h-10 w-full rounded-lg border border-corp-gray/20 bg-white px-3 text-sm tabular-nums text-[#1A1A1A] outline-none transition-colors placeholder:text-corp-gray/50 focus:border-corp-blue/50 focus:ring-2 focus:ring-corp-blue/10"
-				/>
-			</div>
+		<div class="space-y-2.5">
+			<Label>Rango anual de publicación</Label>
+			<YearRange bind:yearFrom bind:yearTo labelFrom="Desde" labelTo="Hasta" minYear={1900} />
 		</div>
 	</div>
 

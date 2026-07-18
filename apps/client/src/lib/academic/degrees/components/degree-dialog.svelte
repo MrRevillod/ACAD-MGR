@@ -2,7 +2,6 @@
 	import type { Degree } from "$degrees/entity"
 	import type { DegreeKind } from "$degrees/value-objects/kind.value"
 
-	import { countryItems } from "$shared/countries"
 	import { degreeService } from "$degrees/service"
 	import { DegreeKindValue } from "$degrees/value-objects/kind.value"
 	import { createDegreeSchema, createDegreeDTOInitialInput } from "$degrees/dtos"
@@ -11,7 +10,9 @@
 	import { createForm, Field, Form, reset } from "@formisch/svelte"
 
 	import Dialog from "$lib/shared/components/ui/dialog.svelte"
+	import DatePicker from "$lib/shared/components/ui/form/date-picker.svelte"
 	import Select from "$lib/shared/components/ui/form/select.svelte"
+	import CountrySelect from "$lib/shared/components/ui/form/country-select.svelte"
 	import TextInput from "$lib/shared/components/ui/form/text-input.svelte"
 	import FormFooter from "$lib/shared/components/ui/form/footer.svelte"
 
@@ -111,8 +112,6 @@
 		{ label: DegreeKindValue.LABELS.base, value: "base" },
 		{ label: DegreeKindValue.LABELS.advanced, value: "advanced" },
 	])
-
-	const countryOptions = $derived(countryItems.map((c) => ({ label: c.label, value: c.value })))
 </script>
 
 <Dialog bind:open title={degree ? "Editar grado" : "Nuevo grado"} class="max-w-xl">
@@ -147,11 +146,10 @@
 			<div class="grid grid-cols-2 gap-4">
 				<Field of={form} path={["obtainedAt"]}>
 					{#snippet children(field)}
-						<TextInput
+						<DatePicker
 							{...field.props}
 							input={field.input}
 							errors={field.errors}
-							type="date"
 							label="Fecha"
 						/>
 					{/snippet}
@@ -172,14 +170,7 @@
 
 			<Field of={form} path={["countryCode"]}>
 				{#snippet children(field)}
-					<Select
-						{...field.props}
-						input={field.input}
-						errors={field.errors}
-						label="País"
-						placeholder="Seleccionar país..."
-						options={countryOptions}
-					/>
+					<CountrySelect {...field.props} input={field.input} errors={field.errors} label="País" />
 				{/snippet}
 			</Field>
 		</div>

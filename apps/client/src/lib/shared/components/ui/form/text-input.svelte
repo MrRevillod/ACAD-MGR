@@ -9,6 +9,7 @@
 		class?: string
 		type: "text" | "email" | "tel" | "password" | "url" | "number" | "date"
 		label?: string
+		hint?: string
 		placeholder?: string
 		required?: boolean
 		input: unknown
@@ -19,6 +20,7 @@
 	let {
 		class: className,
 		label,
+		hint,
 		name,
 		required,
 		input,
@@ -37,7 +39,7 @@
 </script>
 
 <div class={["grid gap-1.5", className]}>
-	<InputLabel {name} {label} {required} />
+	<InputLabel {name} {label} {hint} {required} />
 	<div class="relative">
 		<input
 			{...fieldProps}
@@ -60,3 +62,30 @@
 	</div>
 	<InputErrors {name} {errors} />
 </div>
+
+<style>
+	input[type="date"] {
+		color-scheme: light;
+		appearance: none;
+		-webkit-appearance: none;
+		-moz-appearance: textfield;
+	}
+
+	input[type="date"]::-webkit-calendar-picker-indicator {
+		opacity: 0.45;
+		filter: invert(0);
+		cursor: pointer;
+	}
+
+	input[type="date"]::-webkit-calendar-picker-indicator:hover {
+		opacity: 0.75;
+	}
+
+	input[type="date"]::-webkit-datetime-edit-text {
+		opacity: 0.5;
+	}
+
+	input[type="date"]:user-invalid::-webkit-datetime-edit {
+		color: #dc2626;
+	}
+</style>

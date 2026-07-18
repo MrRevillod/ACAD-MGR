@@ -12,7 +12,7 @@
 		value: string
 	}
 
-	interface Props extends Omit<FieldElementProps, "onchange"> {
+	interface Props extends Omit<Partial<FieldElementProps>, "onchange"> {
 		class?: string
 		label?: string
 		options: Item[]
@@ -40,6 +40,8 @@
 
 	let selectedValue = $state("")
 	let hiddenRef: HTMLSelectElement | undefined = $state()
+
+	let displayText = $derived(options.find((o) => o.value === selectedValue)?.label ?? placeholder)
 
 	$effect(() => {
 		const val = typeof input === "string" ? input : ""
@@ -90,7 +92,7 @@
 				? 'border-red-500'
 				: 'border-corp-gray/20 focus:border-corp-blue/50 focus:ring-2 focus:ring-corp-blue/10'}"
 		>
-			<SelectPrimitive.Value {placeholder} />
+			<span class="flex-1 truncate text-left">{displayText}</span>
 			<ChevronDown class="ml-auto size-4 shrink-0 text-corp-gray/60" />
 		</SelectPrimitive.Trigger>
 		<SelectPrimitive.Portal>

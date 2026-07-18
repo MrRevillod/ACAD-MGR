@@ -11,7 +11,10 @@
 	import { createForm, Field, Form, reset } from "@formisch/svelte"
 
 	import Dialog from "$shared/components/ui/dialog.svelte"
+	import DatePicker from "$shared/components/ui/form/date-picker.svelte"
 	import Select from "$shared/components/ui/form/select.svelte"
+	import RangeInput from "$shared/components/ui/form/range-input.svelte"
+	import CountrySelect from "$shared/components/ui/form/country-select.svelte"
 	import TextInput from "$shared/components/ui/form/text-input.svelte"
 	import FormFooter from "$shared/components/ui/form/footer.svelte"
 
@@ -57,8 +60,6 @@
 	const sexOptions = $derived(
 		Object.entries(SexValue.LABELS).map(([value, label]) => ({ label, value })),
 	)
-
-	const countryOptions = $derived(countryItems.map((c) => ({ label: c.label, value: c.value })))
 </script>
 
 <Dialog bind:open title="Editar académico" class="max-w-2xl">
@@ -116,7 +117,7 @@
 						errors={field.errors}
 						type="text"
 						label="ORCID"
-						placeholder="0000-0000-0000-0000"
+						placeholder="https://orcid.org/0000-0000-0000-0000"
 					/>
 				{/snippet}
 			</Field>
@@ -133,11 +134,10 @@
 			</Field>
 			<Field of={form} path={["birthDate"]}>
 				{#snippet children(field)}
-					<TextInput
+					<DatePicker
 						{...field.props}
 						input={field.input}
 						errors={field.errors}
-						type="date"
 						label="Fecha de nacimiento"
 					/>
 				{/snippet}
@@ -155,24 +155,19 @@
 			</Field>
 			<Field of={form} path={["nationalityCode"]}>
 				{#snippet children(field)}
-					<Select
-						{...field.props}
-						input={field.input}
-						errors={field.errors}
-						label="Nacionalidad"
-						placeholder="Seleccionar país..."
-						options={countryOptions}
-					/>
+					<CountrySelect {...field.props} input={field.input} errors={field.errors} />
 				{/snippet}
 			</Field>
 			<Field of={form} path={["jce"]}>
 				{#snippet children(field)}
-					<TextInput
+					<RangeInput
 						{...field.props}
-						input={field.input}
+						input={field.input ?? ""}
 						errors={field.errors}
-						type="number"
 						label="JCE"
+						min={0}
+						max={1}
+						step={0.1}
 					/>
 				{/snippet}
 			</Field>

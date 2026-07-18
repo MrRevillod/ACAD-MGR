@@ -171,9 +171,7 @@
 						</h2>
 						<div class="space-y-2">
 							{#each work.authorships as auth (auth.orcid)}
-								<div
-									class="rounded-lg border border-corp-gray/10 bg-white p-3"
-								>
+								<div class="rounded-lg border border-corp-gray/10 bg-white p-3">
 									<div class="flex items-center justify-between gap-2">
 										<div class="flex items-center gap-2">
 											<p class="text-sm font-medium text-[#1A1A1A]">
@@ -197,7 +195,9 @@
 											<a
 												href={authStore.isAuthenticated()
 													? resolve(`/academics/${auth.academicId}`)
-													: resolve(`/public/academics/${auth.academicId}`)}
+													: resolve(
+															`/public/academics/${auth.academicId}`,
+														)}
 												class="shrink-0 text-xs font-medium text-corp-blue hover:underline"
 											>
 												Ir al perfil académico →

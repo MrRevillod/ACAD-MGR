@@ -1,7 +1,6 @@
+use crate::{auth::AuthError, shared::AppResult};
 use serde::Deserialize;
 use sword::prelude::*;
-
-use crate::{auth::AuthError, shared::AppResult};
 
 #[config(key = "hasher")]
 #[derive(Clone, Deserialize)]
@@ -28,9 +27,6 @@ impl Hasher {
 	}
 
 	pub fn verify(&self, password: &str, hash: &str) -> AppResult<bool> {
-		tracing::info!("Password: {}", password);
-		tracing::info!("Password HASH: {}", hash);
-
 		let is_valid = bcrypt::verify(password, hash)
 			.inspect_err(|e| eprintln!("{e}"))
 			.map_err(AuthError::from)?;

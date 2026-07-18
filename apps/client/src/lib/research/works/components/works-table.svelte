@@ -6,6 +6,7 @@
 	import { ExternalLink } from "@lucide/svelte"
 	import { createColumnHelper, renderSnippet } from "@tanstack/svelte-table"
 
+	import Badge from "$shared/components/ui/badge.svelte"
 	import DataTable from "$shared/components/ui/data-table.svelte"
 
 	interface Props {
@@ -84,7 +85,7 @@
 			Scopus
 		</span>
 	{:else}
-		<span class="text-xs text-corp-gray/60">—</span>
+		<Badge variant="default">Desconocida</Badge>
 	{/if}
 {/snippet}
 

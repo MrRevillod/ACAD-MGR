@@ -2,7 +2,7 @@
 	import Expandable from "./expandable.svelte"
 
 	interface Props {
-		name: string
+		name?: string
 		errors: [string, ...string[]] | null
 	}
 

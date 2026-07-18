@@ -28,10 +28,8 @@ impl WorksController {
 	#[get("/academic/{id}")]
 	pub async fn list_works_by_academic(&self, req: Request) -> WebResult<Vec<Work>> {
 		let academic_id = req.param::<Uuid>("id")?;
-		let query = GetWorksQuery {
-			academic_id: Some(academic_id),
-			..Default::default()
-		};
+		let mut query = req.query_validator::<GetWorksQuery>()?.unwrap_or_default();
+		query.academic_id = Some(academic_id);
 
 		Ok(self.works.list(&query).await?)
 	}

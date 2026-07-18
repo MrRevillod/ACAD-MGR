@@ -4,17 +4,31 @@
 	import { useWorksByAcademicQuery } from "$works/queries"
 	import { CircleAlert, BookOpen, Loader } from "@lucide/svelte"
 
+	import YearRange from "$shared/components/ui/year-range.svelte"
 	import WorksTable from "./works-table.svelte"
 	import SyncWorksButton from "./sync-works-button.svelte"
 	import WorkDetailDialog from "./work-detail-dialog.svelte"
 
 	interface Props {
 		academic: Academic
+		yearFrom?: string
+		yearTo?: string
 	}
 
-	let { academic }: Props = $props()
+	let {
+		academic,
+		yearFrom = $bindable(""),
+		yearTo = $bindable(""),
+	}: Props = $props()
 
-	const worksQuery = useWorksByAcademicQuery(() => academic.id)
+	function worksParams() {
+		return {
+			...(yearFrom && { yearFrom: Number(yearFrom) }),
+			...(yearTo && { yearTo: Number(yearTo) }),
+		}
+	}
+
+	const worksQuery = useWorksByAcademicQuery(() => academic.id, worksParams)
 
 	let selectedWorkId = $state<string | null>(null)
 	let dialogOpen = $state(false)
@@ -26,7 +40,7 @@
 </script>
 
 <section class="rounded-xl border border-corp-gray/20 bg-white p-6">
-	<div class="mb-6 flex items-center justify-between">
+	<div class="mb-6 flex items-center justify-between gap-3">
 		<div
 			class="flex items-center gap-2 text-xs font-semibold tracking-widest uppercase text-corp-blue"
 		>
@@ -40,7 +54,17 @@
 				</span>
 			{/if}
 		</div>
-		<SyncWorksButton academicId={academic.id} orcid={academic.orcid ?? null} />
+		<div class="flex items-center gap-3">
+			<YearRange
+				bind:yearFrom
+				bind:yearTo
+				showLabels={false}
+				placeholderFrom="DESDE"
+				placeholderTo="HASTA"
+				minYear={1900}
+			/>
+			<SyncWorksButton academicId={academic.id} orcid={academic.orcid ?? null} />
+		</div>
 	</div>
 
 	{#if worksQuery.isPending}
@@ -60,8 +84,8 @@
 			<p class="text-sm text-[#1A1A1A]">No hay publicaciones sincronizadas.</p>
 			<p class="mt-1 max-w-sm text-xs text-corp-gray">
 				{#if academic.orcid}
-					Usa el botón "Sincronizar desde OpenAlex" para importar las publicaciones de
-					este académico.
+					Usa el botón "Sincronizar Publicaciones" para importar las publicaciones de este
+					académico.
 				{:else}
 					Este académico no tiene ORCID asociado, por lo que no se pueden importar
 					publicaciones automáticamente.

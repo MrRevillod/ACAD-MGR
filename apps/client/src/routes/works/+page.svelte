@@ -16,23 +16,23 @@
 
 	const schema = v.object({
 		search: v.optional(v.fallback(v.string(), ""), ""),
-		department_id: v.optional(v.fallback(v.string(), ""), ""),
-		career_id: v.optional(v.fallback(v.string(), ""), ""),
-		year_from: v.optional(v.fallback(v.string(), yearFromDefault), yearFromDefault),
-		year_to: v.optional(v.fallback(v.string(), ""), ""),
-		journal_kind: v.optional(v.fallback(v.string(), ""), ""),
+		departmentId: v.optional(v.fallback(v.string(), ""), ""),
+		careerId: v.optional(v.fallback(v.string(), ""), ""),
+		yearFrom: v.optional(v.fallback(v.string(), yearFromDefault), yearFromDefault),
+		yearTo: v.optional(v.fallback(v.string(), ""), ""),
+		journalKind: v.optional(v.fallback(v.string(), ""), ""),
 	})
 
 	const params = useSearchParams(schema, { debounce: 300, pushHistory: false })
 
 	let filters = $derived<GetWorksParams>({
 		size: 100,
-		yearFrom: Number(params.year_from),
+		yearFrom: Number(params.yearFrom),
 		...(params.search && { search: params.search }),
-		...(params.department_id && { departmentId: params.department_id }),
-		...(params.department_id && params.career_id && { careerId: params.career_id }),
-		...(params.year_to && { yearTo: Number(params.year_to) }),
-		...(params.journal_kind && { journalKind: params.journal_kind as JournalKind }),
+		...(params.departmentId && { departmentId: params.departmentId }),
+		...(params.departmentId && params.careerId && { careerId: params.careerId }),
+		...(params.yearTo && { yearTo: Number(params.yearTo) }),
+		...(params.journalKind && { journalKind: params.journalKind as JournalKind }),
 	})
 
 	const worksQuery = useWorksQuery(() => filters)
@@ -58,11 +58,11 @@
 	<div class="flex min-h-0 flex-1 gap-8">
 		<WorksFilters
 			bind:search={params.search}
-			bind:departmentId={params.department_id}
-			bind:careerId={params.career_id}
-			bind:yearFrom={params.year_from}
-			bind:yearTo={params.year_to}
-			bind:journalKind={params.journal_kind}
+			bind:departmentId={params.departmentId}
+			bind:careerId={params.careerId}
+			bind:yearFrom={params.yearFrom}
+			bind:yearTo={params.yearTo}
+			bind:journalKind={params.journalKind}
 			onClear={clearFilters}
 		/>
 

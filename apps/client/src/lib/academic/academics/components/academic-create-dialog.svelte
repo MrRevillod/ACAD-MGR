@@ -14,11 +14,15 @@
 	import { createAcademicDTOInitialInput, createAcademicDTOSchema } from "$academics/dtos"
 
 	import { SexValue } from "$shared/value-objects/sex.value"
-	import { countryItems } from "$shared/countries"
 
+	import { RotateCcw } from "@lucide/svelte"
+	import Button from "$shared/components/ui/button.svelte"
 	import Dialog from "$shared/components/ui/dialog.svelte"
 	import TextInput from "$shared/components/ui/form/text-input.svelte"
+	import DatePicker from "$shared/components/ui/form/date-picker.svelte"
 	import Select from "$shared/components/ui/form/select.svelte"
+	import RangeInput from "$shared/components/ui/form/range-input.svelte"
+	import CountrySelect from "$shared/components/ui/form/country-select.svelte"
 	import FormFooter from "$shared/components/ui/form/footer.svelte"
 
 	interface Props {
@@ -89,16 +93,25 @@
 		createAcad.mutate(output)
 	}
 
+	function handleReset() {
+		reset(form, { initialInput: createAcademicDTOInitialInput })
+		selectedCategoryId = ""
+		selectedCategoryError = undefined
+		selectedDeptId = ""
+	}
+
 	function handleClose() {
 		open = false
 		onClose()
 	}
 
-	const sexOptions = $derived(
-		Object.entries(SexValue.LABELS).map(([value, label]) => ({ label, value })),
-	)
+	const sexOptions = $derived([
+		{ label: "Seleccionar sexo...", value: "" },
+		...Object.entries(SexValue.LABELS).map(([value, label]) => ({ label, value })),
+	])
 
 	const categoryData = $derived(categoriesQuery.data ?? [])
+	const categoryOptions = $derived(categoryData.map((c) => ({ label: c.name, value: c.id })))
 
 	const deptOptions = $derived(
 		(departmentsQuery.data ?? []).map((d) => ({ label: d.name, value: d.id })),
@@ -113,8 +126,6 @@
 		...(careersQuery.data ?? []).map((c) => ({ label: c.name, value: c.id })),
 	])
 
-	const countryOptions = $derived(countryItems.map((c) => ({ label: c.label, value: c.value })))
-
 	const optionOptions = $derived(
 		(optionsQuery.data ?? []).map((opt) => {
 			const catLabel =
@@ -127,10 +138,10 @@
 	)
 </script>
 
-<Dialog bind:open title="Nuevo académico" class="max-w-5xl">
+<Dialog bind:open title="Nuevo académico" class="max-w-3xl">
 	<Form of={form} onsubmit={(output) => handleSubmit(output)}>
 		<div class="grid gap-4">
-			<div class="grid grid-cols-2 gap-4">
+			<div class="grid grid-cols-3 gap-4">
 				<Field of={form} path={["rut"]}>
 					{#snippet children(field)}
 						<TextInput
@@ -151,6 +162,17 @@
 							errors={field.errors}
 							type="email"
 							label="Email"
+						/>
+					{/snippet}
+				</Field>
+				<Field of={form} path={["sex"]}>
+					{#snippet children(field)}
+						<Select
+							{...field.props}
+							input={field.input}
+							errors={field.errors}
+							label="Sexo"
+							options={sexOptions}
 						/>
 					{/snippet}
 				</Field>
@@ -193,51 +215,25 @@
 			</div>
 
 			<div class="grid grid-cols-2 gap-4">
-				<Field of={form} path={["sex"]}>
-					{#snippet children(field)}
-						<Select
-							{...field.props}
-							input={field.input}
-							errors={field.errors}
-							label="Sexo"
-							options={sexOptions}
-						/>
-					{/snippet}
-				</Field>
-				<Field of={form} path={["orcid"]}>
-					{#snippet children(field)}
-						<TextInput
-							{...field.props}
-							input={field.input ?? ""}
-							errors={field.errors}
-							type="text"
-							label="ORCID"
-							placeholder="0000-0000-0000-0000"
-						/>
-					{/snippet}
-				</Field>
-			</div>
-
-			<div class="grid grid-cols-2 gap-4">
 				<Field of={form} path={["birthDate"]}>
 					{#snippet children(field)}
-						<TextInput
+						<DatePicker
 							{...field.props}
 							input={field.input}
 							errors={field.errors}
-							type="date"
 							label="Fecha de nacimiento"
+							hint="DD/MM/AAAA"
 						/>
 					{/snippet}
 				</Field>
 				<Field of={form} path={["joinedAt"]}>
 					{#snippet children(field)}
-						<TextInput
+						<DatePicker
 							{...field.props}
 							input={field.input}
 							errors={field.errors}
-							type="date"
-							label="Fecha de ingreso"
+							label="Fecha de ingreso UCT"
+							hint="DD/MM/AAAA"
 						/>
 					{/snippet}
 				</Field>
@@ -286,45 +282,24 @@
 				</Field>
 				<Field of={form} path={["nationalityCode"]}>
 					{#snippet children(field)}
-						<Select
-							{...field.props}
-							input={field.input}
-							errors={field.errors}
-							label="Nacionalidad"
-							placeholder="Seleccionar país..."
-							options={countryOptions}
-						/>
+						<CountrySelect {...field.props} input={field.input} errors={field.errors} />
 					{/snippet}
 				</Field>
 			</div>
 
 			<div class="grid grid-cols-2 gap-4">
-				<div class="grid gap-1.5">
-					<span class="text-xs font-medium tracking-wide uppercase text-corp-gray"
-						>Categoría</span
-					>
-					<select
-						bind:value={selectedCategoryId}
-						onchange={(e) => {
-							const el = e.currentTarget
-							if (el instanceof HTMLSelectElement) {
-								selectedCategoryId = el.value
-								selectedCategoryError = undefined
-							}
-						}}
-						class="h-10 w-full rounded-lg border bg-white px-3 text-sm text-[#1A1A1A] outline-none transition-colors {selectedCategoryError
-							? 'border-red-500'
-							: 'border-corp-gray/20 focus:border-corp-blue/50'}"
-					>
-						<option value="" selected>Seleccionar categoría...</option>
-						{#each categoryData as cat (cat.id)}
-							<option value={cat.id}>{cat.name}</option>
-						{/each}
-					</select>
-					{#if selectedCategoryError}
-						<p class="text-xs text-red-600">{selectedCategoryError}</p>
-					{/if}
-				</div>
+				<Select
+					name="category"
+					label="Categoría"
+					placeholder="Seleccionar categoría..."
+					options={categoryOptions}
+					input={selectedCategoryId}
+					onValueChange={(v) => {
+						selectedCategoryId = v
+						selectedCategoryError = undefined
+					}}
+					errors={selectedCategoryError ? [selectedCategoryError] : null}
+				/>
 				<Field of={form} path={["acadCategoryOptionsId"]}>
 					{#snippet children(field)}
 						<Select
@@ -345,12 +320,14 @@
 			<div class="grid grid-cols-2 gap-4">
 				<Field of={form} path={["jce"]}>
 					{#snippet children(field)}
-						<TextInput
+						<RangeInput
 							{...field.props}
 							input={field.input ?? ""}
 							errors={field.errors}
-							type="number"
 							label="JCE"
+							min={0}
+							max={1}
+							step={0.1}
 						/>
 					{/snippet}
 				</Field>
@@ -367,23 +344,38 @@
 				</Field>
 			</div>
 
-			<Field of={form} path={["city"]}>
-				{#snippet children(field)}
-					<TextInput
-						{...field.props}
-						input={field.input}
-						errors={field.errors}
-						type="text"
-						label="Ciudad"
-					/>
-				{/snippet}
-			</Field>
+			<div class="grid grid-cols-2 gap-4">
+				<Field of={form} path={["orcid"]}>
+					{#snippet children(field)}
+						<TextInput
+							{...field.props}
+							input={field.input ?? ""}
+							errors={field.errors}
+							type="text"
+							label="ORCID"
+							placeholder="https://orcid.org/0000-0000-0000-0000"
+						/>
+					{/snippet}
+				</Field>
+				<Field of={form} path={["city"]}>
+					{#snippet children(field)}
+						<TextInput
+							{...field.props}
+							input={field.input}
+							errors={field.errors}
+							type="text"
+							label="Ciudad"
+						/>
+					{/snippet}
+				</Field>
+			</div>
 
-			<FormFooter
-				onCancel={handleClose}
-				submitLabel="Crear"
-				isPending={createAcad.isPending}
-			/>
+			<FormFooter onCancel={handleClose} submitLabel="Crear" isPending={createAcad.isPending}>
+				<Button variant="secondary" type="button" onclick={handleReset}>
+					<RotateCcw class="size-3.5" />
+					Reset
+				</Button>
+			</FormFooter>
 		</div>
 	</Form>
 </Dialog>

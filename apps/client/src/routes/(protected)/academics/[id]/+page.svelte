@@ -1,7 +1,9 @@
 <script lang="ts">
 	import type { Degree } from "$degrees/entity"
 
+	import * as v from "valibot"
 	import { page } from "$app/state"
+	import { useSearchParams } from "runed/kit"
 	import {
 		GraduationCap,
 		Briefcase,
@@ -26,6 +28,13 @@
 	import AcademicEditDialog from "$academics/components/academic-edit-dialog.svelte"
 
 	const id = $derived(page.params.id ?? "")
+
+	const yearParamsSchema = v.object({
+		yearFrom: v.optional(v.fallback(v.string(), ""), ""),
+		yearTo: v.optional(v.fallback(v.string(), ""), ""),
+	})
+
+	const yearParams = useSearchParams(yearParamsSchema, { debounce: 300, pushHistory: false })
 
 	const academicQuery = useQuery(() => ({
 		queryKey: ["academic", id],
@@ -343,7 +352,11 @@
 								{/if}
 							</section>
 						{:else}
-							<WorksSection {academic} />
+							<WorksSection
+							{academic}
+							bind:yearFrom={yearParams.yearFrom}
+							bind:yearTo={yearParams.yearTo}
+						/>
 						{/if}
 					</div>
 				</div>

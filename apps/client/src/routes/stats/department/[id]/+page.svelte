@@ -11,9 +11,10 @@
 	import { useSearchParams } from "runed/kit"
 	import { useDepartmentDetailQuery } from "$stats/queries"
 	import { authStore } from "$lib/auth/store.svelte"
-	import { Loader, CircleAlert, Minus, RotateCcw } from "@lucide/svelte"
+	import { Loader, CircleAlert, RotateCcw } from "@lucide/svelte"
 	import { createColumnHelper, renderSnippet } from "@tanstack/svelte-table"
 
+	import YearRange from "$shared/components/ui/year-range.svelte"
 	import Select from "$shared/components/ui/select.svelte"
 	import Badge from "$shared/components/ui/badge.svelte"
 	import Button from "$shared/components/ui/button.svelte"
@@ -53,11 +54,6 @@
 		{ value: "teaching", label: "Docencia" },
 		{ value: "research", label: "Investigación" },
 	]
-
-	const yearItems = Array.from({ length: currentYear - 2000 + 1 }, (_, i) => ({
-		value: String(2000 + i),
-		label: String(2000 + i),
-	}))
 
 	const detailQuery = useDepartmentDetailQuery(
 		() => deptId,
@@ -163,26 +159,17 @@
 				</p>
 			</div>
 
-			<div class="flex gap-3 flex-row">
-				<div
-					class="inline-flex h-10 items-center rounded-lg border border-corp-gray/20 bg-white focus-within:border-corp-blue/50 focus-within:ring-2 focus-within:ring-corp-blue/10"
-					aria-label="Rango de años"
-					role="group"
+			<div class="flex items-end gap-3">
+				<div class="space-y-2.5">
+				<span class="block text-xs font-medium tracking-wide uppercase text-corp-gray whitespace-nowrap"
+					>Rango anual de publicación</span
 				>
-					<Select
-						items={yearItems}
-						bind:value={params.year_from}
-						placeholder="Año"
-						class="rounded-none! border-0! bg-transparent! shadow-none! focus:ring-0! min-w-22.5"
-					/>
-					<div class="flex items-center px-1 text-corp-gray/40" aria-hidden="true">
-						<Minus class="size-3" />
-					</div>
-					<Select
-						items={yearItems}
-						bind:value={params.year_to}
-						placeholder="Año"
-						class="rounded-none! border-0! bg-transparent! shadow-none! focus:ring-0! min-w-22.5"
+					<YearRange
+						bind:yearFrom={params.year_from}
+						bind:yearTo={params.year_to}
+						labelFrom="Desde"
+						labelTo="Hasta"
+						showLabels={false}
 					/>
 				</div>
 				<Select
@@ -231,11 +218,13 @@
 		</div>
 
 		<div class="grid grid-cols-1 gap-6 lg:grid-cols-[280px_1fr]">
-		<section class="flex flex-col justify-center rounded-xl border border-corp-gray/20 bg-white p-6">
-			<h2 class="text-sm font-semibold tracking-wide uppercase text-corp-blue">
-				Indexación
-			</h2>
-			<DonutChart segments={indexSegments} total={d.totalWorks} class="mt-4" />
+			<section
+				class="flex flex-col justify-center rounded-xl border border-corp-gray/20 bg-white p-6"
+			>
+				<h2 class="text-sm font-semibold tracking-wide uppercase text-corp-blue">
+					Indexación
+				</h2>
+				<DonutChart segments={indexSegments} total={d.totalWorks} class="mt-4" />
 			</section>
 
 			<section class="rounded-xl border border-corp-gray/20 bg-white p-6">

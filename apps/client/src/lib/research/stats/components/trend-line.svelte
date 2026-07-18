@@ -38,7 +38,7 @@
 			{ key: "wos", color: "#0075B4", label: "WoS" },
 		]}
 		height={260}
-		padding={{ left: 50, right: 20, bottom: 30, top: 10 }}
+		padding={{ left: 50, right: 20, bottom: 50, top: 10 }}
 		xDomain={[minYear, maxYear]}
 		xNice={false}
 		yDomain={[0, null]}

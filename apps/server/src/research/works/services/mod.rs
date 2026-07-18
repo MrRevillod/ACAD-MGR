@@ -253,12 +253,12 @@ impl WorksService {
 					is_external,
 					is_corresponding: auth.is_corresponding.unwrap_or(false),
 					affiliations: auth
-					.raw_affiliation_strings
-					.clone()
-					.unwrap_or_default()
-					.into_iter()
-					.map(|s| decode_html_entities(&s).to_string())
-					.collect(),
+						.raw_affiliation_strings
+						.clone()
+						.unwrap_or_default()
+						.into_iter()
+						.map(|s| decode_html_entities(&s).to_string())
+						.collect(),
 					position,
 				};
 				self.authorships.insert(&new_authorship).await?;

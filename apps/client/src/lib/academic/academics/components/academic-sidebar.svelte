@@ -1,11 +1,7 @@
 <script lang="ts">
 	import type { Academic } from "$academics/entity"
-	import {
-		ChevronLeft,
-		Pencil,
-		BookOpen,
-		ExternalLink,
-	} from "@lucide/svelte"
+	import { ChevronLeft, Pencil, BookOpen, ExternalLink } from "@lucide/svelte"
+	import { FullName } from "$shared/value-objects/full-name.value"
 
 	interface Props {
 		academic: Academic
@@ -23,13 +19,12 @@
 		onEdit,
 	}: Props = $props()
 
-	const initials = $derived(
-		(academic.names.charAt(0) + academic.paternalSurname.charAt(0)).toUpperCase(),
+	const nameObj = $derived(
+		FullName.of(academic.names, academic.paternalSurname, academic.maternalSurname),
 	)
 
-	const fullName = $derived(
-		`${academic.names} ${academic.paternalSurname} ${academic.maternalSurname}`,
-	)
+	const initials = $derived(nameObj.initials())
+	const fullName = $derived(nameObj.format())
 </script>
 
 <aside class="relative overflow-hidden rounded-xl bg-corp-blue text-white">
@@ -82,9 +77,7 @@
 				</p>
 			</div>
 			<div>
-				<p class="text-[11px] font-medium tracking-wide uppercase text-white/50">
-					Sexo
-				</p>
+				<p class="text-[11px] font-medium tracking-wide uppercase text-white/50">Sexo</p>
 				<p class="mt-1 text-sm font-semibold text-white">
 					{academic.sex.toDisplay()}
 				</p>

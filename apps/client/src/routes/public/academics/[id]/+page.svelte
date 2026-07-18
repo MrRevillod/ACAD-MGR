@@ -1,5 +1,7 @@
 <script lang="ts">
+	import * as v from "valibot"
 	import { page } from "$app/state"
+	import { useSearchParams } from "runed/kit"
 	import { useQuery } from "$shared/http/tanstack"
 	import { academicService } from "$academics/service"
 	import { Loader, CircleAlert } from "@lucide/svelte"
@@ -7,6 +9,13 @@
 	import AcademicSidebar from "$academics/components/academic-sidebar.svelte"
 
 	const id = $derived(page.params.id ?? "")
+
+	const yearParamsSchema = v.object({
+		yearFrom: v.optional(v.fallback(v.string(), ""), ""),
+		yearTo: v.optional(v.fallback(v.string(), ""), ""),
+	})
+
+	const yearParams = useSearchParams(yearParamsSchema, { debounce: 300, pushHistory: false })
 
 	const academicQuery = useQuery(() => ({
 		queryKey: ["public-academic", id],
@@ -32,7 +41,11 @@
 			<div class="grid grid-cols-1 gap-6 lg:grid-cols-[320px_1fr]">
 				<AcademicSidebar {academic} readonly />
 				<div class="min-h-0">
-					<WorksSection {academic} />
+					<WorksSection
+						{academic}
+						bind:yearFrom={yearParams.yearFrom}
+						bind:yearTo={yearParams.yearTo}
+					/>
 				</div>
 			</div>
 		</div>
