@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Minus } from "@lucide/svelte"
-	import Select from "$lib/shared/components/ui/select.svelte"
+	import Select from "$shared/components/ui/select.svelte"
 
 	interface Props {
 		yearFrom?: string

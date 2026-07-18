@@ -1,9 +1,7 @@
 mod entity;
-mod journal_kind;
 mod repository;
-mod source_view;
+mod views;
 
-pub use entity::{Source, SourceId};
-pub use journal_kind::JournalKind;
+pub use entity::{JournalKind, Source, SourceId};
 pub use repository::SourcesRepository;
-pub use source_view::SourceView;
+pub use views::SourceView;

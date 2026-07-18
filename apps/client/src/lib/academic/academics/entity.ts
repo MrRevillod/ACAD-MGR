@@ -1,4 +1,4 @@
-import type { AcademicDTO } from "./dtos"
+import type { AcademicDTO, PublicAcademicDTO } from "./dtos"
 
 import { SexValue } from "$shared/value-objects/sex.value"
 import { DateValue } from "$shared/value-objects/date.value"
@@ -59,6 +59,39 @@ export class Academic {
 			option,
 			dto.acadCategoryHours,
 			dto.annualDiscountHours,
+			country,
+			dto.city,
+		)
+	}
+
+	public static fromPublicDTO(dto: PublicAcademicDTO): Academic {
+		const country = CountryValue.from(dto.nationality)
+		const sex = SexValue.from(dto.sex)
+		const birthDate = DateValue.from(dto.birthDate)
+		const joinedAt = DateValue.from(dto.joinedAt)
+		const jce = CLf64Value.from(0)
+		const option = AcademicOptionValue.from("teaching")
+		const planta = PlantaValue.from("adjunta")
+
+		return new Academic(
+			dto.id,
+			dto.names,
+			dto.paternalSurname,
+			dto.maternalSurname,
+			dto.email,
+			dto.orcid,
+			sex,
+			birthDate,
+			joinedAt,
+			null,
+			dto.department,
+			dto.career,
+			jce,
+			"",
+			planta,
+			option,
+			null,
+			0,
 			country,
 			dto.city,
 		)

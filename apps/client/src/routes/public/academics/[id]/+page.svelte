@@ -19,7 +19,7 @@
 
 	const academicQuery = useQuery(() => ({
 		queryKey: ["public-academic", id],
-		queryFn: () => academicService.get(id),
+		queryFn: () => academicService.getPublic(id),
 		enabled: Boolean(id),
 	}))
 

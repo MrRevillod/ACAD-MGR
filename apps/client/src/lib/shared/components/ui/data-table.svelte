@@ -10,6 +10,7 @@
 		type ColumnDef,
 		type RowData,
 	} from "@tanstack/svelte-table"
+
 	import {
 		ChevronUp,
 		ChevronDown,

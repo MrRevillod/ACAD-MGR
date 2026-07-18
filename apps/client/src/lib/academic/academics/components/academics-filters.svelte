@@ -40,7 +40,7 @@
 		onImport,
 	}: Props = $props()
 
-	const isAdmin = $derived(authStore.isAuthenticated())
+	const isAdmin = $derived(authStore.isAuthenticated)
 	let fileInput = $state<HTMLInputElement | null>(null)
 
 	const deptItems = $derived([

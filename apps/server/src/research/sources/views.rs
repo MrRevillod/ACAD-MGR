@@ -1,5 +1,4 @@
-use super::SourceId;
-use super::journal_kind::JournalKind;
+use super::{JournalKind, SourceId};
 
 use serde::Serialize;
 use sqlx::FromRow;

@@ -28,9 +28,9 @@
 </script>
 
 <header class="sticky top-0 z-30 border-b border-corp-gray/20 bg-white/95 backdrop-blur-sm">
-	<div class="mx-auto flex h-14 max-w-[1600px] items-center justify-between px-4 sm:px-6 lg:px-8">
-		<a href="/" class="text-lg font-bold tracking-wider text-corp-blue select-none">
-			ACAD MGR <span class="text-corp-gray/40 font-normal">v0.0.1</span>
+	<div class="mx-auto flex h-16 max-w-[1600px] items-center justify-between px-4 sm:px-6 lg:px-8">
+		<a href="/" class="select-none -ml-7">
+			<img src="/logo-header.png" alt="Facultad de Ingeniería" class="h-16 w-auto" />
 		</a>
 
 		<nav class="flex items-center gap-1">
@@ -44,14 +44,14 @@
 				<span class="hidden sm:inline">Estadísticas</span>
 			</a>
 
-			{#if authStore.isAuthenticated()}
-				<a href="/public/academics" class={navClass("/academics")}>
+			{#if authStore.isAuthenticated}
+				<a href="/academics" class={navClass("/academics")}>
 					<Users class="size-4" />
 					<span class="hidden sm:inline">Académicos</span>
 				</a>
 			{/if}
 
-			{#if authStore.isAuthenticated()}
+			{#if authStore.isAuthenticated}
 				<a href="/admin" class={navClass("/admin")}>
 					<Settings class="size-4" />
 					<span class="hidden sm:inline">Administración</span>

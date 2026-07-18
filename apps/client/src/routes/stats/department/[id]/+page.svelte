@@ -236,7 +236,7 @@
 					{columns}
 					pageSize={20}
 					onRowClick={(p: TopPublisher) => {
-						const dest = authStore.isAuthenticated()
+						const dest = authStore.isAuthenticated
 							? `/academics/${p.academicId}`
 							: `/public/academics/${p.academicId}`
 						void goto(dest)

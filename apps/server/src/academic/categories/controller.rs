@@ -6,6 +6,7 @@ use sword::prelude::*;
 use sword::web::*;
 
 #[controller(kind = ControllerKind::Web, path = "/academic-categories")]
+#[interceptor(SessionCheck)]
 pub struct AcademicCategoriesController {
 	categories: Arc<AcademicCategoriesService>,
 }
@@ -28,7 +29,6 @@ impl AcademicCategoriesController {
 	}
 
 	#[post("/")]
-	#[interceptor(SessionCheck)]
 	pub async fn create_category(&self, req: Request) -> WebResult<AcademicCategory> {
 		let input = req.body_validator::<CreateAcademicCategoryDto>()?;
 		let category = self.categories.create(input).await?;

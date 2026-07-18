@@ -25,6 +25,22 @@ export interface AcademicDTO {
 	city: string
 }
 
+export interface PublicAcademicDTO {
+	id: string
+	names: string
+	paternalSurname: string
+	maternalSurname: string
+	email: string
+	orcid: string | null
+	sex: "H" | "M" | "O"
+	birthDate: string
+	joinedAt: string
+	department: string
+	career: string | null
+	nationality: string
+	city: string
+}
+
 // Query Academic DTOs ------------------------------------------------
 
 export interface GetAcademicsParams {

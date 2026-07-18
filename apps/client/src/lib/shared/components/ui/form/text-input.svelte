@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Snippet } from "svelte"
 	import type { FieldElementProps } from "@formisch/svelte"
+	import type { HTMLInputAttributes } from "svelte/elements"
 
 	import InputLabel from "./label.svelte"
 	import InputErrors from "./errors.svelte"
@@ -12,6 +13,7 @@
 		hint?: string
 		placeholder?: string
 		required?: boolean
+		autocomplete?: HTMLInputAttributes["autocomplete"]
 		input: unknown
 		errors: [string, ...string[]] | null
 		rightIcon?: Snippet

@@ -1,4 +1,4 @@
-use crate::research::sources::source_view::SourceView;
+use crate::research::sources::views::SourceView;
 use crate::research::*;
 use crate::shared::{AppResult, Database};
 

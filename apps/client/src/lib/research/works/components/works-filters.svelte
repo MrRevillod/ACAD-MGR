@@ -97,7 +97,14 @@
 
 		<div class="space-y-2.5">
 			<Label>Rango anual de publicación</Label>
-			<YearRange bind:yearFrom bind:yearTo labelFrom="Desde" labelTo="Hasta" minYear={1900} />
+			<YearRange
+				bind:yearFrom
+				bind:yearTo
+				minYear={1900}
+				showLabels={false}
+				placeholderFrom="DESDE"
+				placeholderTo="HASTA"
+			/>
 		</div>
 	</div>
 

@@ -6,6 +6,7 @@ use sword::prelude::*;
 use sword::web::*;
 
 #[controller(kind = ControllerKind::Web, path = "/work-positions")]
+#[interceptor(SessionCheck)]
 pub struct WorkPositionsController {
 	positions: Arc<AcademicWorkPositionsService>,
 }
@@ -20,7 +21,6 @@ impl WorkPositionsController {
 	}
 
 	#[post("/")]
-	#[interceptor(SessionCheck)]
 	pub async fn create_position(&self, req: Request) -> WebResult<AcademicWorkPosition> {
 		let input = req.body_validator::<CreateAcademicWorkPositionDto>()?;
 		let position = self.positions.create(input).await?;

@@ -9,7 +9,6 @@
 	import { AuthorshipPositionValue } from "$works/value-objects/position.value"
 	import { authStore } from "$lib/auth/store.svelte"
 	import { goto } from "$app/navigation"
-	import { resolve } from "$app/paths"
 
 	import Badge from "$shared/components/ui/badge.svelte"
 	import Dialog from "$shared/components/ui/dialog.svelte"
@@ -33,7 +32,7 @@
 	{#if query.data}
 		<button
 			class="flex size-8 items-center justify-center rounded-lg text-corp-blue transition-colors hover:bg-corp-blue/5"
-			onclick={() => void goto(resolve(`/works/${query.data.id}`))}
+			onclick={() => void goto(`/works/${query.data.id}`)}
 			title="Ver página completa"
 		>
 			<ExternalLink class="size-4" />
@@ -183,9 +182,9 @@
 									</div>
 									{#if !auth.isExternal && auth.academicId}
 										<a
-											href={authStore.isAuthenticated()
-												? resolve(`/academics/${auth.academicId}`)
-												: resolve(`/public/academics/${auth.academicId}`)}
+											href={authStore.isAuthenticated
+												? `/academics/${auth.academicId}`
+												: `/public/academics/${auth.academicId}`}
 											class="shrink-0 text-xs font-medium text-corp-blue hover:underline"
 										>
 											Ir al perfil académico →

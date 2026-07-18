@@ -2,15 +2,17 @@
 	import type { Snippet } from "svelte"
 
 	import { goto } from "$app/navigation"
-	import { authStore } from "$lib/auth/store.svelte"
+	import { authStore } from "$auth/store.svelte"
 
 	let { children }: { children: Snippet } = $props()
 
-	$effect(() => {
-		if (!authStore.isAuthenticated()) {
+	$effect.pre(() => {
+		if (!authStore.isAuthenticated) {
 			void goto("/login")
 		}
 	})
 </script>
 
-{@render children()}
+{#if authStore.isAuthenticated}
+	{@render children()}
+{/if}

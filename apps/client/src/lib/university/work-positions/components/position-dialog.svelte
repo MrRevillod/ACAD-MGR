@@ -1,13 +1,14 @@
 <script lang="ts">
+	import { toast } from "svelte-sonner"
 	import { createForm, Field, Form, reset } from "@formisch/svelte"
 	import { createMutation, useQueryClient } from "@tanstack/svelte-query"
-	import { toast } from "svelte-sonner"
 
-	import Dialog from "$lib/shared/components/ui/dialog.svelte"
-	import TextInput from "$lib/shared/components/ui/form/text-input.svelte"
-	import FormFooter from "$lib/shared/components/ui/form/footer.svelte"
 	import { positionService } from "$work-positions/service"
 	import { createPositionSchema, createPositionDTOInitialInput } from "$work-positions/dtos"
+
+	import Dialog from "$shared/components/ui/dialog.svelte"
+	import TextInput from "$shared/components/ui/form/text-input.svelte"
+	import FormFooter from "$shared/components/ui/form/footer.svelte"
 
 	interface Props {
 		open: boolean

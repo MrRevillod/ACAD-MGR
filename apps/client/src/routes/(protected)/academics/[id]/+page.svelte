@@ -81,7 +81,7 @@
 	let showEditAcademicDialog = $state(false)
 	let activeTab = $state<"publications" | "academic-info">("academic-info")
 
-	const isAdmin = $derived(authStore.isAuthenticated())
+	const isAdmin = $derived(authStore.isAuthenticated)
 
 	function closeEditAcademic() {
 		showEditAcademicDialog = false

@@ -3,6 +3,7 @@ import { Academic } from "./entity"
 
 import type {
 	AcademicDTO,
+	PublicAcademicDTO,
 	CreateAcademicDTO,
 	GetAcademicsParams,
 	ImportResult,
@@ -27,6 +28,15 @@ class AcademicsService {
 		})
 
 		return academic.then((dto) => Academic.fromDTO(dto))
+	}
+
+	public getPublic(id: string): Promise<Academic> {
+		const academic = http.request<PublicAcademicDTO>({
+			method: "GET",
+			url: `/academics/public/${id}`,
+		})
+
+		return academic.then((dto) => Academic.fromPublicDTO(dto))
 	}
 
 	public create(data: CreateAcademicDTO): Promise<Academic> {

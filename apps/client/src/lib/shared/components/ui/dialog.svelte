@@ -1,7 +1,8 @@
 <script lang="ts">
-	import { Dialog as DialogPrimitive, type WithoutChild } from "bits-ui"
-	import { X } from "@lucide/svelte"
 	import type { Snippet } from "svelte"
+
+	import { X } from "@lucide/svelte"
+	import { Dialog as DialogPrimitive, type WithoutChild } from "bits-ui"
 
 	type Props = DialogPrimitive.RootProps & {
 		title: string

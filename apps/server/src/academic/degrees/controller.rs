@@ -6,6 +6,7 @@ use sword::prelude::*;
 use sword::web::*;
 
 #[controller(kind = ControllerKind::Web, path = "/degrees")]
+#[interceptor(SessionCheck)]
 pub struct DegreesController {
 	degrees: Arc<DegreesService>,
 }
@@ -20,7 +21,6 @@ impl DegreesController {
 	}
 
 	#[post("/")]
-	#[interceptor(SessionCheck)]
 	pub async fn create_degree(&self, req: Request) -> WebResult<Degree> {
 		let input = req.body_validator::<CreateDegreeDto>()?;
 		let degree = self.degrees.create(input).await?;

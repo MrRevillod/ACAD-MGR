@@ -4,8 +4,7 @@ class AuthStore {
 	user = $state<User | null>(null)
 	isReady = $state(false)
 	isBootstrapping = $state(false)
-
-	isAuthenticated = () => Boolean(this.user)
+	isAuthenticated = $derived(this.user !== null)
 
 	setSession = (user: User) => {
 		this.user = user

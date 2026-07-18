@@ -125,6 +125,7 @@
 						type="password"
 						label={user ? "Contraseña (dejar vacío para mantener)" : "Contraseña"}
 						placeholder={user ? "Sin cambios" : ""}
+						autocomplete="current-password"
 					/>
 				{/snippet}
 			</Field>

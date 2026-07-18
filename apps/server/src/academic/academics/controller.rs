@@ -15,6 +15,7 @@ pub struct AcademicsController {
 
 impl AcademicsController {
 	#[get("/")]
+	#[interceptor(SessionCheck)]
 	pub async fn get_academics(&self, req: Request) -> WebResult<Vec<AcademicView>> {
 		let query = req.query_validator::<GetAcademicsQuery>()?;
 		let academics = self.academics.find(query.unwrap_or_default()).await?;
@@ -23,11 +24,20 @@ impl AcademicsController {
 	}
 
 	#[get("/{id}")]
-	pub async fn get_academic(&self, req: Request) -> WebResult<AcademicView> {
+	#[interceptor(SessionCheck)]
+	pub async fn get_academic_view(&self, req: Request) -> WebResult<AcademicView> {
 		let id = req.param::<AcademicId>("id")?;
 		let academic = self.academics.find_view_by_id(&id).await?;
 
 		Ok(academic)
+	}
+
+	#[get("/public/{id}")]
+	pub async fn get_public_academic_view(&self, req: Request) -> WebResult<AcademicPublicView> {
+		let id = req.param::<AcademicId>("id")?;
+		let academic = self.academics.find_view_by_id(&id).await?;
+
+		Ok(AcademicPublicView::from(academic))
 	}
 
 	#[patch("/{id}")]
@@ -50,6 +60,7 @@ impl AcademicsController {
 	}
 
 	#[post("/import")]
+	#[interceptor(SessionCheck)]
 	pub async fn import_academics(&self, req: Request) -> WebResult<ImportResult> {
 		let mut multipart = req.multipart().await?;
 		let file_path = temp_dir().join(format!("upload_{}.csv", Uuid::new_v4()));

@@ -6,6 +6,7 @@ use sword::prelude::*;
 use sword::web::*;
 
 #[controller(kind = ControllerKind::Web, path = "/faculties")]
+#[interceptor(SessionCheck)]
 pub struct FacultiesController {
 	faculties: Arc<FacultiesService>,
 }
@@ -28,7 +29,6 @@ impl FacultiesController {
 	}
 
 	#[post("/")]
-	#[interceptor(SessionCheck)]
 	pub async fn create_faculty(&self, req: Request) -> WebResult<Faculty> {
 		let input = req.body_validator::<CreateFacultyDto>()?;
 		let faculty = self.faculties.create(input).await?;

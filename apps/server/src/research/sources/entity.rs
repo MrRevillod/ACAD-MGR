@@ -1,8 +1,7 @@
 use crate::shared::{Entity, Id};
-
 use bon::Builder;
-use serde::Serialize;
-use sqlx::FromRow;
+use serde::{Deserialize, Serialize};
+use sqlx::{FromRow, Type};
 
 pub type SourceId = Id<Source>;
 
@@ -34,4 +33,12 @@ impl Entity for Source {
 	fn key_name() -> &'static str {
 		"source"
 	}
+}
+
+#[derive(Debug, Clone, Copy, Type, Serialize, Deserialize, Eq, PartialEq)]
+#[sqlx(type_name = "journal_kind", rename_all = "lowercase")]
+#[serde(rename_all = "lowercase")]
+pub enum JournalKind {
+	Wos,
+	Scopus,
 }

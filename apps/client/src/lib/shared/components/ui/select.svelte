@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { Select as SelectPrimitive } from "bits-ui"
 	import { ChevronDown, Check } from "@lucide/svelte"
+	import { Select as SelectPrimitive } from "bits-ui"
 
 	type Item = {
 		value: string
@@ -43,7 +43,7 @@
 	</SelectPrimitive.Trigger>
 	<SelectPrimitive.Portal>
 		<SelectPrimitive.Content
-			class="z-50 max-h-64 w-[var(--bits-select-anchor-width)] min-w-[8rem] overflow-hidden rounded-xl border border-corp-gray/20 bg-white p-1 shadow-lg"
+			class="z-50 max-h-64 w-(--bits-select-anchor-width) min-w-32 overflow-hidden rounded-xl border border-corp-gray/20 bg-white p-1 shadow-lg"
 			sideOffset={4}
 		>
 			<SelectPrimitive.Viewport>

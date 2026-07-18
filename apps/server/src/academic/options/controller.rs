@@ -6,6 +6,7 @@ use sword::prelude::*;
 use sword::web::*;
 
 #[controller(kind = ControllerKind::Web, path = "/category-options")]
+#[interceptor(SessionCheck)]
 pub struct AcademicCategoryOptionsController {
 	options: Arc<AcademicCategoryOptionsService>,
 }
@@ -28,7 +29,6 @@ impl AcademicCategoryOptionsController {
 	}
 
 	#[post("/")]
-	#[interceptor(SessionCheck)]
 	pub async fn create_option(&self, req: Request) -> WebResult<AcademicCategoryOption> {
 		let input = req.body_validator::<CreateCategoryOptionDto>()?;
 		let option = self.options.create(input).await?;

@@ -33,7 +33,7 @@
 	}
 </script>
 
-{#if authStore.isAuthenticated()}
+{#if authStore.isAuthenticated}
 	{#if !orcid}
 		<button
 			type="button"

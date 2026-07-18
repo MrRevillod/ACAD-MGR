@@ -193,7 +193,7 @@
 										</div>
 										{#if !auth.isExternal && auth.academicId}
 											<a
-												href={authStore.isAuthenticated()
+												href={authStore.isAuthenticated
 													? resolve(`/academics/${auth.academicId}`)
 													: resolve(
 															`/public/academics/${auth.academicId}`,
