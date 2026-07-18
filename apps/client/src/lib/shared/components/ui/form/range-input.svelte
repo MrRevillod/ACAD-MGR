@@ -27,6 +27,7 @@
 		required,
 		input,
 		errors,
+		oninput: formOninput,
 		...fieldProps
 	}: Props = $props()
 
@@ -49,6 +50,7 @@
 		if (el instanceof HTMLInputElement) {
 			rawValue = Number.parseFloat(el.value)
 		}
+		formOninput?.(e as never)
 	}
 </script>
 

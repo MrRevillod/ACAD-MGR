@@ -13,7 +13,8 @@
 </script>
 
 <svelte:head>
-	<title>ACAD MGR</title>
+	<title>Universidad Católica de Temuco - Fac. de Ingeniería - Sistema de Gestión Académica</title
+	>
 </svelte:head>
 
 <QueryClientProvider client={queryClient}>
