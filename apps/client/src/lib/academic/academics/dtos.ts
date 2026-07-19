@@ -45,9 +45,9 @@ export interface PublicAcademicDTO {
 
 export interface GetAcademicsParams {
 	search?: string
-	department_id?: string
-	career_id?: string
-	category_id?: string
+	departmentId?: string
+	careerId?: string
+	categoryId?: string
 	planta?: "adjunta" | "permanente"
 	option?: "teaching" | "research"
 	sort?: AcademicSortField

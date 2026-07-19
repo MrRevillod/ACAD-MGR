@@ -12,6 +12,7 @@
 
 	import Badge from "$shared/components/ui/badge.svelte"
 	import Dialog from "$shared/components/ui/dialog.svelte"
+	import HtmlRenderer from "$shared/components/ui/html-renderer.svelte"
 
 	interface Props {
 		workId: string | null
@@ -80,7 +81,9 @@
 						</span>
 					{/if}
 				</div>
-				<h2 class="mt-2 text-lg font-semibold text-[#1A1A1A]">{work.title}</h2>
+				<h2 class="mt-2 text-lg font-semibold text-[#1A1A1A]">
+					<HtmlRenderer html={work.title} />
+				</h2>
 				<div
 					class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-corp-gray"
 				>
@@ -113,9 +116,11 @@
 					<h3 class="mb-2 text-xs font-semibold tracking-widest uppercase text-corp-blue">
 						Abstract
 					</h3>
-					<p class="text-pretty text-sm leading-relaxed text-[#1A1A1A]">
-						{work.abstract}
-					</p>
+					<HtmlRenderer
+						as="p"
+						html={work.abstract}
+						class="text-pretty text-sm leading-relaxed text-[#1A1A1A]"
+					/>
 				</div>
 			{/if}
 

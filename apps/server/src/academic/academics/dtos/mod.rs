@@ -37,6 +37,7 @@ pub enum AcademicSortField {
 }
 
 #[derive(Debug, Serialize, Deserialize, Validate, Default)]
+#[serde(rename_all = "camelCase")]
 pub struct GetAcademicsQuery {
 	#[validate(length(
 		min = 1,
@@ -45,9 +46,9 @@ pub struct GetAcademicsQuery {
 	))]
 	pub search: Option<String>,
 	pub sort: Option<AcademicSortField>,
-	pub career_id: Option<CareerId>,
-	pub department_id: Option<DepartmentId>,
-	pub category_id: Option<AcademicCategoryId>,
+	pub careerId: Option<CareerId>,
+	pub departmentId: Option<DepartmentId>,
+	pub categoryId: Option<AcademicCategoryId>,
 	pub planta: Option<AcademicPlanta>,
 	pub option: Option<AcademicOption>,
 }

@@ -8,6 +8,7 @@
 
 	import Badge from "$shared/components/ui/badge.svelte"
 	import DataTable from "$shared/components/ui/data-table.svelte"
+	import HtmlRenderer from "$shared/components/ui/html-renderer.svelte"
 
 	interface Props {
 		works: Work[]
@@ -50,7 +51,7 @@
 			class="text-[15px] font-medium text-[#1A1A1A]"
 			title={work.title}
 		>
-			{work.title}
+			<HtmlRenderer html={work.title} />
 		</p>
 		{#if work.doi}
 			<a

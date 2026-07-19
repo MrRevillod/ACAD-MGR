@@ -34,12 +34,12 @@
 </script>
 
 {#if authStore.isAuthenticated}
-	{#if !orcid}
+	{#if !orcid || orcid === "NO TIENE" || orcid === "-"}
 		<button
 			type="button"
 			disabled
 			title="El académico no tiene ORCID asociado"
-			class="inline-flex h-8 cursor-not-allowed items-center gap-1.5 rounded-md border border-corp-gray/20 bg-white px-3 text-xs font-medium text-corp-gray/50 opacity-60"
+			class="inline-flex h-10 cursor-not-allowed items-center gap-1.5 rounded-md border border-corp-gray/20 bg-white px-3 text-xs font-medium text-corp-gray/50 opacity-60"
 		>
 			<CircleAlert class="size-3.5" />
 			Sin ORCID
@@ -49,7 +49,7 @@
 			type="button"
 			onclick={handleSync}
 			disabled={mutation.isPending}
-			class="inline-flex h-8 items-center gap-1.5 rounded-md bg-corp-blue px-3 text-xs font-medium text-white shadow-sm transition-colors hover:bg-corp-blue/90 active:scale-[0.96] disabled:opacity-60"
+			class="inline-flex h-10 items-center gap-1.5 rounded-md bg-corp-blue px-3 text-xs font-medium text-white shadow-sm transition-colors hover:bg-corp-blue/90 active:scale-[0.96] disabled:opacity-60"
 		>
 			{#if mutation.isPending}
 				<Loader class="size-3.5 animate-spin" />

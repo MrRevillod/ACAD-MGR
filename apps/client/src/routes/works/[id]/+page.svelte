@@ -15,6 +15,7 @@
 	import { toast } from "svelte-sonner"
 
 	import Badge from "$lib/shared/components/ui/badge.svelte"
+	import HtmlRenderer from "$shared/components/ui/html-renderer.svelte"
 
 	import { DateValue } from "$shared/value-objects/date.value"
 	import { FullName } from "$shared/value-objects/full-name.value"
@@ -84,7 +85,7 @@
 						{/if}
 					</div>
 					<h1 class="mt-3 text-2xl font-semibold text-balance text-[#1A1A1A]">
-						{work.title}
+						<HtmlRenderer html={work.title} />
 					</h1>
 					<div
 						class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-corp-gray"
@@ -120,9 +121,11 @@
 						>
 							Abstract
 						</h2>
-						<p class="text-pretty text-sm leading-relaxed text-[#1A1A1A]">
-							{work.abstract}
-						</p>
+						<HtmlRenderer
+							as="p"
+							html={work.abstract}
+							class="text-pretty text-sm leading-relaxed text-[#1A1A1A]"
+						/>
 					</section>
 				{/if}
 

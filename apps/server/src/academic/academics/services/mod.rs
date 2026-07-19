@@ -21,9 +21,9 @@ impl AcademicsService {
 		let filter = AcademicListFilter {
 			search: query.search,
 			sort: query.sort,
-			career_id: query.career_id,
-			category_id: query.category_id,
-			department_id: query.department_id,
+			career_id: query.careerId,
+			category_id: query.categoryId,
+			department_id: query.departmentId,
 			option: query.option,
 			planta: query.planta,
 		};

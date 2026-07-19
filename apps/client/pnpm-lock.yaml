@@ -30,7 +30,7 @@ importers:
         specifier: ^0.3.2
         version: 0.3.2
       dompurify:
-        specifier: ^3.3.0
+        specifier: ^3.4.10
         version: 3.4.10
       layerchart:
         specifier: ^2.0.1

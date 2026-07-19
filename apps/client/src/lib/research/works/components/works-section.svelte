@@ -14,9 +14,15 @@
 		academic: Academic
 		yearFrom?: string
 		yearTo?: string
+		readonly?: boolean
 	}
 
-	let { academic, yearFrom = $bindable(""), yearTo = $bindable("") }: Props = $props()
+	let {
+		academic,
+		yearFrom = $bindable(""),
+		yearTo = $bindable(""),
+		readonly = false,
+	}: Props = $props()
 
 	function worksParams() {
 		return {
@@ -59,8 +65,11 @@
 				placeholderFrom="DESDE"
 				placeholderTo="HASTA"
 				minYear={1900}
+				class="min-w-72"
 			/>
-			<SyncWorksButton academicId={academic.id} orcid={academic.orcid ?? null} />
+			{#if !readonly}
+				<SyncWorksButton academicId={academic.id} orcid={academic.orcid ?? null} />
+			{/if}
 		</div>
 	</div>
 

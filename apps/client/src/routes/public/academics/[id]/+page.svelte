@@ -7,6 +7,8 @@
 	import { Loader, CircleAlert } from "@lucide/svelte"
 	import WorksSection from "$works/components/works-section.svelte"
 	import AcademicSidebar from "$academics/components/academic-sidebar.svelte"
+	import Dialog from "$shared/components/ui/dialog.svelte"
+	import Button from "$shared/components/ui/button.svelte"
 
 	const id = $derived(page.params.id ?? "")
 
@@ -24,6 +26,8 @@
 	}))
 
 	const academic = $derived(academicQuery.data)
+
+	let requestEditDialogOpen = $state(false)
 </script>
 
 <div class="h-full overflow-y-auto">
@@ -39,10 +43,15 @@
 	{:else}
 		<div class="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8">
 			<div class="grid grid-cols-1 gap-6 lg:grid-cols-[320px_1fr]">
-				<AcademicSidebar {academic} readonly />
+				<AcademicSidebar
+					{academic}
+					readonly
+					onRequestEdit={() => (requestEditDialogOpen = true)}
+				/>
 				<div class="min-h-0">
 					<WorksSection
 						{academic}
+						readonly
 						bind:yearFrom={yearParams.yearFrom}
 						bind:yearTo={yearParams.yearTo}
 					/>
@@ -50,4 +59,16 @@
 			</div>
 		</div>
 	{/if}
+
+	<Dialog
+		bind:open={requestEditDialogOpen}
+		title="Solicitar edición de perfil"
+		description="La edición del perfil está sujeta a la verificación mediante correo académico. Se enviará un enlace a tu correo con un formulario de edición."
+	>
+		<div class="flex justify-end">
+			<Button variant="primary" onclick={() => (requestEditDialogOpen = false)}>
+				Entendido
+			</Button>
+		</div>
+	</Dialog>
 </div>
