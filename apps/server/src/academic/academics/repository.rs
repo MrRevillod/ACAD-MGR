@@ -1,6 +1,7 @@
 use crate::academic::{Academic, AcademicId, AcademicListFilter, AcademicSortField, AcademicView};
 use crate::shared::{AppResult, Database, Tx};
 
+use chrono::{DateTime, Utc};
 use sqlx::QueryBuilder;
 use std::sync::Arc;
 use sword::prelude::*;
@@ -167,16 +168,27 @@ impl AcademicsRepository {
 		Ok(item)
 	}
 
+	pub async fn update_updated_at(&self, id: &AcademicId) -> AppResult<DateTime<Utc>> {
+		let updated_at = sqlx::query_scalar::<_, DateTime<Utc>>(
+			"UPDATE academics SET updated_at = NOW() WHERE id = $1 RETURNING updated_at",
+		)
+		.bind(id)
+		.fetch_one(self.database.pool())
+		.await?;
+
+		Ok(updated_at)
+	}
+
 	pub async fn save(&self, academic: &Academic) -> AppResult<()> {
 		let query = r"
         INSERT INTO academics (
             id, rut, names, paternal_surname, maternal_surname, email, orcid, sex,
             birth_date, joined_at, work_position_id,
             department_id, career_id, jce, acad_category_options_id,
-            annual_discount_hours, nationality_code, city
+            annual_discount_hours, nationality_code, city, updated_at
         ) VALUES (
             $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-            $11, $12, $13, $14, $15, $16, $17, $18
+            $11, $12, $13, $14, $15, $16, $17, $18, $19
         )
         ON CONFLICT (id) DO UPDATE SET
             names = EXCLUDED.names,
@@ -194,7 +206,8 @@ impl AcademicsRepository {
             acad_category_options_id = EXCLUDED.acad_category_options_id,
             annual_discount_hours = EXCLUDED.annual_discount_hours,
             nationality_code = EXCLUDED.nationality_code,
-            city = EXCLUDED.city
+            city = EXCLUDED.city,
+            updated_at = NOW()
         ";
 
 		sqlx::query(query)
@@ -216,6 +229,7 @@ impl AcademicsRepository {
 			.bind(academic.annual_discount_hours)
 			.bind(&academic.nationality_code)
 			.bind(&academic.city)
+			.bind(academic.updated_at)
 			.execute(self.database.pool())
 			.await?;
 
@@ -228,9 +242,10 @@ impl AcademicsRepository {
             id, rut, names, paternal_surname, maternal_surname, email, orcid, sex,
             birth_date, joined_at, work_position_id,
             department_id, career_id, jce, acad_category_options_id,
-            annual_discount_hours, nationality_code, city
+            annual_discount_hours, nationality_code, city, updated_at
         ) VALUES (
-            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18
+            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
+            $11, $12, $13, $14, $15, $16, $17, $18, $19
         )";
 
 		sqlx::query(query)
@@ -252,6 +267,7 @@ impl AcademicsRepository {
 			.bind(academic.annual_discount_hours)
 			.bind(&academic.nationality_code)
 			.bind(&academic.city)
+			.bind(academic.updated_at)
 			.execute(&mut **tx)
 			.await?;
 

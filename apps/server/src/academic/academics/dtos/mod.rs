@@ -1,9 +1,13 @@
 mod create;
 mod imports;
+mod self_update;
+mod token;
 mod update;
 
 pub use create::*;
 pub use imports::*;
+pub use self_update::*;
+pub use token::*;
 pub use update::*;
 
 use crate::{
@@ -46,9 +50,9 @@ pub struct GetAcademicsQuery {
 	))]
 	pub search: Option<String>,
 	pub sort: Option<AcademicSortField>,
-	pub careerId: Option<CareerId>,
-	pub departmentId: Option<DepartmentId>,
-	pub categoryId: Option<AcademicCategoryId>,
+	pub career_id: Option<CareerId>,
+	pub department_id: Option<DepartmentId>,
+	pub category_id: Option<AcademicCategoryId>,
 	pub planta: Option<AcademicPlanta>,
 	pub option: Option<AcademicOption>,
 }

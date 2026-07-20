@@ -122,7 +122,7 @@
 							Abstract
 						</h2>
 						<HtmlRenderer
-							as="p"
+							tag="p"
 							html={work.abstract}
 							class="text-pretty text-sm leading-relaxed text-[#1A1A1A]"
 						/>

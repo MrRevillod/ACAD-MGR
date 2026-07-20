@@ -19,6 +19,8 @@ impl Module for AcademicModule {
 		controllers.register::<AcademicCategoryOptionsController>();
 		controllers.register::<DegreesController>();
 		controllers.register::<AcademicsController>();
+
+		controllers.register::<AcademicEventsController>();
 	}
 
 	fn register_components(components: &ComponentRegistry) {

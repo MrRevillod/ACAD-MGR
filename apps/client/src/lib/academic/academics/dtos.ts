@@ -191,6 +191,47 @@ export const updateAcademicDTOSchema = v.object({
 export type UpdateAcademicDTOSchema = typeof updateAcademicDTOSchema
 export type UpdateAcademicDTO = v.InferInput<typeof updateAcademicDTOSchema>
 
+// Self-Update Academic DTOs ------------------------------------------------
+
+export const selfUpdateAcademicDTOSchema = v.object({
+	names: v.optional(textField("Los nombres deben tener entre 1 y 255 caracteres")),
+	paternalSurname: v.optional(
+		textField("El apellido paterno debe tener entre 1 y 255 caracteres"),
+	),
+	maternalSurname: v.optional(
+		textField("El apellido materno debe tener entre 1 y 255 caracteres"),
+	),
+	orcid: v.optional(
+		v.nullable(
+			v.pipe(
+				v.string(),
+				v.regex(ORCID_REGEX, "El ORCID ID debe tener el formato XXXX-XXXX-XXXX-XXXX"),
+			),
+		),
+	),
+	sex: v.optional(v.picklist(["H", "M", "O"], "Seleccione una opción válida")),
+	birthDate: v.optional(v.string()),
+	city: v.optional(textField("La ciudad debe tener entre 1 y 255 caracteres")),
+	nationalityCode: v.optional(
+		v.pipe(v.string(), v.length(2, "El código de país debe tener 2 caracteres")),
+	),
+})
+
+export type SelfUpdateAcademicDTOSchema = typeof selfUpdateAcademicDTOSchema
+export type SelfUpdateDTO = v.InferInput<typeof selfUpdateAcademicDTOSchema>
+
+export interface SyncResultDTO {
+	academicId: string
+	academicOrcid: string
+	worksFetched: number
+	worksCreated: number
+	worksSkipped: number
+	authorshipsInserted: number
+	topicsLinked: number
+	keywordsLinked: number
+	errors: string[]
+}
+
 // Data Import DTOs ------------------------------------------------
 
 export interface ImportResult {

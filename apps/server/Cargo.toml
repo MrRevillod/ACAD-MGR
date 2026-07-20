@@ -16,18 +16,14 @@ name = "issn-seeder"
 path = "bin/issn-seeder/main.rs"
 
 [dependencies]
-orcid = "0.2.3"
 tokio = { version = "1.52.3", features = ["full"] }
-
-strum = "0.28"
-strum_macros = "0.28"
-csv = "1.3"
 
 sword = { git = "https://github.com/sword-web/sword.git", features = [
     "web",
     "validation-validator",
     "web-multipart",
-    "web-swagger-ui"
+    "web-swagger-ui",
+    "events-in-memory",
 ] }
 
 sqlx = { version = "0.8.6", features = [
@@ -39,6 +35,7 @@ sqlx = { version = "0.8.6", features = [
 ] }
 
 time = "0.3.47"
+csv = "1.3"
 tracing = "0.1.44"
 tower-http = { version = "0.6.8", features = ["trace", "tracing"] }
 
@@ -55,3 +52,4 @@ sha2 = "0.11.0"
 regex = "1.12.4"
 papers-openalex = "0.3.1"
 html-escape = "0.2.14"
+lettre = { version = "0.11.19", features = ["tokio1", "tokio1-native-tls"] }

@@ -4,6 +4,7 @@ mod extensions;
 mod id;
 mod jsonwebtoken;
 mod logger;
+mod mailer;
 mod seeder;
 
 mod value_objects {
@@ -14,9 +15,8 @@ mod value_objects {
 	pub use country::Country;
 }
 
-use std::sync::Arc;
-
 use database::DatabaseConfig;
+use std::sync::Arc;
 use sword::prelude::*;
 
 pub use database::{Database, TransactionManager, Tx};
@@ -25,6 +25,7 @@ pub use extensions::*;
 pub use id::{Entity, Id};
 pub use jsonwebtoken::JsonWebTokenService;
 pub use logger::LoggerLayer;
+pub use mailer::*;
 pub use value_objects::CLf64;
 pub use value_objects::Country;
 
@@ -44,6 +45,11 @@ impl Module for SharedModule {
 		seeder.seed().await;
 
 		providers.register(database);
+
+		let mailer_config = config.expect::<MailerConfig>();
+		let mailer = Mailer::new(mailer_config);
+
+		providers.register(mailer);
 	}
 
 	fn register_components(components: &ComponentRegistry) {

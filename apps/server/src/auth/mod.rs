@@ -25,6 +25,7 @@ pub struct AuthConfig {
 	pub access_exp_minutes: i64,
 	pub refresh_exp_days: i64,
 	pub jwt_secret: String,
+	pub frontend_url: String,
 }
 
 pub struct AuthModule;

@@ -8,6 +8,8 @@ import type {
 	GetAcademicsParams,
 	ImportResult,
 	UpdateAcademicDTO,
+	SelfUpdateDTO,
+	SyncResultDTO,
 } from "./dtos"
 
 class AcademicsService {
@@ -28,6 +30,16 @@ class AcademicsService {
 		})
 
 		return academic.then((dto) => Academic.fromDTO(dto))
+	}
+
+	public listPublic(params?: GetAcademicsParams): Promise<Academic[]> {
+		const academics = http.request<PublicAcademicDTO[]>({
+			method: "GET",
+			url: "/academics/public",
+			params,
+		})
+
+		return academics.then((data) => data.map((dto) => Academic.fromPublicDTO(dto)))
 	}
 
 	public getPublic(id: string): Promise<Academic> {
@@ -70,6 +82,41 @@ class AcademicsService {
 			headers: {
 				"Content-Type": "multipart/form-data",
 			},
+		})
+	}
+
+	public requestProfileUpdate(id: string): Promise<void> {
+		return http.request<void>({
+			method: "POST",
+			url: `/academics/${id}/update-profile-request`,
+		})
+	}
+
+	public validateOneTimeToken(token: string): Promise<Academic> {
+		const academic = http.request<AcademicDTO>({
+			method: "POST",
+			url: "/academics/profile/update/validate",
+			data: { token },
+		})
+
+		return academic.then((dto) => Academic.fromDTO(dto))
+	}
+
+	public updateByToken(token: string, data: SelfUpdateDTO): Promise<Academic> {
+		const academic = http.request<AcademicDTO>({
+			method: "POST",
+			url: "/academics/profile/update",
+			data: { token, data },
+		})
+
+		return academic.then((dto) => Academic.fromDTO(dto))
+	}
+
+	public syncWorksByToken(token: string): Promise<SyncResultDTO> {
+		return http.request<SyncResultDTO>({
+			method: "POST",
+			url: "/academics/profile/update/sync-works",
+			data: { token },
 		})
 	}
 }

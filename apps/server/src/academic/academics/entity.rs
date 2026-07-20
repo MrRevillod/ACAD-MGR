@@ -6,7 +6,7 @@ use crate::academic::{
 use crate::shared::{Entity, Id};
 use crate::university::{AcademicWorkPositionId, CareerId, DepartmentId};
 
-use chrono::NaiveDate;
+use chrono::{DateTime, NaiveDate, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, Type};
 
@@ -42,6 +42,8 @@ pub struct Academic {
 	pub annual_discount_hours: f64,
 	pub nationality_code: String,
 	pub city: String,
+	#[builder(default = Utc::now())]
+	pub updated_at: DateTime<Utc>,
 }
 
 #[derive(Debug)]

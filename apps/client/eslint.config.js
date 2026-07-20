@@ -56,8 +56,12 @@ export default defineConfig(
 		},
 	},
 	{
-		// Override or add rule settings here, such as:
-		// 'svelte/button-has-type': 'error'
+		files: ["**/html-renderer.svelte"],
+		rules: {
+			"svelte/no-at-html-tags": "off",
+		},
+	},
+	{
 		rules: {},
 	},
 )

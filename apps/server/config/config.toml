@@ -29,6 +29,7 @@ acquire_timeout_ms = 5000
 jwt_secret = "${JWT_SECRET}"
 access_exp_minutes = 15
 refresh_exp_days = 7
+frontend_url = "${FRONTEND_URL}"
 
 [cookies]
 path = "/"
@@ -55,3 +56,9 @@ admin_password_hash = "${SEED_ADMIN_PASSWORD_HASH}"
 
 [openalex]
 api_key = "${OPENALEX_API_KEY}"
+
+[mailer]
+smtp_host = "${SMTP_HOST}"
+smtp_port = "${SMTP_PORT}"
+smtp_username = "${SMTP_USERNAME}"
+smtp_password = "${SMTP_PASSWORD}"

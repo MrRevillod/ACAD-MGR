@@ -58,4 +58,11 @@ pub enum AcademicError {
 	#[http(code = 404, message = "Académico no encontrado")]
 	#[error("Academic not found")]
 	AcademicNotFound,
+
+	#[http(
+		code = 401,
+		message = "El enlace de actualización es inválido o ha expirado"
+	)]
+	#[error("Invalid or expired one-time token")]
+	InvalidOneTimeToken,
 }

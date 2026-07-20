@@ -5,6 +5,7 @@
 	import { useQuery } from "$shared/http/tanstack"
 	import { academicService } from "$academics/service"
 	import { Loader, CircleAlert } from "@lucide/svelte"
+	import { toast } from "svelte-sonner"
 	import WorksSection from "$works/components/works-section.svelte"
 	import AcademicSidebar from "$academics/components/academic-sidebar.svelte"
 	import Dialog from "$shared/components/ui/dialog.svelte"
@@ -28,6 +29,21 @@
 	const academic = $derived(academicQuery.data)
 
 	let requestEditDialogOpen = $state(false)
+	let isRequesting = $state(false)
+	let requestSent = $state(false)
+
+	async function handleRequestEdit() {
+		isRequesting = true
+		try {
+			await academicService.requestProfileUpdate(id)
+			requestSent = true
+			toast.success("Enlace enviado a tu correo electrónico")
+		} catch {
+			toast.error("Error al solicitar la edición del perfil")
+		} finally {
+			isRequesting = false
+		}
+	}
 </script>
 
 <div class="h-full overflow-y-auto">
@@ -65,10 +81,26 @@
 		title="Solicitar edición de perfil"
 		description="La edición del perfil está sujeta a la verificación mediante correo académico. Se enviará un enlace a tu correo con un formulario de edición."
 	>
-		<div class="flex justify-end">
-			<Button variant="primary" onclick={() => (requestEditDialogOpen = false)}>
-				Entendido
+		{#if requestSent}
+			<p class="mb-4 text-sm text-green-600">
+				Enlace enviado correctamente. Revisá tu correo electrónico para acceder al
+				formulario de edición.
+			</p>
+		{/if}
+		<div class="flex justify-end gap-2">
+			<Button variant="secondary" onclick={() => (requestEditDialogOpen = false)}>
+				Cerrar
 			</Button>
+			{#if !requestSent}
+				<Button variant="primary" disabled={isRequesting} onclick={handleRequestEdit}>
+					{#if isRequesting}
+						<Loader class="size-4 animate-spin" />
+						Enviando...
+					{:else}
+						Enviar enlace
+					{/if}
+				</Button>
+			{/if}
 		</div>
 	</Dialog>
 </div>
