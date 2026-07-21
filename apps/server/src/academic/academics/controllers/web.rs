@@ -100,17 +100,21 @@ impl AcademicsController {
 	}
 
 	#[post("/profile/update/validate")]
-	pub async fn validate_profile_update_token(&self, req: Request) -> WebResult<AcademicView> {
+	pub async fn validate_profile_update_token(
+		&self,
+		req: Request,
+	) -> WebResult<AcademicPublicView> {
 		let dto = req.body_validator::<ValidateTokenDto>()?;
 		let academic_id = self.academics.validate_one_time_token(&dto.token).await?;
 		let academic = self.academics.find_view_by_id(&academic_id).await?;
 
-		Ok(academic)
+		Ok(AcademicPublicView::from(academic))
 	}
 
 	#[post("/profile/update")]
 	pub async fn update_profile_from_token(&self, req: Request) -> WebResult<AcademicView> {
 		let dto = req.body_validator::<CombinedSelfUpdateDto>()?;
+
 		let academic = self
 			.academics
 			.update_from_one_time_link(&dto.token, dto.data)

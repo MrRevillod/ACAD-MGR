@@ -92,14 +92,14 @@ class AcademicsService {
 		})
 	}
 
-	public validateOneTimeToken(token: string): Promise<Academic> {
-		const academic = http.request<AcademicDTO>({
+	public validateOneTimeToken(token: string): Promise<PublicAcademicDTO> {
+		const academic = http.request<PublicAcademicDTO>({
 			method: "POST",
 			url: "/academics/profile/update/validate",
 			data: { token },
 		})
 
-		return academic.then((dto) => Academic.fromDTO(dto))
+		return academic
 	}
 
 	public updateByToken(token: string, data: SelfUpdateDTO): Promise<Academic> {
