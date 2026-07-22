@@ -10,6 +10,8 @@ COPY ./apps/client/.npmrc ./
 RUN corepack enable && pnpm install --frozen-lockfile --ignore-scripts
 
 FROM base AS builder
+ARG VITE_API_URL
+ENV VITE_API_URL=$VITE_API_URL
 COPY ./apps/client/ ./
 RUN pnpm build
 

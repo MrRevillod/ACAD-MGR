@@ -62,3 +62,9 @@ smtp_host = "${SMTP_HOST}"
 smtp_port = "${SMTP_PORT}"
 smtp_username = "${SMTP_USERNAME}"
 smtp_password = "${SMTP_PASSWORD}"
+
+[cors]
+allow-origins = ["http://localhost/", "https://academic-mgr.inf.uct.cl"]
+allow-methods = ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"]
+allow-headers = ["Content-Type", "Authorization", "Accept", "Origin", "User-Agent"]
+allow-credentials = true

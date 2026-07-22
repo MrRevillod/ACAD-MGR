@@ -30,6 +30,8 @@ sword = { git = "https://github.com/sword-web/sword.git", features = [
     "events-in-memory",
 ] }
 
+sword-layers = { git = "https://github.com/sword-web/sword.git", package = "sword-layers", features = ["cors"] }
+
 sqlx = { version = "0.8.6", features = [
     "chrono",
     "macros",
