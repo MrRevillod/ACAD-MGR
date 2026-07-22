@@ -44,7 +44,7 @@ RUN apk add --no-cache \
 WORKDIR /app
 COPY . .
 
-RUN cargo build -p orcid-acad-mgr-server --release
+RUN cargo build -p acad-mgr-server --release
 
 # ==============================================================================
 # Production Stage
@@ -59,7 +59,10 @@ WORKDIR /app
 RUN adduser -D appuser
 USER appuser
 
-COPY --from=builder /app/target/release/server ./server
+COPY --from=builder /app/target/release/acad-mgr-server ./server
+COPY --from=builder /app/target/release/issn-seeder ./issn-seeder
+COPY --from=builder /app/target/release/openalex-seeder ./openalex-seeder
+COPY --from=builder /app/target/release/research-lines-seeder ./research-lines-seeder
 COPY --from=builder /app/apps/server/config/migrations ./config/migrations
 COPY --from=builder /app/apps/server/config/config.toml ./config/config.toml
 
