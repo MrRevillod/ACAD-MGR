@@ -42,8 +42,10 @@ impl WorksEventsController {
 					)
 				} else {
 					let n = error_orcids.len();
-					let items: String =
-						error_orcids.iter().map(|o| format!("<li>{}</li>", o)).collect();
+					let items: String = error_orcids
+						.iter()
+						.map(|o| format!("<li>{}</li>", o))
+						.collect();
 					(
 						format!(" con {n} académico(s) con errores"),
 						format!(

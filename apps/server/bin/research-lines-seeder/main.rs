@@ -2,115 +2,439 @@ use std::error::Error;
 
 const MAPPINGS: &[(&str, &str)] = &[
 	// IA, Sistemas Complejos y Modelamiento Matemático
-	("https://openalex.org/subfields/1203", "ia-sistemas-complejos"),
-	("https://openalex.org/subfields/1302", "ia-sistemas-complejos"),
-	("https://openalex.org/subfields/1304", "ia-sistemas-complejos"),
-	("https://openalex.org/subfields/1306", "ia-sistemas-complejos"),
-	("https://openalex.org/subfields/1311", "ia-sistemas-complejos"),
-	("https://openalex.org/subfields/1315", "ia-sistemas-complejos"),
-	("https://openalex.org/subfields/1702", "ia-sistemas-complejos"),
-	("https://openalex.org/subfields/1703", "ia-sistemas-complejos"),
-	("https://openalex.org/subfields/1704", "ia-sistemas-complejos"),
-	("https://openalex.org/subfields/1705", "ia-sistemas-complejos"),
-	("https://openalex.org/subfields/1706", "ia-sistemas-complejos"),
-	("https://openalex.org/subfields/1707", "ia-sistemas-complejos"),
-	("https://openalex.org/subfields/1708", "ia-sistemas-complejos"),
-	("https://openalex.org/subfields/1709", "ia-sistemas-complejos"),
-	("https://openalex.org/subfields/1710", "ia-sistemas-complejos"),
-	("https://openalex.org/subfields/1711", "ia-sistemas-complejos"),
-	("https://openalex.org/subfields/1712", "ia-sistemas-complejos"),
-	("https://openalex.org/subfields/1800", "ia-sistemas-complejos"),
-	("https://openalex.org/subfields/1802", "ia-sistemas-complejos"),
-	("https://openalex.org/subfields/1803", "ia-sistemas-complejos"),
-	("https://openalex.org/subfields/1804", "ia-sistemas-complejos"),
-	("https://openalex.org/subfields/2206", "ia-sistemas-complejos"),
-	("https://openalex.org/subfields/2207", "ia-sistemas-complejos"),
-	("https://openalex.org/subfields/2208", "ia-sistemas-complejos"),
-	("https://openalex.org/subfields/2214", "ia-sistemas-complejos"),
-	("https://openalex.org/subfields/2602", "ia-sistemas-complejos"),
-	("https://openalex.org/subfields/2604", "ia-sistemas-complejos"),
-	("https://openalex.org/subfields/2605", "ia-sistemas-complejos"),
-	("https://openalex.org/subfields/2607", "ia-sistemas-complejos"),
-	("https://openalex.org/subfields/2608", "ia-sistemas-complejos"),
-	("https://openalex.org/subfields/2610", "ia-sistemas-complejos"),
-	("https://openalex.org/subfields/2611", "ia-sistemas-complejos"),
-	("https://openalex.org/subfields/2612", "ia-sistemas-complejos"),
-	("https://openalex.org/subfields/2613", "ia-sistemas-complejos"),
-	("https://openalex.org/subfields/2614", "ia-sistemas-complejos"),
-	("https://openalex.org/subfields/2716", "ia-sistemas-complejos"),
-	("https://openalex.org/subfields/2718", "ia-sistemas-complejos"),
-	("https://openalex.org/subfields/2728", "ia-sistemas-complejos"),
-	("https://openalex.org/subfields/2802", "ia-sistemas-complejos"),
-	("https://openalex.org/subfields/2803", "ia-sistemas-complejos"),
-	("https://openalex.org/subfields/2804", "ia-sistemas-complejos"),
-	("https://openalex.org/subfields/2805", "ia-sistemas-complejos"),
-	("https://openalex.org/subfields/2806", "ia-sistemas-complejos"),
-	("https://openalex.org/subfields/2807", "ia-sistemas-complejos"),
-	("https://openalex.org/subfields/2808", "ia-sistemas-complejos"),
-	("https://openalex.org/subfields/2809", "ia-sistemas-complejos"),
-	("https://openalex.org/subfields/3109", "ia-sistemas-complejos"),
-	("https://openalex.org/subfields/3200", "ia-sistemas-complejos"),
-	("https://openalex.org/subfields/3202", "ia-sistemas-complejos"),
-	("https://openalex.org/subfields/3203", "ia-sistemas-complejos"),
-	("https://openalex.org/subfields/3206", "ia-sistemas-complejos"),
-	("https://openalex.org/subfields/3207", "ia-sistemas-complejos"),
-	("https://openalex.org/subfields/3307", "ia-sistemas-complejos"),
-	("https://openalex.org/subfields/3309", "ia-sistemas-complejos"),
-	("https://openalex.org/subfields/3310", "ia-sistemas-complejos"),
-	("https://openalex.org/subfields/3315", "ia-sistemas-complejos"),
+	(
+		"https://openalex.org/subfields/1203",
+		"ia-sistemas-complejos",
+	),
+	(
+		"https://openalex.org/subfields/1302",
+		"ia-sistemas-complejos",
+	),
+	(
+		"https://openalex.org/subfields/1304",
+		"ia-sistemas-complejos",
+	),
+	(
+		"https://openalex.org/subfields/1306",
+		"ia-sistemas-complejos",
+	),
+	(
+		"https://openalex.org/subfields/1311",
+		"ia-sistemas-complejos",
+	),
+	(
+		"https://openalex.org/subfields/1315",
+		"ia-sistemas-complejos",
+	),
+	(
+		"https://openalex.org/subfields/1702",
+		"ia-sistemas-complejos",
+	),
+	(
+		"https://openalex.org/subfields/1703",
+		"ia-sistemas-complejos",
+	),
+	(
+		"https://openalex.org/subfields/1704",
+		"ia-sistemas-complejos",
+	),
+	(
+		"https://openalex.org/subfields/1705",
+		"ia-sistemas-complejos",
+	),
+	(
+		"https://openalex.org/subfields/1706",
+		"ia-sistemas-complejos",
+	),
+	(
+		"https://openalex.org/subfields/1707",
+		"ia-sistemas-complejos",
+	),
+	(
+		"https://openalex.org/subfields/1708",
+		"ia-sistemas-complejos",
+	),
+	(
+		"https://openalex.org/subfields/1709",
+		"ia-sistemas-complejos",
+	),
+	(
+		"https://openalex.org/subfields/1710",
+		"ia-sistemas-complejos",
+	),
+	(
+		"https://openalex.org/subfields/1711",
+		"ia-sistemas-complejos",
+	),
+	(
+		"https://openalex.org/subfields/1712",
+		"ia-sistemas-complejos",
+	),
+	(
+		"https://openalex.org/subfields/1800",
+		"ia-sistemas-complejos",
+	),
+	(
+		"https://openalex.org/subfields/1802",
+		"ia-sistemas-complejos",
+	),
+	(
+		"https://openalex.org/subfields/1803",
+		"ia-sistemas-complejos",
+	),
+	(
+		"https://openalex.org/subfields/1804",
+		"ia-sistemas-complejos",
+	),
+	(
+		"https://openalex.org/subfields/2206",
+		"ia-sistemas-complejos",
+	),
+	(
+		"https://openalex.org/subfields/2207",
+		"ia-sistemas-complejos",
+	),
+	(
+		"https://openalex.org/subfields/2208",
+		"ia-sistemas-complejos",
+	),
+	(
+		"https://openalex.org/subfields/2214",
+		"ia-sistemas-complejos",
+	),
+	(
+		"https://openalex.org/subfields/2602",
+		"ia-sistemas-complejos",
+	),
+	(
+		"https://openalex.org/subfields/2604",
+		"ia-sistemas-complejos",
+	),
+	(
+		"https://openalex.org/subfields/2605",
+		"ia-sistemas-complejos",
+	),
+	(
+		"https://openalex.org/subfields/2607",
+		"ia-sistemas-complejos",
+	),
+	(
+		"https://openalex.org/subfields/2608",
+		"ia-sistemas-complejos",
+	),
+	(
+		"https://openalex.org/subfields/2610",
+		"ia-sistemas-complejos",
+	),
+	(
+		"https://openalex.org/subfields/2611",
+		"ia-sistemas-complejos",
+	),
+	(
+		"https://openalex.org/subfields/2612",
+		"ia-sistemas-complejos",
+	),
+	(
+		"https://openalex.org/subfields/2613",
+		"ia-sistemas-complejos",
+	),
+	(
+		"https://openalex.org/subfields/2614",
+		"ia-sistemas-complejos",
+	),
+	(
+		"https://openalex.org/subfields/2716",
+		"ia-sistemas-complejos",
+	),
+	(
+		"https://openalex.org/subfields/2718",
+		"ia-sistemas-complejos",
+	),
+	(
+		"https://openalex.org/subfields/2728",
+		"ia-sistemas-complejos",
+	),
+	(
+		"https://openalex.org/subfields/2802",
+		"ia-sistemas-complejos",
+	),
+	(
+		"https://openalex.org/subfields/2803",
+		"ia-sistemas-complejos",
+	),
+	(
+		"https://openalex.org/subfields/2804",
+		"ia-sistemas-complejos",
+	),
+	(
+		"https://openalex.org/subfields/2805",
+		"ia-sistemas-complejos",
+	),
+	(
+		"https://openalex.org/subfields/2806",
+		"ia-sistemas-complejos",
+	),
+	(
+		"https://openalex.org/subfields/2807",
+		"ia-sistemas-complejos",
+	),
+	(
+		"https://openalex.org/subfields/2808",
+		"ia-sistemas-complejos",
+	),
+	(
+		"https://openalex.org/subfields/2809",
+		"ia-sistemas-complejos",
+	),
+	(
+		"https://openalex.org/subfields/3109",
+		"ia-sistemas-complejos",
+	),
+	(
+		"https://openalex.org/subfields/3200",
+		"ia-sistemas-complejos",
+	),
+	(
+		"https://openalex.org/subfields/3202",
+		"ia-sistemas-complejos",
+	),
+	(
+		"https://openalex.org/subfields/3203",
+		"ia-sistemas-complejos",
+	),
+	(
+		"https://openalex.org/subfields/3206",
+		"ia-sistemas-complejos",
+	),
+	(
+		"https://openalex.org/subfields/3207",
+		"ia-sistemas-complejos",
+	),
+	(
+		"https://openalex.org/subfields/3307",
+		"ia-sistemas-complejos",
+	),
+	(
+		"https://openalex.org/subfields/3309",
+		"ia-sistemas-complejos",
+	),
+	(
+		"https://openalex.org/subfields/3310",
+		"ia-sistemas-complejos",
+	),
+	(
+		"https://openalex.org/subfields/3315",
+		"ia-sistemas-complejos",
+	),
 	// Materiales Avanzados y Bioproductos
-	("https://openalex.org/subfields/1106", "materiales-avanzados"),
-	("https://openalex.org/subfields/1303", "materiales-avanzados"),
-	("https://openalex.org/subfields/1305", "materiales-avanzados"),
-	("https://openalex.org/subfields/1307", "materiales-avanzados"),
-	("https://openalex.org/subfields/1308", "materiales-avanzados"),
-	("https://openalex.org/subfields/1312", "materiales-avanzados"),
-	("https://openalex.org/subfields/1313", "materiales-avanzados"),
-	("https://openalex.org/subfields/1502", "materiales-avanzados"),
-	("https://openalex.org/subfields/1503", "materiales-avanzados"),
-	("https://openalex.org/subfields/1504", "materiales-avanzados"),
-	("https://openalex.org/subfields/1506", "materiales-avanzados"),
-	("https://openalex.org/subfields/1507", "materiales-avanzados"),
-	("https://openalex.org/subfields/1508", "materiales-avanzados"),
-	("https://openalex.org/subfields/1602", "materiales-avanzados"),
-	("https://openalex.org/subfields/1603", "materiales-avanzados"),
-	("https://openalex.org/subfields/1604", "materiales-avanzados"),
-	("https://openalex.org/subfields/1605", "materiales-avanzados"),
-	("https://openalex.org/subfields/1606", "materiales-avanzados"),
-	("https://openalex.org/subfields/1607", "materiales-avanzados"),
-	("https://openalex.org/subfields/2202", "materiales-avanzados"),
-	("https://openalex.org/subfields/2203", "materiales-avanzados"),
-	("https://openalex.org/subfields/2204", "materiales-avanzados"),
-	("https://openalex.org/subfields/2209", "materiales-avanzados"),
-	("https://openalex.org/subfields/2210", "materiales-avanzados"),
-	("https://openalex.org/subfields/2211", "materiales-avanzados"),
-	("https://openalex.org/subfields/2402", "materiales-avanzados"),
-	("https://openalex.org/subfields/2403", "materiales-avanzados"),
-	("https://openalex.org/subfields/2404", "materiales-avanzados"),
-	("https://openalex.org/subfields/2405", "materiales-avanzados"),
-	("https://openalex.org/subfields/2406", "materiales-avanzados"),
-	("https://openalex.org/subfields/2500", "materiales-avanzados"),
-	("https://openalex.org/subfields/2502", "materiales-avanzados"),
-	("https://openalex.org/subfields/2503", "materiales-avanzados"),
-	("https://openalex.org/subfields/2504", "materiales-avanzados"),
-	("https://openalex.org/subfields/2505", "materiales-avanzados"),
-	("https://openalex.org/subfields/2506", "materiales-avanzados"),
-	("https://openalex.org/subfields/2507", "materiales-avanzados"),
-	("https://openalex.org/subfields/2508", "materiales-avanzados"),
-	("https://openalex.org/subfields/2704", "materiales-avanzados"),
-	("https://openalex.org/subfields/2723", "materiales-avanzados"),
-	("https://openalex.org/subfields/2725", "materiales-avanzados"),
-	("https://openalex.org/subfields/2726", "materiales-avanzados"),
-	("https://openalex.org/subfields/2736", "materiales-avanzados"),
-	("https://openalex.org/subfields/3002", "materiales-avanzados"),
-	("https://openalex.org/subfields/3003", "materiales-avanzados"),
-	("https://openalex.org/subfields/3004", "materiales-avanzados"),
-	("https://openalex.org/subfields/3102", "materiales-avanzados"),
-	("https://openalex.org/subfields/3104", "materiales-avanzados"),
-	("https://openalex.org/subfields/3105", "materiales-avanzados"),
-	("https://openalex.org/subfields/3106", "materiales-avanzados"),
-	("https://openalex.org/subfields/3107", "materiales-avanzados"),
-	("https://openalex.org/subfields/3611", "materiales-avanzados"),
+	(
+		"https://openalex.org/subfields/1106",
+		"materiales-avanzados",
+	),
+	(
+		"https://openalex.org/subfields/1303",
+		"materiales-avanzados",
+	),
+	(
+		"https://openalex.org/subfields/1305",
+		"materiales-avanzados",
+	),
+	(
+		"https://openalex.org/subfields/1307",
+		"materiales-avanzados",
+	),
+	(
+		"https://openalex.org/subfields/1308",
+		"materiales-avanzados",
+	),
+	(
+		"https://openalex.org/subfields/1312",
+		"materiales-avanzados",
+	),
+	(
+		"https://openalex.org/subfields/1313",
+		"materiales-avanzados",
+	),
+	(
+		"https://openalex.org/subfields/1502",
+		"materiales-avanzados",
+	),
+	(
+		"https://openalex.org/subfields/1503",
+		"materiales-avanzados",
+	),
+	(
+		"https://openalex.org/subfields/1504",
+		"materiales-avanzados",
+	),
+	(
+		"https://openalex.org/subfields/1506",
+		"materiales-avanzados",
+	),
+	(
+		"https://openalex.org/subfields/1507",
+		"materiales-avanzados",
+	),
+	(
+		"https://openalex.org/subfields/1508",
+		"materiales-avanzados",
+	),
+	(
+		"https://openalex.org/subfields/1602",
+		"materiales-avanzados",
+	),
+	(
+		"https://openalex.org/subfields/1603",
+		"materiales-avanzados",
+	),
+	(
+		"https://openalex.org/subfields/1604",
+		"materiales-avanzados",
+	),
+	(
+		"https://openalex.org/subfields/1605",
+		"materiales-avanzados",
+	),
+	(
+		"https://openalex.org/subfields/1606",
+		"materiales-avanzados",
+	),
+	(
+		"https://openalex.org/subfields/1607",
+		"materiales-avanzados",
+	),
+	(
+		"https://openalex.org/subfields/2202",
+		"materiales-avanzados",
+	),
+	(
+		"https://openalex.org/subfields/2203",
+		"materiales-avanzados",
+	),
+	(
+		"https://openalex.org/subfields/2204",
+		"materiales-avanzados",
+	),
+	(
+		"https://openalex.org/subfields/2209",
+		"materiales-avanzados",
+	),
+	(
+		"https://openalex.org/subfields/2210",
+		"materiales-avanzados",
+	),
+	(
+		"https://openalex.org/subfields/2211",
+		"materiales-avanzados",
+	),
+	(
+		"https://openalex.org/subfields/2402",
+		"materiales-avanzados",
+	),
+	(
+		"https://openalex.org/subfields/2403",
+		"materiales-avanzados",
+	),
+	(
+		"https://openalex.org/subfields/2404",
+		"materiales-avanzados",
+	),
+	(
+		"https://openalex.org/subfields/2405",
+		"materiales-avanzados",
+	),
+	(
+		"https://openalex.org/subfields/2406",
+		"materiales-avanzados",
+	),
+	(
+		"https://openalex.org/subfields/2500",
+		"materiales-avanzados",
+	),
+	(
+		"https://openalex.org/subfields/2502",
+		"materiales-avanzados",
+	),
+	(
+		"https://openalex.org/subfields/2503",
+		"materiales-avanzados",
+	),
+	(
+		"https://openalex.org/subfields/2504",
+		"materiales-avanzados",
+	),
+	(
+		"https://openalex.org/subfields/2505",
+		"materiales-avanzados",
+	),
+	(
+		"https://openalex.org/subfields/2506",
+		"materiales-avanzados",
+	),
+	(
+		"https://openalex.org/subfields/2507",
+		"materiales-avanzados",
+	),
+	(
+		"https://openalex.org/subfields/2508",
+		"materiales-avanzados",
+	),
+	(
+		"https://openalex.org/subfields/2704",
+		"materiales-avanzados",
+	),
+	(
+		"https://openalex.org/subfields/2723",
+		"materiales-avanzados",
+	),
+	(
+		"https://openalex.org/subfields/2725",
+		"materiales-avanzados",
+	),
+	(
+		"https://openalex.org/subfields/2726",
+		"materiales-avanzados",
+	),
+	(
+		"https://openalex.org/subfields/2736",
+		"materiales-avanzados",
+	),
+	(
+		"https://openalex.org/subfields/3002",
+		"materiales-avanzados",
+	),
+	(
+		"https://openalex.org/subfields/3003",
+		"materiales-avanzados",
+	),
+	(
+		"https://openalex.org/subfields/3004",
+		"materiales-avanzados",
+	),
+	(
+		"https://openalex.org/subfields/3102",
+		"materiales-avanzados",
+	),
+	(
+		"https://openalex.org/subfields/3104",
+		"materiales-avanzados",
+	),
+	(
+		"https://openalex.org/subfields/3105",
+		"materiales-avanzados",
+	),
+	(
+		"https://openalex.org/subfields/3106",
+		"materiales-avanzados",
+	),
+	(
+		"https://openalex.org/subfields/3107",
+		"materiales-avanzados",
+	),
+	(
+		"https://openalex.org/subfields/3611",
+		"materiales-avanzados",
+	),
 	// Ciencias de la Tierra
 	("https://openalex.org/subfields/1104", "ciencias-tierra"),
 	("https://openalex.org/subfields/1111", "ciencias-tierra"),
@@ -210,14 +534,38 @@ const MAPPINGS: &[(&str, &str)] = &[
 	("https://openalex.org/subfields/3614", "sostenibilidad"),
 	("https://openalex.org/subfields/3616", "sostenibilidad"),
 	// Educación en Ingeniería
-	("https://openalex.org/subfields/1200", "educacion-ingenieria"),
-	("https://openalex.org/subfields/1202", "educacion-ingenieria"),
-	("https://openalex.org/subfields/1207", "educacion-ingenieria"),
-	("https://openalex.org/subfields/1211", "educacion-ingenieria"),
-	("https://openalex.org/subfields/2200", "educacion-ingenieria"),
-	("https://openalex.org/subfields/3204", "educacion-ingenieria"),
-	("https://openalex.org/subfields/3205", "educacion-ingenieria"),
-	("https://openalex.org/subfields/3304", "educacion-ingenieria"),
+	(
+		"https://openalex.org/subfields/1200",
+		"educacion-ingenieria",
+	),
+	(
+		"https://openalex.org/subfields/1202",
+		"educacion-ingenieria",
+	),
+	(
+		"https://openalex.org/subfields/1207",
+		"educacion-ingenieria",
+	),
+	(
+		"https://openalex.org/subfields/1211",
+		"educacion-ingenieria",
+	),
+	(
+		"https://openalex.org/subfields/2200",
+		"educacion-ingenieria",
+	),
+	(
+		"https://openalex.org/subfields/3204",
+		"educacion-ingenieria",
+	),
+	(
+		"https://openalex.org/subfields/3205",
+		"educacion-ingenieria",
+	),
+	(
+		"https://openalex.org/subfields/3304",
+		"educacion-ingenieria",
+	),
 	// Sin Asignar
 	("https://openalex.org/subfields/1205", "sin-asignar"),
 	("https://openalex.org/subfields/1208", "sin-asignar"),
@@ -292,6 +640,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
 		inserted += result.rows_affected();
 	}
 
-	eprintln!("Done — {inserted} mappings inserted ({} total)", MAPPINGS.len());
+	eprintln!(
+		"Done — {inserted} mappings inserted ({} total)",
+		MAPPINGS.len()
+	);
 	Ok(())
 }
