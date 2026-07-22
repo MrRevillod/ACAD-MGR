@@ -59,3 +59,5 @@ regex = "1.12.4"
 papers-openalex = "0.3.1"
 html-escape = "0.2.14"
 lettre = { version = "0.11.19", features = ["tokio1", "tokio1-native-tls"] }
+zip = "2"
+reqwest = { version = "0.12.23", features = ["stream"] }
