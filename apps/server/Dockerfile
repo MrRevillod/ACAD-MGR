@@ -59,7 +59,7 @@ WORKDIR /app
 RUN adduser -D appuser
 USER appuser
 
-COPY --from=builder /app/target/release/acad-mgr-server ./server
+COPY --from=builder /app/target/release/orcid-acad-mgr-server ./server
 COPY --from=builder /app/target/release/issn-seeder ./issn-seeder
 COPY --from=builder /app/target/release/openalex-seeder ./openalex-seeder
 COPY --from=builder /app/target/release/research-lines-seeder ./research-lines-seeder

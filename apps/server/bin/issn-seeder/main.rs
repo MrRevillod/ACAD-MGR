@@ -18,8 +18,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
 	let data_dir = Path::new("data/ISSN");
 
-	if !data_dir.join("SCOPUS.csv").exists() {
-		if let Ok(zip_url) = std::env::var("ISSN_ZIP_URL") {
+	if !data_dir.join("SCOPUS.csv").exists()
+		&& let Ok(zip_url) = std::env::var("ISSN_ZIP_URL")
+	{
 			eprintln!("Downloading ISSN CSVs from: {zip_url}");
 			std::fs::create_dir_all(data_dir)?;
 			let response = reqwest::get(&zip_url).await?;
@@ -33,7 +34,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
 				std::io::copy(&mut file, &mut out)?;
 			}
 			eprintln!("  Extracted {} files", archive.len());
-		}
 	}
 
 	let files: &[(&str, &str)] = &[
