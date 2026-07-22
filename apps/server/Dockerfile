@@ -38,6 +38,7 @@ RUN apk add --no-cache \
 	pkgconf \
 	openssl-dev \
 	openssl-libs-static \
+	curl \
 	&& rm -rf /var/cache/apk/*
 
 WORKDIR /app
