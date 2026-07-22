@@ -1,5 +1,5 @@
 [package]
-name = "orcid-acad-mgr-server"
+name = "acad-mgr-server"
 version = "0.1.0"
 edition = "2024"
 

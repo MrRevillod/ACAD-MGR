@@ -1,6 +1,6 @@
 services:
   server:
-    container_name: orcid-acad-mgr-server
+    container_name: acad-mgr-server
     build:
       context: .
       dockerfile: ./apps/server/Dockerfile
@@ -19,13 +19,13 @@ services:
     ports:
       - "8000"
     networks:
-      - orcid-acad-mgr-network
+      - acad-mgr-network
     volumes:
       - ./:/app
       - server_target:/app/target
 
   nginx:
-    container_name: orcid-acad-mgr-nginx
+    container_name: acad-mgr-nginx
     image: nginx:alpine
     ports:
       - "80:80"
@@ -37,11 +37,11 @@ services:
       client:
         condition: service_healthy
     networks:
-      - orcid-acad-mgr-network
+      - acad-mgr-network
 
   postgres:
     image: postgres:16-alpine
-    container_name: orcid-acad-mgr-postgres
+    container_name: acad-mgr-postgres
     command: postgres -c log_min_messages=ERROR -c log_statement=none -c log_duration=off -c log_min_duration_statement=-1 -c log_checkpoints=off
     ports:
       - "5432:5432"
@@ -50,7 +50,7 @@ services:
     env_file:
       - .env
     networks:
-      - orcid-acad-mgr-network
+      - acad-mgr-network
     healthcheck:
       test:
         [
@@ -63,7 +63,7 @@ services:
       start_period: 10s
 
   client:
-    container_name: orcid-acad-mgr-client
+    container_name: acad-mgr-client
     build:
       context: .
       dockerfile: apps/client/Dockerfile
@@ -90,10 +90,10 @@ services:
       retries: 10
       start_period: 40s
     networks:
-      - orcid-acad-mgr-network
+      - acad-mgr-network
 
 networks:
-  orcid-acad-mgr-network:
+  acad-mgr-network:
     driver: bridge
 
 volumes:

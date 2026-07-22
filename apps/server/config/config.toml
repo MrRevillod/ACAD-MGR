@@ -1,5 +1,5 @@
 [application]
-name = "ORCID ACAD MGR Server"
+name = "ACAD MGR Server"
 
 [web]
 port = 8000
