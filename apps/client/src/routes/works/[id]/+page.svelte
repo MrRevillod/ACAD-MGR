@@ -160,6 +160,19 @@
 					</section>
 				{/if}
 
+				{#if work.researchLineName}
+					<section>
+						<h2
+							class="mb-3 text-xs font-semibold tracking-widest uppercase text-corp-blue"
+						>
+							Línea de Investigación
+						</h2>
+						<p class="text-sm font-medium text-[#1A1A1A]">
+							{work.researchLineName}
+						</p>
+					</section>
+				{/if}
+
 				{#if work.authorships.length > 0}
 					<section>
 						<h2

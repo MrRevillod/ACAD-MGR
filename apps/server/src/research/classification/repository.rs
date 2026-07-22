@@ -4,6 +4,7 @@ use crate::shared::{AppResult, Database};
 use sqlx::{Postgres, QueryBuilder, Row};
 use std::sync::Arc;
 use sword::prelude::*;
+use uuid::Uuid;
 
 #[injectable]
 pub struct WorkClassificationRepository {
@@ -157,6 +158,80 @@ impl WorkClassificationRepository {
 			.fetch_all(self.database.pool())
 			.await
 			.map_err(Into::into)
+	}
+
+	pub async fn list_research_lines(&self) -> AppResult<Vec<ResearchLineView>> {
+		sqlx::query_as::<_, ResearchLineView>(
+			"SELECT id, name, slug FROM research_lines ORDER BY name",
+		)
+		.fetch_all(self.database.pool())
+		.await
+		.map_err(Into::into)
+	}
+
+	pub async fn list_research_lines_with_subfields(&self) -> AppResult<Vec<ResearchLineDetail>> {
+		let rows = sqlx::query(
+			"SELECT rl.id, rl.name, rl.slug,
+				COALESCE(jsonb_agg(
+					jsonb_build_object(
+						'subfieldOpenalexId', rlm.subfield_openalex_id,
+						'subfieldName', rs.name
+					)
+					ORDER BY rs.name
+				) FILTER (WHERE rlm.subfield_openalex_id IS NOT NULL), '[]'::jsonb) AS subfields
+			FROM research_lines rl
+			LEFT JOIN research_line_mappings rlm ON rlm.research_line_id = rl.id
+			LEFT JOIN research_subfields rs ON rs.openalex_id = rlm.subfield_openalex_id
+			GROUP BY rl.id, rl.name, rl.slug
+			ORDER BY rl.name",
+		)
+		.fetch_all(self.database.pool())
+		.await?;
+
+		let lines = rows
+			.into_iter()
+			.map(|row| {
+				let id: Uuid = row.get("id");
+				let name: String = row.get("name");
+				let slug: String = row.get("slug");
+				let subfields: serde_json::Value = row.get("subfields");
+				let subfields: Vec<SubfieldMapping> =
+					serde_json::from_value(subfields).unwrap_or_default();
+				ResearchLineDetail {
+					id,
+					name,
+					slug,
+					subfields,
+				}
+			})
+			.collect();
+
+		Ok(lines)
+	}
+
+	pub async fn update_mapping(
+		&self,
+		subfield_openalex_id: &str,
+		research_line_id: Uuid,
+	) -> AppResult<()> {
+		sqlx::query(
+			"UPDATE research_line_mappings SET research_line_id = $1 WHERE subfield_openalex_id = $2",
+		)
+		.bind(research_line_id)
+		.bind(subfield_openalex_id)
+		.execute(self.database.pool())
+		.await?;
+
+		Ok(())
+	}
+
+	pub async fn delete_mapping(&self, subfield_openalex_id: &str) -> AppResult<()> {
+		sqlx::query("DELETE FROM research_line_mappings WHERE subfield_openalex_id = $1")
+			.bind(subfield_openalex_id)
+			.execute(self.database.pool())
+			.await?;
+
+		Ok(())
 	}
 
 	pub async fn list_topics_by_work(&self, work_id: &WorkId) -> AppResult<Vec<ResearchTopicView>> {

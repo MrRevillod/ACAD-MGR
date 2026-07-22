@@ -42,6 +42,13 @@ class WorksService {
 			url: `/works/sync/${academicId}`,
 		})
 	}
+
+	public async syncAll(): Promise<void> {
+		await http.request<null>({
+			method: "POST",
+			url: "/works/sync-all",
+		})
+	}
 }
 
 export const worksService = new WorksService()

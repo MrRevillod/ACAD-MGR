@@ -1,9 +1,15 @@
 <script lang="ts">
+	import { useQuery } from "$shared/http/tanstack"
+	import { RotateCcw, Search, BookOpen, Funnel, RefreshCw } from "@lucide/svelte"
+
+	import { authStore } from "$auth/store.svelte"
 	import { useCareersQuery } from "$careers/queries"
+	import { useSyncAllMutation } from "$works/queries"
 	import { useDepartmentsQuery } from "$departments/queries"
-	import { RotateCcw, Search, BookOpen, Funnel } from "@lucide/svelte"
+	import { classificationService } from "$research/classification/service"
 
 	import Button from "$shared/components/ui/button.svelte"
+	import Dialog from "$shared/components/ui/dialog.svelte"
 	import Label from "$shared/components/ui/label.svelte"
 	import Select from "$shared/components/ui/select.svelte"
 	import YearRange from "$shared/components/ui/year-range.svelte"
@@ -15,6 +21,7 @@
 		yearFrom: string
 		yearTo: string
 		journalKind: string
+		researchLineId: string
 		onClear: () => void
 	}
 
@@ -25,11 +32,18 @@
 		yearFrom = $bindable(),
 		yearTo = $bindable(),
 		journalKind = $bindable(),
+		researchLineId = $bindable(),
 		onClear,
 	}: Props = $props()
 
 	const departmentsQuery = useDepartmentsQuery()
 	const careersQuery = useCareersQuery(() => departmentId)
+
+	const researchLinesQuery = useQuery(() => ({
+		queryKey: ["research-lines"],
+		queryFn: () => classificationService.researchLines(),
+		staleTime: 300_000,
+	}))
 
 	const departmentItems = $derived([
 		{ value: "", label: "Todos los departamentos" },
@@ -49,6 +63,15 @@
 		{ value: "scopus", label: "Scopus" },
 		{ value: "wos", label: "WoS" },
 	])
+
+	const researchLineItems = $derived([
+		{ value: "", label: "Todas las líneas" },
+		...(researchLinesQuery.data?.map((rl) => ({ value: rl.id, label: rl.name })) ?? []),
+	])
+
+	const syncAllMutation = useSyncAllMutation()
+
+	let syncDialogOpen = $state(false)
 </script>
 
 <aside
@@ -63,6 +86,17 @@
 			Catálogo de publicaciones académicas de la Facultad de Ingeniería UCT
 		</p>
 	</div>
+
+	{#if authStore.isAuthenticated}
+		<button
+			class="mb-6 mt-0 inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-corp-blue px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-corp-blue/90 active:scale-95 disabled:opacity-60 disabled:pointer-events-none"
+			onclick={() => (syncDialogOpen = true)}
+			disabled={syncAllMutation.isPending}
+		>
+			<RefreshCw class="size-4 {syncAllMutation.isPending ? 'animate-spin' : ''}" />
+			{syncAllMutation.isPending ? "Sincronizando…" : "Sincronizar publicaciones"}
+		</button>
+	{/if}
 
 	<div class="flex items-center gap-2">
 		<Funnel class="size-4 text-corp-blue" />
@@ -96,6 +130,11 @@
 		</div>
 
 		<div class="space-y-2.5">
+			<Label>Línea de investigación</Label>
+			<Select items={researchLineItems} bind:value={researchLineId} />
+		</div>
+
+		<div class="space-y-2.5">
 			<Label>Rango anual de publicación</Label>
 			<YearRange
 				bind:yearFrom
@@ -113,3 +152,26 @@
 		Limpiar filtros
 	</Button>
 </aside>
+
+<Dialog
+	bind:open={syncDialogOpen}
+	title="Sincronizar publicaciones"
+	description="La sincronización consulta las publicaciones de todos los académicos en OpenAlex. El proceso puede tardar unos minutos dependiendo de la cantidad de académicos."
+>
+	<p class="mb-4 text-sm text-corp-gray">
+		Al finalizar recibirás un correo electrónico con el resultado de la sincronización.
+	</p>
+	<div class="flex justify-end gap-2">
+		<Button variant="secondary" onclick={() => (syncDialogOpen = false)}>Cancelar</Button>
+		<Button
+			variant="primary"
+			disabled={syncAllMutation.isPending}
+			onclick={() => {
+				syncAllMutation.mutate()
+				syncDialogOpen = false
+			}}
+		>
+			Sincronizar
+		</Button>
+	</div>
+</Dialog>

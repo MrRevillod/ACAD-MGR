@@ -151,6 +151,17 @@
 				</div>
 			{/if}
 
+			{#if work.researchLineName}
+				<div>
+					<h3 class="mb-2 text-xs font-semibold tracking-widest uppercase text-corp-blue">
+						Línea de Investigación
+					</h3>
+					<p class="text-sm font-medium text-[#1A1A1A]">
+						{work.researchLineName}
+					</p>
+				</div>
+			{/if}
+
 			{#if work.authorships.length > 0}
 				<div>
 					<h3

@@ -6,6 +6,7 @@ use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, Type};
 use std::str::FromStr;
+use uuid::Uuid;
 
 pub type WorkId = Id<Work>;
 
@@ -90,6 +91,9 @@ pub struct Work {
 	pub is_published: bool,
 	pub primary_source_id: Option<SourceId>,
 	pub journal_kind: Option<String>,
+	pub research_line_id: Option<Uuid>,
+	pub research_line_name: Option<String>,
+	pub research_line_slug: Option<String>,
 }
 
 impl Entity for Work {

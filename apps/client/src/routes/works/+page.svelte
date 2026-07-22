@@ -21,6 +21,7 @@
 		yearFrom: v.optional(v.fallback(v.string(), yearFromDefault), yearFromDefault),
 		yearTo: v.optional(v.fallback(v.string(), ""), ""),
 		journalKind: v.optional(v.fallback(v.string(), ""), ""),
+		researchLineId: v.optional(v.fallback(v.string(), ""), ""),
 	})
 
 	const params = useSearchParams(schema, { debounce: 300, pushHistory: false })
@@ -33,6 +34,7 @@
 		...(params.departmentId && params.careerId && { careerId: params.careerId }),
 		...(params.yearTo && { yearTo: Number(params.yearTo) }),
 		...(params.journalKind && { journalKind: params.journalKind as JournalKind }),
+		...(params.researchLineId && { researchLineId: params.researchLineId }),
 	})
 
 	const worksQuery = useWorksQuery(() => filters)
@@ -63,6 +65,7 @@
 			bind:yearFrom={params.yearFrom}
 			bind:yearTo={params.yearTo}
 			bind:journalKind={params.journalKind}
+			bind:researchLineId={params.researchLineId}
 			onClear={clearFilters}
 		/>
 

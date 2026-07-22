@@ -4,6 +4,14 @@ use sqlx::FromRow;
 use uuid::Uuid;
 use validator::Validate;
 
+#[derive(Debug, Serialize, FromRow)]
+#[serde(rename_all = "camelCase")]
+pub struct ResearchLineView {
+	pub id: Uuid,
+	pub name: String,
+	pub slug: String,
+}
+
 #[derive(Debug, Clone, Default, Deserialize, Validate)]
 pub struct WorkClassificationQueryDto {
 	pub domain_id: Option<ResearchDomainId>,
@@ -51,6 +59,35 @@ impl From<WorkClassificationQueryDto> for ClassificationFilter {
 			search: dto.search,
 		}
 	}
+}
+
+#[derive(Debug, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct SubfieldMapping {
+	pub subfield_openalex_id: String,
+	pub subfield_name: String,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ResearchLineDetail {
+	pub id: Uuid,
+	pub name: String,
+	pub slug: String,
+	pub subfields: Vec<SubfieldMapping>,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ResearchLinesDetailResponse {
+	pub lines: Vec<ResearchLineDetail>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateMappingBody {
+	pub subfield_openalex_id: String,
+	pub research_line_id: Uuid,
 }
 
 impl

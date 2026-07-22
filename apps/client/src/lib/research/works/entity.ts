@@ -24,6 +24,8 @@ export class Work {
 		public isPublished: boolean,
 		public primarySourceId: string | null,
 		public journalKind: JournalKindValue,
+		public researchLineId?: string,
+		public researchLineName?: string,
 	) {}
 
 	static fromDTO(dto: WorkDTO): Work {
@@ -41,6 +43,8 @@ export class Work {
 			dto.isPublished,
 			dto.primarySourceId,
 			JournalKindValue.from(dto.journalKind),
+			dto.researchLineId,
+			dto.researchLineName,
 		)
 	}
 }
@@ -67,6 +71,8 @@ export class WorkDetail extends Work {
 			work.isPublished,
 			work.primarySourceId,
 			work.journalKind,
+			work.researchLineId,
+			work.researchLineName,
 		)
 	}
 

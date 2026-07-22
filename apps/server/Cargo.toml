@@ -15,6 +15,10 @@ path = "bin/openalex-seeder/main.rs"
 name = "issn-seeder"
 path = "bin/issn-seeder/main.rs"
 
+[[bin]]
+name = "research-lines-seeder"
+path = "bin/research-lines-seeder/main.rs"
+
 [dependencies]
 tokio = { version = "1.52.3", features = ["full"] }
 

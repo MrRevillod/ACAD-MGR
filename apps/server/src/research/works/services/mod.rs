@@ -60,7 +60,7 @@ impl WorksService {
 
 		let orcid = academic.orcid.ok_or(WorksError::AcademicWithoutOrcid)?;
 
-		let oa_works = self.openalex.list_works_by_orcid(&orcid).await?;
+		let oa_works = self.openalex.list_all_works_by_orcid(&orcid).await?;
 		let works_fetched = oa_works.len();
 
 		let mut created = 0usize;
@@ -106,6 +106,32 @@ impl WorksService {
 			keywords_linked: keywords_count,
 			errors,
 		})
+	}
+
+	pub async fn sync_all_academics(&self) -> AppResult<Vec<SyncResultView>> {
+		let academics = self.academics.list_orcids().await?;
+		let mut results = Vec::with_capacity(academics.len());
+
+		for (academic_id, orcid) in &academics {
+			match self.sync_from_openalex(*academic_id).await {
+				Ok(result) => results.push(result),
+				Err(e) => {
+					results.push(SyncResultView {
+						academic_id: *academic_id,
+						academic_orcid: orcid.clone(),
+						works_fetched: 0,
+						works_created: 0,
+						works_skipped: 0,
+						authorships_inserted: 0,
+						topics_linked: 0,
+						keywords_linked: 0,
+						errors: vec![e.to_string()],
+					});
+				}
+			}
+		}
+
+		Ok(results)
 	}
 
 	async fn process_single_work(

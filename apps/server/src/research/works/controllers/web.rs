@@ -1,7 +1,9 @@
-use crate::auth::SessionCheck;
+use crate::auth::{SessionCheck, UsersRepository};
 use crate::research::*;
+use crate::shared::RequestExt;
 
 use std::sync::Arc;
+use sword::events::EventPublisher;
 use sword::prelude::*;
 use sword::web::*;
 use uuid::Uuid;
@@ -9,6 +11,8 @@ use uuid::Uuid;
 #[controller(kind = ControllerKind::Web, path = "/works")]
 pub struct WorksController {
 	works: Arc<WorksService>,
+	events: Arc<EventPublisher>,
+	users_repo: Arc<UsersRepository>,
 }
 
 impl WorksController {
@@ -17,6 +21,25 @@ impl WorksController {
 	pub async fn sync_works(&self, req: Request) -> WebResult<SyncResultView> {
 		let academic_id = req.param::<Uuid>("id")?;
 		Ok(self.works.sync_from_openalex(academic_id).await?)
+	}
+
+	#[post("/sync-all")]
+	#[interceptor(SessionCheck)]
+	pub async fn sync_all_works(&self, req: Request) -> WebResult<JsonResponse> {
+		let claims = req.claims().ok_or_else(JsonResponse::Unauthorized)?;
+		let user = self
+			.users_repo
+			.find_by_id(&claims.user_id)
+			.await?
+			.ok_or_else(JsonResponse::Unauthorized)?;
+
+		self.events
+			.publish(SyncWorksRequest {
+				user_email: user.email,
+			})
+			.await;
+
+		Ok(JsonResponse::Accepted().message("Sincronización iniciada"))
 	}
 
 	#[get("/")]
@@ -29,6 +52,7 @@ impl WorksController {
 	pub async fn list_works_by_academic(&self, req: Request) -> WebResult<Vec<Work>> {
 		let academic_id = req.param::<Uuid>("id")?;
 		let mut query = req.query_validator::<GetWorksQuery>()?.unwrap_or_default();
+
 		query.academic_id = Some(academic_id);
 
 		Ok(self.works.list(&query).await?)

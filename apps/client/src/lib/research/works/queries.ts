@@ -2,6 +2,7 @@ import type { GetWorksParams, SyncResult } from "./dtos"
 
 import { worksService } from "./service"
 import { createMutation, createQuery, useQueryClient } from "@tanstack/svelte-query"
+import { toast } from "svelte-sonner"
 
 export function useWorksQuery(getParams: () => GetWorksParams) {
 	return createQuery(() => ({
@@ -37,6 +38,18 @@ export function useSyncWorksMutation() {
 		mutationFn: (academicId: string) => worksService.sync(academicId),
 		onSuccess: () => {
 			void qc.invalidateQueries({ queryKey: ["works"] })
+		},
+	}))
+}
+
+export function useSyncAllMutation() {
+	return createMutation<void, Error, void>(() => ({
+		mutationFn: () => worksService.syncAll(),
+		onSuccess: () => {
+			toast.success("Sincronización iniciada. Recibirás un correo cuando finalice.")
+		},
+		onError: () => {
+			toast.error("Error al solicitar la sincronización")
 		},
 	}))
 }

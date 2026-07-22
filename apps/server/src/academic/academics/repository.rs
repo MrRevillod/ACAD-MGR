@@ -5,6 +5,7 @@ use chrono::{DateTime, Utc};
 use sqlx::QueryBuilder;
 use std::sync::Arc;
 use sword::prelude::*;
+use uuid::Uuid;
 
 #[injectable]
 pub struct AcademicsRepository {
@@ -272,5 +273,15 @@ impl AcademicsRepository {
 			.await?;
 
 		Ok(())
+	}
+
+	pub async fn list_orcids(&self) -> AppResult<Vec<(Uuid, String)>> {
+		let rows = sqlx::query_as::<_, (Uuid, String)>(
+			"SELECT id, orcid FROM academics WHERE orcid IS NOT NULL",
+		)
+		.fetch_all(self.database.pool())
+		.await?;
+
+		Ok(rows)
 	}
 }

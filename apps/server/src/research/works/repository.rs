@@ -16,10 +16,23 @@ impl WorksRepository {
 		sqlx::query_as::<_, Work>(
             "SELECT w.id, w.openalex_id, w.title, w.abstract, w.doi,
             w.publication_date, w.publication_year, w.ty, w.lang, w.is_accepted,
-            w.is_published, w.primary_source_id, ji.kind::text AS journal_kind
+            w.is_published, w.primary_source_id, ji.kind::text AS journal_kind,
+            rl.id AS research_line_id, rl.name AS research_line_name, rl.slug AS research_line_slug
             FROM works w LEFT JOIN sources src ON w.primary_source_id = src.id
             LEFT JOIN LATERAL (SELECT kind FROM journal_issn WHERE issn = src.issn_l
             OR eissn = src.issn_l OR issn = ANY(src.issn) OR eissn = ANY(src.issn) LIMIT 1) ji ON TRUE
+            LEFT JOIN LATERAL (
+                SELECT r.id, r.name, r.slug
+                FROM work_topics wt
+                JOIN research_topics rt ON rt.id = wt.topic_id
+                JOIN research_subfields rs ON rs.id = rt.subfield_id
+                LEFT JOIN research_line_mappings rlm ON rlm.subfield_openalex_id = rs.openalex_id
+                LEFT JOIN work_research_line_overrides o ON o.work_id = w.id
+                JOIN research_lines r ON r.id = COALESCE(o.research_line_id, rlm.research_line_id)
+                WHERE wt.work_id = w.id
+                ORDER BY wt.score DESC
+                LIMIT 1
+            ) rl ON TRUE
             WHERE w.id = $1",
         )
         .bind(id)
@@ -32,12 +45,26 @@ impl WorksRepository {
 		let mut qb = QueryBuilder::new(
 			"SELECT DISTINCT w.id, w.openalex_id, w.title, w.abstract,
 				w.doi, w.publication_date, w.publication_year, w.ty, w.lang, w.is_accepted,
-				w.is_published, w.primary_source_id, ji.kind::text AS journal_kind
+				w.is_published, w.primary_source_id, ji.kind::text AS journal_kind,
+				rl.id AS research_line_id, rl.name AS research_line_name, rl.slug AS research_line_slug
 			FROM works w
 			LEFT JOIN work_authorships wa ON w.id = wa.work_id
 			LEFT JOIN sources src ON w.primary_source_id = src.id
 			LEFT JOIN LATERAL (
-			SELECT kind FROM journal_issn WHERE issn = src.issn_l OR eissn = src.issn_l OR issn = ANY(src.issn) OR eissn = ANY(src.issn) LIMIT 1) ji ON TRUE WHERE TRUE",
+			SELECT kind FROM journal_issn WHERE issn = src.issn_l OR eissn = src.issn_l OR issn = ANY(src.issn) OR eissn = ANY(src.issn) LIMIT 1) ji ON TRUE
+			LEFT JOIN LATERAL (
+				SELECT r.id, r.name, r.slug
+				FROM work_topics wt
+				JOIN research_topics rt ON rt.id = wt.topic_id
+				JOIN research_subfields rs ON rs.id = rt.subfield_id
+				LEFT JOIN research_line_mappings rlm ON rlm.subfield_openalex_id = rs.openalex_id
+				LEFT JOIN work_research_line_overrides o ON o.work_id = w.id
+				JOIN research_lines r ON r.id = COALESCE(o.research_line_id, rlm.research_line_id)
+				WHERE wt.work_id = w.id
+				ORDER BY wt.score DESC
+				LIMIT 1
+			) rl ON TRUE
+			WHERE TRUE",
 		);
 
 		if let Some(academic_id) = query.academic_id {
@@ -87,6 +114,11 @@ impl WorksRepository {
 			qb.push(" AND (ji.kind = ");
 			qb.push_bind(journal_kind);
 			qb.push("::journal_kind)");
+		}
+
+		if let Some(research_line_id) = query.research_line_id {
+			qb.push(" AND rl.id = ");
+			qb.push_bind(research_line_id);
 		}
 
 		qb.push(

@@ -15,6 +15,8 @@ export interface WorkDTO {
 	isPublished: boolean
 	primarySourceId: string | null
 	journalKind: string | null
+	researchLineId?: string
+	researchLineName?: string
 }
 
 export const WORK_TYPE_LABELS: Record<string, string> = {
@@ -100,6 +102,7 @@ export interface GetWorksParams {
 	careerId?: string
 	size?: number
 	journalKind?: JournalKind
+	researchLineId?: string
 }
 
 export interface SyncResult {

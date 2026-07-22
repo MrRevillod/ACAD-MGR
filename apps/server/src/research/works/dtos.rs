@@ -35,6 +35,7 @@ pub struct GetWorksQuery {
 	pub department_id: Option<Uuid>,
 	pub career_id: Option<Uuid>,
 	pub journal_kind: Option<JournalKind>,
+	pub research_line_id: Option<Uuid>,
 
 	#[validate(range(min = 1, max = 1000))]
 	pub size: Option<u32>,

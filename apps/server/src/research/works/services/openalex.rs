@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use crate::{research::WorksError, shared::AppResult};
 
 use papers_openalex::{ListParams, OpenAlexClient as OaClient, Work as OaWork};
@@ -23,6 +25,8 @@ const SELECT_FIELDS: &[&str] = &[
 	"created_date",
 ];
 
+const API_DELAY: Duration = Duration::from_millis(50);
+
 #[derive(Debug, Clone, Deserialize)]
 #[config(key = "openalex")]
 pub struct OpenAlexConfig {
@@ -41,18 +45,33 @@ impl OpenAlexClient {
 		}
 	}
 
-	pub async fn list_works_by_orcid(&self, orcid: &str) -> AppResult<Vec<OaWork>> {
-		let params = ListParams::builder()
-			.filter(format!("authorships.author.orcid:{}", orcid))
-			.select(SELECT_FIELDS.join(","))
-			.build();
+	pub async fn list_all_works_by_orcid(&self, orcid: &str) -> AppResult<Vec<OaWork>> {
+		let mut all = Vec::new();
+		let mut cursor = Some("*".to_string());
 
-		let response = self
-			.inner
-			.list_works(&params)
-			.await
-			.map_err(WorksError::from)?;
+		while let Some(c) = cursor {
+			let params = ListParams::builder()
+				.filter(format!("authorships.author.orcid:{}", orcid))
+				.select(SELECT_FIELDS.join(","))
+				.per_page(200)
+				.cursor(c)
+				.build();
 
-		Ok(response.results)
+			let response = self
+				.inner
+				.list_works(&params)
+				.await
+				.map_err(WorksError::from)?;
+
+			all.extend(response.results);
+
+			cursor = response.meta.next_cursor;
+
+			if cursor.is_some() {
+				tokio::time::sleep(API_DELAY).await;
+			}
+		}
+
+		Ok(all)
 	}
 }

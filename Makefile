@@ -56,3 +56,4 @@ machete:
 seed:
 	cargo run --bin openalex-seeder
 	cargo run --bin issn-seeder
+	cargo run --bin research-lines-seeder

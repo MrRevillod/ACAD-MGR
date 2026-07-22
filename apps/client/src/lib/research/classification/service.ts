@@ -3,6 +3,8 @@ import type {
 	ResearchDomain,
 	ResearchField,
 	ResearchKeyword,
+	ResearchLineDTO,
+	ResearchLinesDetailResponseDTO,
 	ResearchSubfield,
 	ResearchTopic,
 } from "./dtos"
@@ -43,6 +45,35 @@ class ClassificationService {
 		return http.request<ResearchKeyword[]>({
 			method: "GET",
 			url: "/works-classification/keywords",
+		})
+	}
+
+	public async researchLines(): Promise<ResearchLineDTO[]> {
+		return http.request<ResearchLineDTO[]>({
+			method: "GET",
+			url: "/works-classification/research-lines",
+		})
+	}
+
+	public async researchLineDetails(): Promise<ResearchLinesDetailResponseDTO> {
+		return http.request<ResearchLinesDetailResponseDTO>({
+			method: "GET",
+			url: "/works-classification/research-lines/detail",
+		})
+	}
+
+	public async updateMapping(subfieldOpenalexId: string, researchLineId: string): Promise<void> {
+		await http.request<void>({
+			method: "PUT",
+			url: "/works-classification/research-line-mappings",
+			data: { subfieldOpenalexId, researchLineId },
+		})
+	}
+
+	public async deleteMapping(subfieldOpenalexId: string): Promise<void> {
+		await http.request<void>({
+			method: "DELETE",
+			url: `/works-classification/research-line-mappings/${encodeURIComponent(subfieldOpenalexId)}`,
 		})
 	}
 }

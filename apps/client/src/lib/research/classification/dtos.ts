@@ -30,3 +30,25 @@ export interface ResearchKeyword {
 	openalexId: string
 	name: string
 }
+
+export interface ResearchLineDTO {
+	id: string
+	name: string
+	slug: string
+}
+
+export interface SubfieldMappingDTO {
+	subfieldOpenalexId: string
+	subfieldName: string
+}
+
+export interface ResearchLineDetailDTO {
+	id: string
+	name: string
+	slug: string
+	subfields: SubfieldMappingDTO[]
+}
+
+export interface ResearchLinesDetailResponseDTO {
+	lines: ResearchLineDetailDTO[]
+}

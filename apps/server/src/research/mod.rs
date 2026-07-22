@@ -18,7 +18,9 @@ impl Module for ResearchModule {
 	fn register_controllers(controllers: &ControllerRegistry) {
 		controllers.register::<StatsController>();
 		controllers.register::<WorksClassificationController>();
+
 		controllers.register::<WorksController>();
+		controllers.register::<WorksEventsController>();
 	}
 
 	fn register_components(components: &ComponentRegistry) {
