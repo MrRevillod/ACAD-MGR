@@ -65,5 +65,6 @@ COPY --from=builder /app/target/release/openalex-seeder ./openalex-seeder
 COPY --from=builder /app/target/release/research-lines-seeder ./research-lines-seeder
 COPY --from=builder /app/apps/server/config/migrations ./config/migrations
 COPY --from=builder /app/apps/server/config/config.toml ./config/config.toml
+COPY --from=builder /app/apps/server/docs ./docs
 
 CMD ["./server"]
