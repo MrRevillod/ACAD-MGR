@@ -148,14 +148,12 @@
 	{:else}
 		{@const d = detailQuery.data}
 
-		<div class="mb-8 flex items-start justify-between gap-4">
+		<div class="mb-4 flex items-center justify-between gap-4">
 			<div class="min-w-0">
 				<h1 class="text-2xl font-semibold tracking-tight text-[#1A1A1A]">
-					{d.department}
+					Departamento de {d.department}
 				</h1>
-				<p class="mt-1 text-sm text-corp-gray">
-					{d.totalWorks} publicaciones
-				</p>
+				<p class="mt-1 text-sm text-corp-gray">Ranking de publicadores</p>
 			</div>
 
 			<div class="flex items-end gap-3">
@@ -186,51 +184,50 @@
 			</div>
 		</div>
 
-		<div class="mb-6 grid grid-cols-6 gap-3">
+		<div class="mb-4 grid grid-cols-6 gap-3">
 			<div class="rounded-lg border border-corp-gray/20 bg-white p-4">
 				<p class="text-xs font-medium tracking-wide uppercase text-corp-gray">Total</p>
-				<p class="mt-1 text-2xl font-bold text-[#1A1A1A]">{d.totalWorks}</p>
+				<p class="mt-1 text-xl font-bold text-[#1A1A1A]">{d.totalWorks}</p>
 			</div>
 			<div class="rounded-lg border border-corp-yellow/30 bg-corp-yellow/5 p-4">
 				<p class="text-xs font-medium tracking-wide uppercase text-corp-gray">Scopus</p>
-				<p class="mt-1 text-2xl font-bold text-corp-yellow">{d.scopusCount}</p>
+				<p class="mt-1 text-xl font-bold text-corp-yellow">{d.scopusCount}</p>
 			</div>
 			<div class="rounded-lg border border-corp-blue/30 bg-corp-blue/5 p-4">
 				<p class="text-xs font-medium tracking-wide uppercase text-corp-gray">WoS</p>
-				<p class="mt-1 text-2xl font-bold text-corp-blue">{d.wosCount}</p>
+				<p class="mt-1 text-xl font-bold text-corp-blue">{d.wosCount}</p>
 			</div>
 			<div class="rounded-lg border border-corp-gray/20 bg-white p-4">
 				<p class="text-xs font-medium tracking-wide uppercase text-corp-gray">
 					Sin indexar
 				</p>
-				<p class="mt-1 text-2xl font-bold text-corp-gray">{unindexedCount}</p>
+				<p class="mt-1 text-xl font-bold text-corp-gray">{unindexedCount}</p>
 			</div>
 			<div class="rounded-lg border border-corp-gray/20 bg-white p-4">
 				<p class="text-xs font-medium tracking-wide uppercase text-corp-gray">Docencia</p>
-				<p class="mt-1 text-2xl font-bold text-[#1A1A1A]">{d.teachingCount}</p>
+				<p class="mt-1 text-xl font-bold text-[#1A1A1A]">{d.teachingCount}</p>
 			</div>
 			<div class="rounded-lg border border-corp-gray/20 bg-white p-4">
 				<p class="text-xs font-medium tracking-wide uppercase text-corp-gray">
 					Investigación
 				</p>
-				<p class="mt-1 text-2xl font-bold text-[#1A1A1A]">{d.researchCount}</p>
+				<p class="mt-1 text-xl font-bold text-[#1A1A1A]">{d.researchCount}</p>
 			</div>
 		</div>
 
 		<div class="grid grid-cols-1 gap-6 lg:grid-cols-[280px_1fr]">
 			<section
-				class="flex flex-col justify-center rounded-xl border border-corp-gray/20 bg-white p-6"
+				class="flex flex-col justify-start gap-8 rounded-xl border border-corp-gray/20 bg-white p-6"
 			>
-				<h2 class="text-sm font-semibold tracking-wide uppercase text-corp-blue">
-					Indexación
+				<h2
+					class="text-sm font-semibold tracking-wide uppercase text-corp-blue text-center"
+				>
+					Distribución Porcentual de tipos de indexación
 				</h2>
 				<DonutChart segments={indexSegments} total={d.totalWorks} class="mt-4" />
 			</section>
 
-			<section class="rounded-xl border border-corp-gray/20 bg-white p-6">
-				<h2 class="mb-4 text-sm font-semibold tracking-wide uppercase text-corp-blue">
-					Top Publicadores
-				</h2>
+			<section class="rounded-xl border border-corp-gray/20 bg-white p-4">
 				<DataTable
 					data={d.topPublishers}
 					{columns}

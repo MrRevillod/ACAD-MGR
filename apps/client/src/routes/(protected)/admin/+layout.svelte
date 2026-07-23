@@ -11,7 +11,7 @@
 		GraduationCap,
 		Users,
 		GitFork,
-		ChevronLeft,
+		Menu,
 	} from "@lucide/svelte"
 
 	let { children }: { children: Snippet } = $props()
@@ -39,26 +39,28 @@
 				? 'w-16'
 				: 'w-72'}"
 		>
-			<button
-				type="button"
-				class="absolute -right-3 top-5 z-10 flex size-6 items-center justify-center rounded-full border border-corp-gray/20 bg-white text-corp-gray shadow-sm transition-colors hover:text-[#1A1A1A]"
-				onclick={() => (collapsed = !collapsed)}
+			<div
+				class="flex items-center p-4 {collapsed
+					? 'justify-center px-3'
+					: 'justify-between'}"
 			>
-				<ChevronLeft
-					class="size-3.5 transition-transform duration-200 {collapsed
-						? 'rotate-180'
-						: ''}"
-				/>
-			</button>
-
-			<div class="p-4 {collapsed ? 'px-3' : ''}">
 				{#if !collapsed}
-					<h1 class="text-lg font-semibold text-[#1A1A1A]">Administración</h1>
-					<p class="mt-1 text-sm text-corp-gray">Gestión del sistema</p>
+					<div>
+						<h1 class="text-lg font-semibold text-[#1A1A1A]">Administración</h1>
+						<p class="mt-1 text-sm text-corp-gray">Gestión del sistema</p>
+					</div>
 				{/if}
+				<button
+					type="button"
+					class="flex items-center justify-center rounded-lg text-corp-gray transition-colors hover:text-[#1A1A1A]"
+					onclick={() => (collapsed = !collapsed)}
+					title={collapsed ? "Expandir menú" : "Colapsar menú"}
+				>
+					<Menu class="size-5" />
+				</button>
 			</div>
 
-			<nav class="mt-2 space-y-1 px-2">
+			<nav class="mt-2 space-y-1 px-2 pb-4">
 				{#each navItems as item (item.href)}
 					<a
 						href={item.href}
