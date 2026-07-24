@@ -65,4 +65,21 @@ impl WorksController {
 
 		Ok(work)
 	}
+
+	#[put("/{id}/overrides")]
+	#[interceptor(SessionCheck)]
+	pub async fn update_work_overrides(&self, req: Request) -> WebResult<JsonResponse> {
+		let work_id = req.param::<WorkId>("id")?;
+		let input = req.body_validator::<WorkOverridesInput>()?;
+		self.works.update_overrides(work_id, input).await?;
+		Ok(JsonResponse::Ok().message("Overrides actualizados"))
+	}
+
+	#[delete("/{id}/overrides")]
+	#[interceptor(SessionCheck)]
+	pub async fn clear_work_overrides(&self, req: Request) -> WebResult<JsonResponse> {
+		let work_id = req.param::<WorkId>("id")?;
+		self.works.clear_overrides(work_id).await?;
+		Ok(JsonResponse::Ok().message("Overrides eliminados"))
+	}
 }

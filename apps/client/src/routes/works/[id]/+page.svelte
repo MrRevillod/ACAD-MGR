@@ -7,6 +7,7 @@
 		Loader,
 		Mail,
 		Network,
+		Pencil,
 		Tag,
 	} from "@lucide/svelte"
 
@@ -24,10 +25,13 @@
 	import { AuthorshipPositionValue } from "$works/value-objects/position.value"
 	import { authStore } from "$lib/auth/store.svelte"
 	import { resolve } from "$app/paths"
+	import WorkEditDialog from "$works/components/work-edit-dialog.svelte"
 
 	const id = $derived(page.params.id ?? "")
 
 	const query = useWorkDetailQuery(() => id)
+
+	let editDialogOpen = $state(false)
 
 	function copyOrcid(orcid: string) {
 		void navigator.clipboard.writeText(orcid)
@@ -45,6 +49,17 @@
 			<ArrowLeft class="size-3.5" />
 			Volver al catálogo
 		</button>
+
+		{#if query.data}
+			<button
+				type="button"
+				onclick={() => (editDialogOpen = true)}
+				class="inline-flex items-center gap-1.5 rounded-lg border border-corp-gray/20 px-3 py-1.5 text-sm font-medium text-corp-gray transition-colors hover:border-corp-blue/30 hover:text-corp-blue"
+			>
+				<Pencil class="size-4" />
+				Editar
+			</button>
+		{/if}
 
 		{#if query.isPending}
 			<div class="flex justify-center py-12">
@@ -311,3 +326,7 @@
 		{/if}
 	</div>
 </div>
+
+{#if query.data && editDialogOpen}
+	<WorkEditDialog bind:open={editDialogOpen} work={query.data} />
+{/if}

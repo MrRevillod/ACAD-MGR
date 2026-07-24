@@ -17,6 +17,7 @@ export interface WorkDTO {
 	journalKind: string | null
 	researchLineId?: string
 	researchLineName?: string
+	overriddenFields?: string[]
 }
 
 export const WORK_TYPE_LABELS: Record<string, string> = {
@@ -103,6 +104,15 @@ export interface GetWorksParams {
 	size?: number
 	journalKind?: JournalKind
 	researchLineId?: string
+}
+
+export interface WorkOverridesInput {
+	title?: string | null
+	abstract?: string | null
+	doi?: string | null
+	publicationYear?: number | null
+	isAccepted?: boolean | null
+	isPublished?: boolean | null
 }
 
 export interface SyncResult {

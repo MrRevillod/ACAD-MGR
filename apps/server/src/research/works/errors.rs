@@ -19,4 +19,8 @@ pub enum WorksError {
 	#[http(code = 502, message = "Error al consultar OpenAlex")]
 	#[error("OpenAlex API error: {0}")]
 	OpenAlexError(#[from] OpenAlexError),
+
+	#[http(code = 500, message = "Error interno")]
+	#[error("{0}")]
+	Other(String),
 }

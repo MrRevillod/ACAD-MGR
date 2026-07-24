@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Loader, ExternalLink, Mail, Building2, Tag, Network } from "@lucide/svelte"
+	import { Loader, ExternalLink, Mail, Building2, Tag, Network, Pencil } from "@lucide/svelte"
 	import { toast } from "svelte-sonner"
 
 	import { DateValue } from "$shared/value-objects/date.value"
@@ -13,6 +13,8 @@
 	import Badge from "$shared/components/ui/badge.svelte"
 	import Dialog from "$shared/components/ui/dialog.svelte"
 	import HtmlRenderer from "$shared/components/ui/html-renderer.svelte"
+	import type { WorkDetail } from "$works/entity"
+	import WorkEditDialog from "./work-edit-dialog.svelte"
 
 	interface Props {
 		workId: string | null
@@ -22,6 +24,9 @@
 	let { workId = $bindable(null), open = $bindable(false) }: Props = $props()
 
 	const query = useWorkDetailQuery(() => workId ?? "")
+
+	let editDialogOpen = $state(false)
+	let currentEditWork = $state<WorkDetail | null>(null)
 
 	function copyOrcid(orcid: string) {
 		void navigator.clipboard.writeText(orcid)
@@ -33,6 +38,16 @@
 	{#if query.data}
 		<button
 			class="flex size-8 items-center justify-center rounded-lg text-corp-blue transition-colors hover:bg-corp-blue/5"
+			onclick={() => {
+				currentEditWork = query.data
+				editDialogOpen = true
+			}}
+			title="Editar publicación"
+		>
+			<Pencil class="size-4" />
+		</button>
+		<button
+			class="flex size-8 items-center justify-center rounded-lg text-corp-blue transition-colors hover:bg-corp-blue/5"
 			onclick={() => void goto(`/works/${query.data.id}`)}
 			title="Ver página completa"
 		>
@@ -42,6 +57,10 @@
 {/snippet}
 
 <Dialog bind:open title="Detalle de la publicación" class="max-w-3xl" actions={headerActions}>
+	{#if currentEditWork}
+		<WorkEditDialog bind:open={editDialogOpen} work={currentEditWork} />
+	{/if}
+
 	{#if !workId}
 		<p class="py-8 text-center text-sm text-corp-gray">
 			Selecciona una publicación para ver detalles.
@@ -71,6 +90,11 @@
 							class="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold tracking-wide text-emerald-700 uppercase"
 						>
 							Aceptado
+							{#if work.isFieldOverridden("isAccepted")}
+								<span class="ml-1 text-[10px] italic text-emerald-500"
+									>(editado)</span
+								>
+							{/if}
 						</span>
 					{/if}
 					{#if work.isPublished}
@@ -78,11 +102,19 @@
 							class="inline-flex items-center rounded-full bg-corp-blue/10 px-2 py-0.5 text-[11px] font-semibold tracking-wide text-corp-blue uppercase"
 						>
 							Publicado
+							{#if work.isFieldOverridden("isPublished")}
+								<span class="ml-1 text-[10px] italic text-corp-blue/60"
+									>(editado)</span
+								>
+							{/if}
 						</span>
 					{/if}
 				</div>
 				<h2 class="mt-2 text-lg font-semibold text-[#1A1A1A]">
 					<HtmlRenderer html={work.title} />
+					{#if work.isFieldOverridden("title")}
+						<span class="ml-1.5 text-xs italic text-corp-blue/60">(editado)</span>
+					{/if}
 				</h2>
 				<div
 					class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-corp-gray"
@@ -115,6 +147,11 @@
 				<div>
 					<h3 class="mb-2 text-xs font-semibold tracking-widest uppercase text-corp-blue">
 						Abstract
+						{#if work.isFieldOverridden("abstract")}
+							<span class="ml-1 text-[10px] italic font-normal text-corp-blue/60"
+								>(editado)</span
+							>
+						{/if}
 					</h3>
 					<HtmlRenderer
 						tag="p"

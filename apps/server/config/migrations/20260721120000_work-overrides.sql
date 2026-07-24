@@ -1,0 +1,1 @@
+ALTER TABLE works ADD COLUMN overrides JSONB DEFAULT '{}'::jsonb NOT NULL;

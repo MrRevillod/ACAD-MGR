@@ -1,4 +1,4 @@
-import type { WorkDTO, WorkDetailDTO, GetWorksParams, SyncResult } from "./dtos"
+import type { WorkDTO, WorkDetailDTO, GetWorksParams, SyncResult, WorkOverridesInput } from "./dtos"
 
 import { http } from "$shared/http/client"
 import { Work, WorkDetail } from "./entity"
@@ -47,6 +47,21 @@ class WorksService {
 		await http.request<null>({
 			method: "POST",
 			url: "/works/sync-all",
+		})
+	}
+
+	public async updateOverrides(id: string, data: WorkOverridesInput): Promise<void> {
+		await http.request<null>({
+			method: "PUT",
+			url: `/works/${id}/overrides`,
+			data,
+		})
+	}
+
+	public async clearOverrides(id: string): Promise<void> {
+		await http.request<null>({
+			method: "DELETE",
+			url: `/works/${id}/overrides`,
 		})
 	}
 }

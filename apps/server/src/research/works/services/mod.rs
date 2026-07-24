@@ -2,7 +2,7 @@ mod openalex;
 
 use crate::academic::AcademicsRepository;
 use crate::research::*;
-use crate::shared::AppResult;
+use crate::shared::{AppError, AppResult};
 
 pub use openalex::*;
 
@@ -33,17 +33,18 @@ impl WorksService {
 			return Err(WorksError::NotFound)?;
 		};
 
-		let source = match work.primary_source_id {
+		let resolved = work.resolve();
+		let source = match resolved.primary_source_id {
 			Some(sid) => self.sources.find_source_view_by_id(&sid).await?,
 			None => None,
 		};
 
-		let authorships = self.authorships.list(&work.id).await?;
-		let topics = self.classification.list_topics_by_work(&work.id).await?;
-		let keywords = self.classification.list_keywords_by_work(&work.id).await?;
+		let authorships = self.authorships.list(&resolved.id).await?;
+		let topics = self.classification.list_topics_by_work(&resolved.id).await?;
+		let keywords = self.classification.list_keywords_by_work(&resolved.id).await?;
 
 		Ok(WorkDetailView {
-			work,
+			work: resolved,
 			source,
 			authorships,
 			topics,
@@ -106,6 +107,49 @@ impl WorksService {
 			keywords_linked: keywords_count,
 			errors,
 		})
+	}
+
+	pub async fn update_overrides(
+		&self,
+		work_id: WorkId,
+		input: WorkOverridesInput,
+	) -> AppResult<()> {
+		use crate::research::WorkOverrides;
+
+		let mut overrides: WorkOverrides = self
+			.works
+			.find_by_id(&work_id)
+			.await?
+			.and_then(|w| serde_json::from_value(w.overrides).ok())
+			.unwrap_or_default();
+
+		if let Some(v) = input.title {
+			overrides.title = v;
+		}
+		if let Some(v) = input.r#abstract {
+			overrides.r#abstract = v;
+		}
+		if let Some(v) = input.doi {
+			overrides.doi = v;
+		}
+		if let Some(v) = input.publication_year {
+			overrides.publication_year = v;
+		}
+		if let Some(v) = input.is_accepted {
+			overrides.is_accepted = v;
+		}
+		if let Some(v) = input.is_published {
+			overrides.is_published = v;
+		}
+
+		let value = serde_json::to_value(overrides).map_err(|e| {
+			AppError::from(WorksError::Other(format!("serialization error: {e}")))
+		})?;
+		self.works.update_overrides(&work_id, &value).await
+	}
+
+	pub async fn clear_overrides(&self, work_id: WorkId) -> AppResult<()> {
+		self.works.clear_overrides(&work_id).await
 	}
 
 	pub async fn sync_all_academics(&self) -> AppResult<Vec<SyncResultView>> {
@@ -215,19 +259,18 @@ impl WorksService {
 			is_published,
 			primary_source_id: source_id,
 		};
-		let inserted = self.works.insert_work(&new_work).await?;
+		let (work_id, was_inserted) = self.works.upsert_work(&new_work).await?;
 
-		let work_id = match inserted {
-			Some(id) => id,
-			None => {
-				return Ok(WorkImportProcessStats {
-					was_inserted: false,
-					authorships: 0,
-					topics: 0,
-					keywords: 0,
-				});
-			}
-		};
+		if !was_inserted {
+			self.works.apply_overrides_sync(&work_id).await?;
+
+			return Ok(WorkImportProcessStats {
+				was_inserted: false,
+				authorships: 0,
+				topics: 0,
+				keywords: 0,
+			});
+		}
 
 		let unknown_topic_id = self
 			.classification

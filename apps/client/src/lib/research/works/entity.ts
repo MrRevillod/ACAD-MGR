@@ -26,6 +26,7 @@ export class Work {
 		public journalKind: JournalKindValue,
 		public researchLineId?: string,
 		public researchLineName?: string,
+		public overriddenFields: string[] = [],
 	) {}
 
 	static fromDTO(dto: WorkDTO): Work {
@@ -45,7 +46,12 @@ export class Work {
 			JournalKindValue.from(dto.journalKind),
 			dto.researchLineId,
 			dto.researchLineName,
+			dto.overriddenFields,
 		)
+	}
+
+	isFieldOverridden(field: string): boolean {
+		return this.overriddenFields.includes(field)
 	}
 }
 
@@ -73,6 +79,7 @@ export class WorkDetail extends Work {
 			work.journalKind,
 			work.researchLineId,
 			work.researchLineName,
+			work.overriddenFields,
 		)
 	}
 

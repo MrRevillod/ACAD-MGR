@@ -16,7 +16,7 @@ impl WorksRepository {
 		sqlx::query_as::<_, Work>(
             "SELECT w.id, w.openalex_id, w.title, w.abstract, w.doi,
             w.publication_date, w.publication_year, w.ty, w.lang, w.is_accepted,
-            w.is_published, w.primary_source_id, ji.kind::text AS journal_kind,
+            w.is_published, w.primary_source_id, w.overrides, ji.kind::text AS journal_kind,
             rl.id AS research_line_id, rl.name AS research_line_name, rl.slug AS research_line_slug
             FROM works w LEFT JOIN sources src ON w.primary_source_id = src.id
             LEFT JOIN LATERAL (SELECT kind FROM journal_issn WHERE issn = src.issn_l
@@ -45,7 +45,7 @@ impl WorksRepository {
 		let mut qb = QueryBuilder::new(
 			"SELECT DISTINCT w.id, w.openalex_id, w.title, w.abstract,
 				w.doi, w.publication_date, w.publication_year, w.ty, w.lang, w.is_accepted,
-				w.is_published, w.primary_source_id, ji.kind::text AS journal_kind,
+				w.is_published, w.primary_source_id, w.overrides, ji.kind::text AS journal_kind,
 				rl.id AS research_line_id, rl.name AS research_line_name, rl.slug AS research_line_slug
 			FROM works w
 			LEFT JOIN work_authorships wa ON w.id = wa.work_id
@@ -133,9 +133,9 @@ impl WorksRepository {
 			.map_err(Into::into)
 	}
 
-	pub async fn insert_work(&self, work: &NewWork) -> AppResult<Option<WorkId>> {
+	pub async fn upsert_work(&self, work: &NewWork) -> AppResult<(WorkId, bool)> {
 		let row = sqlx::query(
-            "INSERT INTO works (openalex_id, title, abstract, doi, publication_date, publication_year, ty, lang, is_accepted, is_published, primary_source_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) ON CONFLICT (openalex_id) DO NOTHING RETURNING id",
+            "INSERT INTO works (openalex_id, title, abstract, doi, publication_date, publication_year, ty, lang, is_accepted, is_published, primary_source_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) ON CONFLICT (openalex_id) DO UPDATE SET title = EXCLUDED.title, abstract = EXCLUDED.abstract, doi = EXCLUDED.doi, publication_date = EXCLUDED.publication_date, publication_year = EXCLUDED.publication_year, ty = EXCLUDED.ty, lang = EXCLUDED.lang, is_accepted = EXCLUDED.is_accepted, is_published = EXCLUDED.is_published, primary_source_id = EXCLUDED.primary_source_id RETURNING id, (xmax = 0) AS was_inserted",
         )
         .bind(&work.openalex_id)
         .bind(&work.title)
@@ -148,11 +148,52 @@ impl WorksRepository {
         .bind(work.is_accepted)
         .bind(work.is_published)
         .bind(work.primary_source_id)
-        .fetch_optional(self.database.pool())
+        .fetch_one(self.database.pool())
         .await?;
-		Ok(row
-			.map(|r| SourceId::from_uuid(r.get("id")))
-			.map(|sid| WorkId::from_uuid(*sid)))
+
+		let id = WorkId::from_uuid(row.get::<Uuid, _>("id"));
+		let was_inserted: bool = row.get("was_inserted");
+		Ok((id, was_inserted))
+	}
+
+	pub async fn apply_overrides_sync(&self, work_id: &WorkId) -> AppResult<()> {
+		sqlx::query(
+			"UPDATE works SET
+				title = COALESCE(overrides->>'title', title),
+				doi = COALESCE(overrides->>'doi', doi),
+				is_accepted = COALESCE((overrides->>'is_accepted')::boolean, is_accepted),
+				is_published = COALESCE((overrides->>'is_published')::boolean, is_published),
+				publication_year = COALESCE((overrides->>'publication_year')::smallint, publication_year)
+			WHERE id = $1 AND overrides != '{}'::jsonb",
+		)
+		.bind(work_id)
+		.execute(self.database.pool())
+		.await?;
+
+		Ok(())
+	}
+
+	pub async fn update_overrides(
+		&self,
+		work_id: &WorkId,
+		overrides: &serde_json::Value,
+	) -> AppResult<()> {
+		sqlx::query("UPDATE works SET overrides = $1 WHERE id = $2")
+			.bind(overrides)
+			.bind(work_id)
+			.execute(self.database.pool())
+			.await?;
+
+		Ok(())
+	}
+
+	pub async fn clear_overrides(&self, work_id: &WorkId) -> AppResult<()> {
+		sqlx::query("UPDATE works SET overrides = '{}'::jsonb WHERE id = $1")
+			.bind(work_id)
+			.execute(self.database.pool())
+			.await?;
+
+		Ok(())
 	}
 
 	pub async fn link_topic(&self, work_id: &WorkId, topic_id: Uuid, score: f64) -> AppResult<()> {

@@ -4,8 +4,7 @@
 	import { useSearchParams } from "runed/kit"
 	import { useQuery } from "$shared/http/tanstack"
 	import { academicService } from "$academics/service"
-	import { Loader, CircleAlert } from "@lucide/svelte"
-	import { toast } from "svelte-sonner"
+	import { Loader, CircleAlert, Construction } from "@lucide/svelte"
 	import WorksSection from "$works/components/works-section.svelte"
 	import AcademicSidebar from "$academics/components/academic-sidebar.svelte"
 	import Dialog from "$shared/components/ui/dialog.svelte"
@@ -29,6 +28,7 @@
 	const academic = $derived(academicQuery.data)
 
 	let requestEditDialogOpen = $state(false)
+	/* -- disabled temporarily --
 	let isRequesting = $state(false)
 	let requestSent = $state(false)
 
@@ -44,6 +44,7 @@
 			isRequesting = false
 		}
 	}
+	*/
 </script>
 
 <div class="h-full overflow-y-auto">
@@ -79,28 +80,19 @@
 	<Dialog
 		bind:open={requestEditDialogOpen}
 		title="Solicitar edición de perfil"
-		description="La edición del perfil está sujeta a la verificación mediante correo académico. Se enviará un enlace a tu correo con un formulario de edición."
+		description="Esta funcionalidad no está disponible temporalmente."
 	>
-		{#if requestSent}
-			<p class="mb-4 text-sm text-green-600">
-				Enlace enviado correctamente. Revisá tu correo electrónico para acceder al
-				formulario de edición.
+		<div class="flex flex-col items-center py-4 text-center">
+			<Construction class="size-10 text-amber-500" />
+			<p class="mt-3 text-sm text-corp-gray">
+				Esta funcionalidad estará disponible próximamente.
 			</p>
-		{/if}
+		</div>
+
 		<div class="flex justify-end gap-2">
 			<Button variant="secondary" onclick={() => (requestEditDialogOpen = false)}>
 				Cerrar
 			</Button>
-			{#if !requestSent}
-				<Button variant="primary" disabled={isRequesting} onclick={handleRequestEdit}>
-					{#if isRequesting}
-						<Loader class="size-4 animate-spin" />
-						Enviando...
-					{:else}
-						Enviar enlace
-					{/if}
-				</Button>
-			{/if}
 		</div>
 	</Dialog>
 </div>

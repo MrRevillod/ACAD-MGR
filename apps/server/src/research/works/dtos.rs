@@ -47,3 +47,14 @@ pub struct WorkImportProcessStats {
 	pub topics: usize,
 	pub keywords: usize,
 }
+
+#[derive(Debug, Validate, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkOverridesInput {
+	pub title: Option<Option<String>>,
+	pub r#abstract: Option<Option<String>>,
+	pub doi: Option<Option<String>>,
+	pub publication_year: Option<Option<i16>>,
+	pub is_accepted: Option<Option<bool>>,
+	pub is_published: Option<Option<bool>>,
+}
