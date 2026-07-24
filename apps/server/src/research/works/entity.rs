@@ -139,8 +139,7 @@ pub struct Work {
 
 impl Work {
 	pub fn resolve(&self) -> Self {
-		let o: WorkOverrides =
-			serde_json::from_value(self.overrides.clone()).unwrap_or_default();
+		let o: WorkOverrides = serde_json::from_value(self.overrides.clone()).unwrap_or_default();
 
 		Self {
 			title: o.title.clone().unwrap_or_else(|| self.title.clone()),
@@ -153,7 +152,6 @@ impl Work {
 			..self.clone()
 		}
 	}
-
 }
 
 impl Entity for Work {

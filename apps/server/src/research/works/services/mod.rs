@@ -40,8 +40,14 @@ impl WorksService {
 		};
 
 		let authorships = self.authorships.list(&resolved.id).await?;
-		let topics = self.classification.list_topics_by_work(&resolved.id).await?;
-		let keywords = self.classification.list_keywords_by_work(&resolved.id).await?;
+		let topics = self
+			.classification
+			.list_topics_by_work(&resolved.id)
+			.await?;
+		let keywords = self
+			.classification
+			.list_keywords_by_work(&resolved.id)
+			.await?;
 
 		Ok(WorkDetailView {
 			work: resolved,
@@ -142,9 +148,8 @@ impl WorksService {
 			overrides.is_published = v;
 		}
 
-		let value = serde_json::to_value(overrides).map_err(|e| {
-			AppError::from(WorksError::Other(format!("serialization error: {e}")))
-		})?;
+		let value = serde_json::to_value(overrides)
+			.map_err(|e| AppError::from(WorksError::Other(format!("serialization error: {e}"))))?;
 		self.works.update_overrides(&work_id, &value).await
 	}
 
