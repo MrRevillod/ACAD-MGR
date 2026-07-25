@@ -1,29 +1,23 @@
-use crate::{
-	auth::UserId,
-	shared::{Entity, Id},
-};
+use crate::{auth::UserId, model_id};
 
-use chrono::{DateTime, Utc};
+use jiff::Timestamp;
 use serde::{Deserialize, Serialize};
-use sqlx::prelude::FromRow;
+use toasty::Model;
 
-pub type SessionId = Id<Session>;
+model_id! {
+	struct SessionId, key: "session"
+}
 
-#[derive(Debug, Serialize, Deserialize, FromRow)]
+#[derive(Debug, Serialize, Deserialize, Model)]
 pub struct Session {
+	#[key]
 	pub id: SessionId,
 	pub user_id: UserId,
 	pub refresh_token_hash: String,
-	pub created_at: DateTime<Utc>,
-	pub expires_at: DateTime<Utc>,
-	pub refresh_expires_at: DateTime<Utc>,
-	pub revoked_at: Option<DateTime<Utc>>,
-}
-
-impl Entity for Session {
-	fn key_name() -> &'static str {
-		"session"
-	}
+	pub created_at: Timestamp,
+	pub expires_at: Timestamp,
+	pub refresh_expires_at: Timestamp,
+	pub revoked_at: Option<Timestamp>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

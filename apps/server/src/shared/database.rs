@@ -1,15 +1,15 @@
 use crate::shared::AppResult;
 
 use serde::Deserialize;
-use sqlx::{PgPool, migrate::Migrator, postgres::PgPoolOptions};
-use std::{path::Path, sync::Arc, time::Duration};
+use std::sync::Arc;
 use sword::prelude::*;
+use toasty::{Db as Pool, models};
 
-pub type Tx<'a> = sqlx::Transaction<'a, sqlx::Postgres>;
+pub use toasty::Transaction as Tx;
 
 #[injectable(provider)]
 pub struct Database {
-	pool: Arc<PgPool>,
+	pool: Arc<Pool>,
 }
 
 #[config(key = "postgres-db")]
@@ -28,29 +28,17 @@ pub struct DatabaseConfig {
 
 impl Database {
 	pub async fn new(db_conf: DatabaseConfig) -> Self {
-		let pool = PgPoolOptions::new()
-			.min_connections(db_conf.min_connections.into())
-			.max_connections(db_conf.max_connections.into())
-			.acquire_timeout(Duration::from_millis(db_conf.acquire_timeout_ms))
+		let mut db = Pool::builder()
+			.max_pool_size(db_conf.max_connections as usize)
+			.models(models!(crate::*))
 			.connect(&Self::create_uri(&db_conf))
-			.await
-			.inspect_err(|err| {
-				tracing::error!("Failed to connect to PostgreSQL database: {}", err);
-			})
-			.expect("Failed to create database connection pool");
+			.await?;
 
-		let migrator = Migrator::new(Path::new(&db_conf.migrations_path))
-			.await
-			.expect("Failed to initialize migrator");
+		db.push_schema().expect("Failed to migrate database schema");
 
-		migrator
-			.run(&pool)
-			.await
-			.expect("Failed to run database migrations");
+		let a = db.transaction().await?;
 
-		Self {
-			pool: Arc::new(pool),
-		}
+		Self { pool: Arc::new(db) }
 	}
 
 	fn create_uri(db_conf: &DatabaseConfig) -> String {
@@ -60,12 +48,12 @@ impl Database {
 		)
 	}
 
-	pub fn pool(&self) -> &PgPool {
+	pub fn pool(&self) -> &Pool {
 		&self.pool
 	}
 
 	pub async fn tx(&self) -> AppResult<Tx<'_>> {
-		Ok(self.pool.begin().await?)
+		Ok(self.pool.transaction().await?)
 	}
 }
 

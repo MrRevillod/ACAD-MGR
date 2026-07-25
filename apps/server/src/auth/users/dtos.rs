@@ -1,7 +1,6 @@
 use crate::auth::{User, UserId, UserRole};
 
 use serde::{Deserialize, Serialize};
-use sqlx::FromRow;
 use validator::{Validate, ValidationError};
 
 #[derive(Debug, Default, Validate, Deserialize)]
@@ -63,7 +62,7 @@ fn validate_password(password: &str) -> Result<(), ValidationError> {
 	}
 }
 
-#[derive(Debug, Clone, Serialize, FromRow)]
+#[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UserView {
 	pub id: UserId,

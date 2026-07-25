@@ -1,7 +1,8 @@
 use crate::auth::*;
 use crate::shared::RequestExt;
 
-use chrono::{Duration, Utc};
+use jiff::Timestamp;
+use jiff::ToSpan;
 use std::sync::Arc;
 use sword::prelude::*;
 use sword::web::*;
@@ -72,11 +73,11 @@ impl AuthController {
 
 		let access_cookie = self
 			.cookie_manager
-			.build_access_cookie(String::new(), Utc::now() - Duration::days(1))?;
+			.build_access_cookie(String::new(), Timestamp::now().checked_sub(1.day())?)?;
 
 		let refresh_cookie = self
 			.cookie_manager
-			.build_refresh_cookie(String::new(), Utc::now() - Duration::days(1))?;
+			.build_refresh_cookie(String::new(), Timestamp::now().checked_sub(1.day())?)?;
 
 		req.cookies()?.remove(access_cookie);
 		req.cookies()?.remove(refresh_cookie);

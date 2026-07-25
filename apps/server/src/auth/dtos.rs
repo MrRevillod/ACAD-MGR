@@ -1,6 +1,5 @@
 use crate::auth::UserView;
-
-use chrono::{DateTime, Utc};
+use jiff::Timestamp;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
@@ -26,14 +25,14 @@ pub struct LoginDto {
 pub struct LoginResponse {
 	pub user: UserView,
 	pub access_token: String,
-	pub access_token_exp: DateTime<Utc>,
+	pub access_token_exp: Timestamp,
+	pub refresh_token_exp: Timestamp,
 	pub refresh_token: String,
-	pub refresh_token_exp: DateTime<Utc>,
 }
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RefreshResponse {
 	pub access_token: String,
-	pub access_token_exp: DateTime<Utc>,
+	pub access_token_exp: Timestamp,
 }

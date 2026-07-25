@@ -2,10 +2,10 @@ use crate::{
 	academic::AcademicError, auth::AuthError, research::WorksError, university::UniversityError,
 };
 
-use sqlx::Error as SqlxError;
 use std::io::Error as IoError;
 use sword::web::*;
 use thiserror::Error;
+use toasty::Error as DatabaseError;
 
 pub type AppResult<T = JsonResponse> = Result<T, AppError>;
 
@@ -30,7 +30,7 @@ pub enum AppError {
 	#[http(code = 500)]
 	#[tracing(error)]
 	#[error("Database error: {0}")]
-	Database(#[from] SqlxError),
+	Database(#[from] DatabaseError),
 
 	#[http(code = 500)]
 	#[tracing(error)]
@@ -45,4 +45,8 @@ pub enum AppError {
 	#[http(code = 500, message = "Internal Server Error")]
 	#[error("Internal Error")]
 	InternalError,
+
+	#[http(code = 500, message = "Internal Server Error")]
+	#[error("Jiff time error: {0}")]
+	Time(#[from] jiff::Error),
 }

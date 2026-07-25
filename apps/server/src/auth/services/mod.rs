@@ -5,8 +5,7 @@ pub use cookies::*;
 pub use hasher::*;
 
 use crate::{auth::*, shared::*};
-
-use chrono::{DateTime, Duration, Utc};
+use jiff::{Timestamp, ToSpan};
 use sha2::{Digest, Sha256};
 use std::sync::Arc;
 use sword::prelude::*;
@@ -38,7 +37,7 @@ impl AuthService {
 		let (refresh_token, refresh_token_exp) =
 			self.generate_refresh_token(&session_id, &user.id)?;
 
-		let now = Utc::now();
+		let now = Timestamp::now();
 
 		let session = Session {
 			id: session_id,
@@ -91,7 +90,7 @@ impl AuthService {
 
 	pub async fn logout(&self, session_id: &SessionId) -> AppResult<()> {
 		if let Some(mut session) = self.sessions.find_active_by_id(session_id).await? {
-			session.revoked_at = Some(Utc::now());
+			session.revoked_at = Some(Timestamp::now());
 			self.sessions.save(&session).await?;
 		}
 
@@ -102,13 +101,13 @@ impl AuthService {
 		&self,
 		session_id: &SessionId,
 		user_id: &UserId,
-	) -> AppResult<(String, DateTime<Utc>)> {
-		let expiration = Utc::now() + Duration::minutes(self.config.access_exp_minutes);
+	) -> AppResult<(String, Timestamp)> {
+		let expiration = Timestamp::now().checked_add(self.config.access_exp_minutes.minutes())?;
 
 		let claims = SessionClaims {
 			session_id: *session_id,
 			user_id: *user_id,
-			exp: expiration.timestamp(),
+			exp: expiration.as_second(),
 			typ: "access".to_string(),
 		};
 
@@ -123,13 +122,13 @@ impl AuthService {
 		&self,
 		session_id: &SessionId,
 		user_id: &UserId,
-	) -> AppResult<(String, DateTime<Utc>)> {
-		let expiration = Utc::now() + Duration::days(self.config.refresh_exp_days);
+	) -> AppResult<(String, Timestamp)> {
+		let expiration = Timestamp::now().checked_add(self.config.refresh_exp_minutes.minutes())?;
 
 		let claims = SessionClaims {
 			session_id: *session_id,
 			user_id: *user_id,
-			exp: expiration.timestamp(),
+			exp: expiration.as_second(),
 			typ: "refresh".to_string(),
 		};
 

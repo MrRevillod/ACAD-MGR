@@ -1,6 +1,6 @@
 use crate::shared::{AppError, AppResult};
 
-use chrono::{DateTime, Utc};
+use jiff::Timestamp;
 use serde::Deserialize;
 use sword::prelude::*;
 use sword::web::{Cookie, CookieBuilder, CookiesExpiration, SameSite};
@@ -22,11 +22,7 @@ pub struct CookieManager {
 }
 
 impl CookieManager {
-	pub fn build_access_cookie(
-		&self,
-		value: String,
-		exp: DateTime<Utc>,
-	) -> AppResult<Cookie<'static>> {
+	pub fn build_access_cookie(&self, value: String, exp: Timestamp) -> AppResult<Cookie<'static>> {
 		let expiration = self.format_expiration(exp)?;
 
 		let cookie = CookieBuilder::new(self.config.access_cookie_name.clone(), value)
@@ -43,7 +39,7 @@ impl CookieManager {
 	pub fn build_refresh_cookie(
 		&self,
 		value: String,
-		exp: DateTime<Utc>,
+		exp: Timestamp,
 	) -> AppResult<Cookie<'static>> {
 		let expiration = self.format_expiration(exp)?;
 
@@ -58,8 +54,8 @@ impl CookieManager {
 		Ok(cookie)
 	}
 
-	pub fn format_expiration(&self, expires: DateTime<Utc>) -> AppResult<CookiesExpiration> {
-		let Ok(exp_dt) = OffsetDateTime::from_unix_timestamp(expires.timestamp()) else {
+	pub fn format_expiration(&self, expires: Timestamp) -> AppResult<CookiesExpiration> {
+		let Ok(exp_dt) = OffsetDateTime::from_unix_timestamp(expires.as_second()) else {
 			tracing::error!("Cookie expiration Datetime convertion error on CookieBuilding");
 			return Err(AppError::InternalError);
 		};

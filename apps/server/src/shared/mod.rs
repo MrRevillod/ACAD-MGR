@@ -22,7 +22,7 @@ use sword::prelude::*;
 pub use database::{Database, TransactionManager, Tx};
 pub use errors::*;
 pub use extensions::*;
-pub use id::{Entity, Id};
+pub use id::*;
 pub use jsonwebtoken::JsonWebTokenService;
 pub use logger::LoggerLayer;
 pub use mailer::*;

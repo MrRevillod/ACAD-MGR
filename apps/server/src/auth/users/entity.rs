@@ -1,21 +1,27 @@
-use crate::shared::{Entity, Id};
+use crate::model_id;
 use serde::{Deserialize, Serialize};
-use sqlx::{FromRow, Type};
+use toasty::{Embed, Model};
 
-#[derive(Debug, Clone, Serialize, Deserialize, Type, Copy)]
+model_id! {
+	struct UserId, key: "user"
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Copy, Embed)]
 #[serde(rename_all = "lowercase")]
-#[sqlx(type_name = "user_role", rename_all = "lowercase")]
+#[column(rename_all = "lowercase")]
 pub enum UserRole {
 	Admin,
 }
 
-pub type UserId = Id<User>;
-
-#[derive(Debug, Clone, FromRow, Serialize)]
+#[derive(Debug, Clone, Model)]
 pub struct User {
+	#[key]
 	pub id: UserId,
-	pub name: String,
+
+	#[unique]
 	pub email: String,
+
+	pub name: String,
 	pub role: UserRole,
 	pub password_hash: String,
 }
@@ -24,10 +30,4 @@ pub struct User {
 pub struct UserFilter {
 	pub search: Option<String>,
 	pub role: Option<UserRole>,
-}
-
-impl Entity for User {
-	fn key_name() -> &'static str {
-		"user"
-	}
 }
