@@ -1,4 +1,4 @@
-use crate::{model_id, university::Department};
+use crate::{shared::model_id, university::Department};
 use bon::Builder;
 use serde::Serialize;
 use toasty::{Deferred, Model};

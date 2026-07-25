@@ -1,55 +1,91 @@
+use crate::academic::*;
+use crate::shared::model_id;
+use crate::university::*;
+
 use bon::Builder;
-
-use crate::academic::{
-	AcademicCategoryId, AcademicCategoryOptionId, AcademicOption, AcademicPlanta, AcademicSortField,
-};
-use crate::shared::{Entity, Id};
-use crate::university::{AcademicWorkPositionId, CareerId, DepartmentId};
-
-use chrono::{DateTime, NaiveDate, Utc};
+use jiff::{Timestamp, civil::Date};
 use serde::{Deserialize, Serialize};
-use sqlx::{FromRow, Type};
+use toasty::{Deferred, Embed, Model};
 
-pub type AcademicId = Id<Academic>;
+model_id! {
+	struct AcademicId,
+	key: "academic_id"
+}
 
-#[derive(Debug, Clone, Copy, Type, Serialize, Deserialize)]
-#[sqlx(type_name = "sex", rename_all = "UPPERCASE")]
+#[derive(Debug, Clone, Copy, Embed, Serialize, Deserialize)]
 #[serde(rename_all = "UPPERCASE")]
+#[column(rename_all = "UPPERCASE")]
 pub enum Sex {
 	H,
 	M,
 	O,
 }
 
-#[derive(Debug, Clone, Serialize, FromRow, Builder)]
+#[derive(Debug, Clone, Serialize, Model, Builder)]
 pub struct Academic {
+	#[key]
 	#[builder(default = AcademicId::new())]
 	pub id: AcademicId,
+
+	#[unique]
 	pub rut: String,
+
+	#[unique]
+	pub email: String,
+
+	#[unique]
+	pub orcid: Option<String>,
+
 	pub names: String,
 	pub paternal_surname: String,
 	pub maternal_surname: String,
-	pub email: String,
-	pub orcid: Option<String>,
 	pub sex: Sex,
-	pub birth_date: NaiveDate,
-	pub joined_at: NaiveDate,
-	pub work_position_id: AcademicWorkPositionId,
-	pub department_id: DepartmentId,
-	pub career_id: Option<CareerId>,
+	pub joined_at: Date,
+	pub birth_date: Date,
 	pub jce: f64,
-	pub acad_category_options_id: AcademicCategoryOptionId,
-	pub annual_discount_hours: f64,
-	pub nationality_code: String,
 	pub city: String,
-	#[builder(default = Utc::now())]
-	pub updated_at: DateTime<Utc>,
+	pub annual_discount_hours: f64,
+
+	#[builder(default = Timestamp::now())]
+	pub updated_at: Timestamp,
+
+	#[index]
+	pub nationality_code: String,
+
+	#[index]
+	pub department_id: DepartmentId,
+
+	#[index]
+	pub career_id: Option<CareerId>,
+
+	#[index]
+	pub category_option_id: AcademicCategoryOptionId,
+
+	#[index]
+	pub work_position_id: AcademicWorkPositionId,
+
+	#[has_many]
+	pub degrees: Deferred<Vec<Degree>>,
+
+	#[belongs_to(key = nationality_code, references = code)]
+	pub nationality: Deferred<Country>,
+
+	#[belongs_to]
+	pub department: Deferred<Department>,
+
+	#[belongs_to]
+	pub career: Deferred<Option<Career>>,
+
+	#[belongs_to]
+	pub category_option: Deferred<AcademicCategoryOption>,
+
+	#[belongs_to]
+	pub work_position: Deferred<AcademicWorkPosition>,
 }
 
 #[derive(Debug)]
 pub struct AcademicListFilter {
 	pub search: Option<String>,
-	pub sort: Option<AcademicSortField>,
 	pub career_id: Option<CareerId>,
 	pub department_id: Option<DepartmentId>,
 	pub category_id: Option<AcademicCategoryId>,
@@ -63,11 +99,5 @@ impl Academic {
 			"{} {} {}",
 			self.names, self.paternal_surname, self.maternal_surname
 		)
-	}
-}
-
-impl Entity for Academic {
-	fn key_name() -> &'static str {
-		"academic"
 	}
 }

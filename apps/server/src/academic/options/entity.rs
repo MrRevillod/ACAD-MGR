@@ -1,41 +1,44 @@
-use bon::Builder;
-
 use crate::{
-	academic::AcademicCategoryId,
-	shared::{Entity, Id},
+	academic::{AcademicCategory, AcademicCategoryId},
+	shared::model_id,
 };
-use serde::{Deserialize, Serialize};
-use sqlx::{FromRow, Type};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Type, Serialize, Deserialize)]
-#[sqlx(type_name = "academic_option", rename_all = "lowercase")]
+use bon::Builder;
+use serde::{Deserialize, Serialize};
+use toasty::{Deferred, Embed, Model};
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Embed, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
+#[column(rename_all = "lowercase")]
 pub enum AcademicOption {
 	Teaching,
 	Research,
 }
 
-pub type AcademicCategoryOptionId = Id<AcademicCategoryOption>;
-
-#[derive(Debug, Clone, Serialize, FromRow, Builder)]
-#[serde(rename_all = "camelCase")]
-pub struct AcademicCategoryOption {
-	#[builder(default = AcademicCategoryOptionId::new())]
-	pub id: AcademicCategoryOptionId,
-	pub category_id: AcademicCategoryId,
-	pub hours: Option<f64>,
-	pub option: AcademicOption,
+model_id! {
+	struct AcademicCategoryOptionId,
+	key: "academic_category_option"
 }
 
-impl Entity for AcademicCategoryOption {
-	fn key_name() -> &'static str {
-		"academic_category_option"
-	}
+#[derive(Debug, Clone, Serialize, Model, Builder)]
+#[serde(rename_all = "camelCase")]
+pub struct AcademicCategoryOption {
+	#[key]
+	#[builder(default = AcademicCategoryOptionId::new())]
+	pub id: AcademicCategoryOptionId,
+
+	#[index]
+	pub category_id: AcademicCategoryId,
+
+	pub hours: Option<f64>,
+	pub option: AcademicOption,
+
+	#[belongs_to]
+	pub category: Deferred<AcademicCategory>,
 }
 
 #[derive(Debug, Default)]
 pub struct AcademicCategoryOptionFilter {
-	pub category_id: Option<AcademicCategoryId>,
 	pub option: Option<AcademicOption>,
-	pub category_name: Option<String>,
+	pub category_id: Option<AcademicCategoryId>,
 }

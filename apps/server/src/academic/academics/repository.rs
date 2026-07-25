@@ -1,11 +1,10 @@
-use crate::academic::{Academic, AcademicId, AcademicListFilter, AcademicSortField, AcademicView};
-use crate::shared::{AppResult, Database, Tx};
+use crate::academic::*;
+use crate::auth::User;
+use crate::shared::{AppError, AppResult, Database, Tx};
 
-use chrono::{DateTime, Utc};
-use sqlx::QueryBuilder;
+use jiff::Timestamp;
 use std::sync::Arc;
 use sword::prelude::*;
-use uuid::Uuid;
 
 #[injectable]
 pub struct AcademicsRepository {
@@ -14,274 +13,173 @@ pub struct AcademicsRepository {
 
 impl AcademicsRepository {
 	pub async fn list(&self, filter: AcademicListFilter) -> AppResult<Vec<AcademicView>> {
-		let mut query = QueryBuilder::new(
-			r"
-            SELECT
-                a.id, a.names, a.paternal_surname, a.maternal_surname,
-                a.email, a.orcid, a.sex, a.birth_date, a.joined_at,
-                wp.name AS work_position,
-                d.name AS department,
-                c.name AS career,
-                a.jce,
-                ac.name AS category,
-                ac.planta,
-                aco.option,
-                aco.hours AS acad_category_hours, a.annual_discount_hours,
-                a.nationality_code AS nationality,
-                a.city
-            FROM academics a
-            LEFT JOIN academic_work_positions wp ON a.work_position_id = wp.id
-            JOIN departments d ON a.department_id = d.id
-            LEFT JOIN careers c ON a.career_id = c.id
-            JOIN academic_category_options aco ON a.acad_category_options_id = aco.id
-            JOIN academic_categories ac ON aco.category_id = ac.id
-            WHERE 1=1
-            ",
-		);
+		let mut query = Academic::all()
+			.include((
+				Academic::fields().degrees(),
+				Academic::fields().department(),
+				Academic::fields().career(),
+				Academic::fields().work_position(),
+				Academic::fields().category_option().category(),
+			))
+			.exec(&mut self.database.pool())
+			.await?;
 
 		if let Some(q) = filter.search {
 			let pattern = format!("%{}%", q.trim());
 
-			query
-				.push(" AND (a.names ILIKE ")
-				.push_bind(pattern.clone())
-				.push(" OR a.paternal_surname ILIKE ")
-				.push_bind(pattern.clone())
-				.push(" OR a.maternal_surname ILIKE ")
-				.push_bind(pattern.clone())
-				.push(" OR a.email ILIKE ")
-				.push_bind(pattern)
-				.push(")");
+			let pattern_chain = User::fields()
+				.name()
+				.ilike(&pattern)
+				.or(User::fields().paternal_surname().ilike(&pattern))
+				.or(User::fields().maternal_surname().ilike(&pattern))
+				.or(User::fields().email().ilike(&pattern));
+
+			query = query.filter(pattern_chain);
 		}
 
 		if let Some(id) = filter.department_id {
-			query.push(" AND a.department_id = ").push_bind(id);
+			query = query.filter(Academic::fields().department_id().eq(id));
 		}
 
 		if let Some(id) = filter.career_id {
-			query.push(" AND a.career_id = ").push_bind(id);
+			query = query.filter(Academic::fields().career_id().eq(id));
 		}
 
 		if let Some(id) = filter.category_id {
-			query.push(" AND aco.category_id = ").push_bind(id);
+			query = query.filter(Academic::fields().category_option().category_id().eq(id));
 		}
 
 		if let Some(planta) = filter.planta {
-			query.push(" AND ac.planta = ").push_bind(planta);
+			query = query.filter(
+				Academic::fields()
+					.category_option()
+					.category()
+					.planta()
+					.eq(planta),
+			);
 		}
 
 		if let Some(option) = filter.option {
-			query.push(" AND aco.option = ").push_bind(option);
+			query = query.filter(Academic::fields().category_option().option().eq(option));
 		}
 
-		match filter.sort {
-			Some(AcademicSortField::Names) => {
-				query.push(" ORDER BY a.names ASC");
-			}
-			Some(AcademicSortField::MaternalSurname) => {
-				query.push(" ORDER BY a.maternal_surname, a.paternal_surname, a.names ASC");
-			}
-			Some(AcademicSortField::JoinedAt) => {
-				query.push(" ORDER BY a.joined_at ASC");
-			}
-			Some(AcademicSortField::BirthDate) => {
-				query.push(" ORDER BY a.birth_date ASC");
-			}
-			Some(AcademicSortField::PaternalSurname) | None => {
-				query.push(" ORDER BY a.paternal_surname, a.maternal_surname, a.names ASC");
-			}
-		}
+		let academics = query
+			.exec(&mut self.database.pool())
+			.await?
+			.iter()
+			.map(AcademicView::from)
+			.collect();
 
-		let items = query
-			.build_query_as::<AcademicView>()
-			.fetch_all(self.database.pool())
-			.await?;
-
-		Ok(items)
+		Ok(academics)
 	}
 
 	pub async fn find_view_by_id(&self, id: &AcademicId) -> AppResult<Option<AcademicView>> {
-		let item = sqlx::query_as::<_, AcademicView>(
-			r"
-            SELECT
-                a.id, a.names, a.paternal_surname, a.maternal_surname,
-                a.email, a.orcid, a.sex, a.birth_date, a.joined_at,
-                wp.name AS work_position,
-                d.name AS department,
-                c.name AS career,
-                a.jce,
-                ac.name AS category,
-                ac.planta,
-                aco.option,
-                aco.hours AS acad_category_hours, a.annual_discount_hours,
-                a.nationality_code AS nationality,
-                a.city
-            FROM academics a
-            LEFT JOIN academic_work_positions wp ON a.work_position_id = wp.id
-            JOIN departments d ON a.department_id = d.id
-            LEFT JOIN careers c ON a.career_id = c.id
-            JOIN academic_category_options aco ON a.acad_category_options_id = aco.id
-            JOIN academic_categories ac ON aco.category_id = ac.id
-            WHERE a.id = $1
-            ",
-		)
-		.bind(id)
-		.fetch_optional(self.database.pool())
-		.await?;
-
-		Ok(item)
+		Ok(self.find_by_id(id).await?.map(AcademicView::from))
 	}
 
 	pub async fn find_by_id(&self, id: &AcademicId) -> AppResult<Option<Academic>> {
-		let item = sqlx::query_as::<_, Academic>("SELECT * FROM academics WHERE id = $1")
-			.bind(id)
-			.fetch_optional(self.database.pool())
+		let academic = Academic::all()
+			.include((
+				Academic::fields().degrees(),
+				Academic::fields().department(),
+				Academic::fields().career(),
+				Academic::fields().work_position(),
+				Academic::fields().category_option().category(),
+			))
+			.first()
+			.exec(&mut self.database.pool())
 			.await?;
 
-		Ok(item)
-	}
-
-	#[allow(dead_code)]
-	pub async fn find_by_email(&self, email: &str) -> AppResult<Option<Academic>> {
-		let item = sqlx::query_as::<_, Academic>("SELECT * FROM academics WHERE email = $1")
-			.bind(email)
-			.fetch_optional(self.database.pool())
-			.await?;
-
-		Ok(item)
+		Ok(academic)
 	}
 
 	pub async fn find_by_rut(&self, rut: &str) -> AppResult<Option<Academic>> {
-		let item = sqlx::query_as::<_, Academic>("SELECT * FROM academics WHERE rut = $1")
-			.bind(rut)
-			.fetch_optional(self.database.pool())
+		let academic = Academic::all()
+			.filter(Academic::fields().rut().eq(rut))
+			.first()
+			.exec(&mut self.database.pool())
 			.await?;
 
-		Ok(item)
+		Ok(academic)
 	}
 
 	pub async fn find_by_orcid(&self, orcid: &str) -> AppResult<Option<Academic>> {
-		let item = sqlx::query_as::<_, Academic>("SELECT * FROM academics WHERE orcid = $1")
-			.bind(orcid)
-			.fetch_optional(self.database.pool())
+		let academic = Academic::all()
+			.filter(Academic::fields().orcid().eq(orcid))
+			.first()
+			.exec(&mut self.database.pool())
 			.await?;
 
-		Ok(item)
+		Ok(academic)
 	}
 
-	pub async fn update_updated_at(&self, id: &AcademicId) -> AppResult<DateTime<Utc>> {
-		let updated_at = sqlx::query_scalar::<_, DateTime<Utc>>(
-			"UPDATE academics SET updated_at = NOW() WHERE id = $1 RETURNING updated_at",
-		)
-		.bind(id)
-		.fetch_one(self.database.pool())
-		.await?;
+	pub async fn update_updated_at(&self, id: &AcademicId) -> AppResult<Timestamp> {
+		let now = Timestamp::now();
 
-		Ok(updated_at)
+		Academic::update_by_id(id)
+			.updated_at(now)
+			.exec(&mut self.database.pool())
+			.await?;
+
+		Ok(now)
 	}
 
 	pub async fn save(&self, academic: &Academic) -> AppResult<()> {
-		let query = r"
-        INSERT INTO academics (
-            id, rut, names, paternal_surname, maternal_surname, email, orcid, sex,
-            birth_date, joined_at, work_position_id,
-            department_id, career_id, jce, acad_category_options_id,
-            annual_discount_hours, nationality_code, city, updated_at
-        ) VALUES (
-            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-            $11, $12, $13, $14, $15, $16, $17, $18, $19
-        )
-        ON CONFLICT (id) DO UPDATE SET
-            names = EXCLUDED.names,
-            paternal_surname = EXCLUDED.paternal_surname,
-            maternal_surname = EXCLUDED.maternal_surname,
-            email = EXCLUDED.email,
-            orcid = EXCLUDED.orcid,
-            sex = EXCLUDED.sex,
-            birth_date = EXCLUDED.birth_date,
-            joined_at = EXCLUDED.joined_at,
-            work_position_id = EXCLUDED.work_position_id,
-            department_id = EXCLUDED.department_id,
-            career_id = EXCLUDED.career_id,
-            jce = EXCLUDED.jce,
-            acad_category_options_id = EXCLUDED.acad_category_options_id,
-            annual_discount_hours = EXCLUDED.annual_discount_hours,
-            nationality_code = EXCLUDED.nationality_code,
-            city = EXCLUDED.city,
-            updated_at = NOW()
-        ";
-
-		sqlx::query(query)
-			.bind(academic.id)
-			.bind(&academic.rut)
-			.bind(&academic.names)
-			.bind(&academic.paternal_surname)
-			.bind(&academic.maternal_surname)
-			.bind(&academic.email)
-			.bind(&academic.orcid)
-			.bind(academic.sex)
-			.bind(academic.birth_date)
-			.bind(academic.joined_at)
-			.bind(academic.work_position_id)
-			.bind(academic.department_id)
-			.bind(academic.career_id)
-			.bind(academic.jce)
-			.bind(academic.acad_category_options_id)
-			.bind(academic.annual_discount_hours)
-			.bind(&academic.nationality_code)
-			.bind(&academic.city)
-			.bind(academic.updated_at)
-			.execute(self.database.pool())
-			.await?;
-
-		Ok(())
+		Academic::upsert_by_id(academic.id)
+			.rut(&academic.rut)
+			.names(&academic.names)
+			.paternal_surname(&academic.paternal_surname)
+			.maternal_surname(&academic.maternal_surname)
+			.email(&academic.email)
+			.orcid(&academic.orcid)
+			.sex(academic.sex)
+			.birth_date(academic.birth_date)
+			.joined_at(academic.joined_at)
+			.work_position_id(academic.work_position_id)
+			.department_id(academic.department_id)
+			.career_id(academic.career_id)
+			.jce(academic.jce)
+			.acad_category_options_id(academic.acad_category_options_id)
+			.annual_discount_hours(academic.annual_discount_hours)
+			.nationality_code(&academic.nationality_code)
+			.city(&academic.city)
+			.updated_at(academic.updated_at)
+			.exec(&mut self.database.pool())
+			.await?
+			.map_err(AppError::from)?
 	}
 
 	pub async fn save_tx(&self, tx: &mut Tx<'_>, academic: &Academic) -> AppResult<()> {
-		let query = r"
-        INSERT INTO academics (
-            id, rut, names, paternal_surname, maternal_surname, email, orcid, sex,
-            birth_date, joined_at, work_position_id,
-            department_id, career_id, jce, acad_category_options_id,
-            annual_discount_hours, nationality_code, city, updated_at
-        ) VALUES (
-            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-            $11, $12, $13, $14, $15, $16, $17, $18, $19
-        )";
-
-		sqlx::query(query)
-			.bind(academic.id)
-			.bind(&academic.rut)
-			.bind(&academic.names)
-			.bind(&academic.paternal_surname)
-			.bind(&academic.maternal_surname)
-			.bind(&academic.email)
-			.bind(&academic.orcid)
-			.bind(academic.sex)
-			.bind(academic.birth_date)
-			.bind(academic.joined_at)
-			.bind(academic.work_position_id)
-			.bind(academic.department_id)
-			.bind(academic.career_id)
-			.bind(academic.jce)
-			.bind(academic.acad_category_options_id)
-			.bind(academic.annual_discount_hours)
-			.bind(&academic.nationality_code)
-			.bind(&academic.city)
-			.bind(academic.updated_at)
-			.execute(&mut **tx)
-			.await?;
-
-		Ok(())
+		Academic::upsert_by_id(academic.id)
+			.rut(&academic.rut)
+			.names(&academic.names)
+			.paternal_surname(&academic.paternal_surname)
+			.maternal_surname(&academic.maternal_surname)
+			.email(&academic.email)
+			.orcid(&academic.orcid)
+			.sex(academic.sex)
+			.birth_date(academic.birth_date)
+			.joined_at(academic.joined_at)
+			.work_position_id(academic.work_position_id)
+			.department_id(academic.department_id)
+			.career_id(academic.career_id)
+			.jce(academic.jce)
+			.acad_category_options_id(academic.acad_category_options_id)
+			.annual_discount_hours(academic.annual_discount_hours)
+			.nationality_code(&academic.nationality_code)
+			.city(&academic.city)
+			.updated_at(academic.updated_at)
+			.exec(tx)
+			.await?
+			.map_err(AppError::from)?
 	}
 
-	pub async fn list_orcids(&self) -> AppResult<Vec<(Uuid, String)>> {
-		let rows = sqlx::query_as::<_, (Uuid, String)>(
-			"SELECT id, orcid FROM academics WHERE orcid IS NOT NULL",
-		)
-		.fetch_all(self.database.pool())
-		.await?;
-
-		Ok(rows)
+	pub async fn list_orcids(&self) -> AppResult<Vec<(AcademicId, String)>> {
+		Academic::all()
+			.filter(Academic::fields().orcid().is_not_null())
+			.select((Academic::fields().id(), Academic::fields().orcid()))
+			.exec(&mut self.database.pool())
+			.await?
+			.map_err(AppError::from)
 	}
 }

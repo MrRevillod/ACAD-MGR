@@ -1,29 +1,33 @@
+use crate::shared::model_id;
 use bon::Builder;
 use serde::{Deserialize, Serialize};
-use sqlx::{FromRow, Type};
+use toasty::{Embed, Model};
 
-use crate::shared::{Entity, Id};
+model_id! {
+	struct AcademicCategoryId,
+	key: "academic_category"
+}
 
-#[derive(Debug, Clone, Type, Serialize, Deserialize, PartialEq, Eq)]
-#[sqlx(type_name = "academic_planta", rename_all = "lowercase")]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Embed)]
 #[serde(rename_all = "lowercase")]
+#[column(rename_all = "lowercase")]
 pub enum AcademicPlanta {
 	Adjunta,
 	Permanente,
 }
 
-pub type AcademicCategoryId = Id<AcademicCategory>;
-
-#[derive(Debug, Clone, Serialize, Deserialize, FromRow, Builder)]
+#[derive(Debug, Clone, Serialize, Deserialize, Builder, Model)]
 pub struct AcademicCategory {
+	#[key]
 	#[builder(default = AcademicCategoryId::new())]
 	pub id: AcademicCategoryId,
+
 	pub name: String,
 	pub planta: AcademicPlanta,
 }
 
-impl Entity for AcademicCategory {
-	fn key_name() -> &'static str {
-		"academic_category"
-	}
+#[derive(Debug)]
+pub struct AcademicCategoryFilter {
+	pub name: Option<String>,
+	pub planta: Option<AcademicPlanta>,
 }

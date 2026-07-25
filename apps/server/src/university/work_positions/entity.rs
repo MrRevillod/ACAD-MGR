@@ -1,4 +1,4 @@
-use crate::model_id;
+use crate::shared::model_id;
 use bon::Builder;
 use serde::Serialize;
 use toasty::Model;

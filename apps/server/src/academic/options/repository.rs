@@ -1,7 +1,6 @@
 use crate::academic::*;
-use crate::shared::{AppResult, Database};
+use crate::shared::{AppError, AppResult, Database};
 
-use sqlx::{Postgres, QueryBuilder};
 use std::sync::Arc;
 use sword::prelude::*;
 
@@ -15,83 +14,56 @@ impl AcademicCategoryOptionsRepository {
 		&self,
 		filter: AcademicCategoryOptionFilter,
 	) -> AppResult<Vec<AcademicCategoryOption>> {
-		let mut query = QueryBuilder::<Postgres>::new(
-			"SELECT id, category_id, option, hours FROM academic_category_options WHERE 1=1",
-		);
+		let mut options = AcademicCategoryOption::all();
 
 		if let Some(cid) = filter.category_id {
-			query.push(" AND category_id = ").push_bind(cid);
+			options = options.filter(AcademicCategoryOption::fields().category_id.eq(cid));
 		}
 
-		let items = query
-			.build_query_as::<AcademicCategoryOption>()
-			.fetch_all(self.database.pool())
-			.await?;
-
-		Ok(items)
+		options
+			.exec(&mut self.database.pool())
+			.await?
+			.map_err(AppError::from)
 	}
 
 	pub async fn find_one(
 		&self,
 		filter: AcademicCategoryOptionFilter,
 	) -> AppResult<Option<AcademicCategoryOption>> {
-		let base = if filter.category_name.is_some() {
-			"SELECT aco.id, aco.category_id, aco.option, aco.hours \
-             FROM academic_category_options aco \
-             JOIN academic_categories ac ON ac.id = aco.category_id \
-             WHERE 1=1"
-		} else {
-			"SELECT aco.id, aco.category_id, aco.option, aco.hours \
-             FROM academic_category_options aco WHERE 1=1"
-		};
-
-		let mut query = QueryBuilder::<Postgres>::new(base);
+		let mut option = AcademicCategoryOption::all();
 
 		if let Some(cid) = filter.category_id {
-			query.push(" AND aco.category_id = ").push_bind(cid);
+			option = option.filter(AcademicCategoryOption::fields().category_id.eq(cid));
 		}
 
 		if let Some(option) = filter.option {
-			query.push(" AND aco.option = ").push_bind(option);
+			option = option.filter(AcademicCategoryOption::fields().option.eq(option));
 		}
 
-		if let Some(name) = filter.category_name {
-			query.push(" AND ac.name = ").push_bind(name);
-		}
-
-		let item = query
-			.build_query_as::<AcademicCategoryOption>()
-			.fetch_optional(self.database.pool())
-			.await?;
-
-		Ok(item)
+		option
+			.first()
+			.exec(&mut self.database.pool())
+			.await?
+			.map_err(AppError::from)
 	}
 
 	pub async fn find_by_id(
 		&self,
 		id: &AcademicCategoryOptionId,
 	) -> AppResult<Option<AcademicCategoryOption>> {
-		let item = sqlx::query_as::<_, AcademicCategoryOption>(
-			"SELECT id, category_id, option, hours FROM academic_category_options WHERE id = $1",
-		)
-		.bind(id)
-		.fetch_optional(self.database.pool())
-		.await?;
-
-		Ok(item)
+		AcademicCategoryOption::get_by_id(&mut self.database.pool(), id)
+			.await?
+			.map_err(AppError::from)
 	}
 
 	pub async fn save(&self, option: &AcademicCategoryOption) -> AppResult<()> {
-		sqlx::query(
-			"INSERT INTO academic_category_options (id, category_id, option, hours) VALUES ($1, $2, $3, $4)",
-		)
-		.bind(option.id)
-		.bind(option.category_id)
-		.bind(option.option)
-		.bind(option.hours)
-		.execute(self.database.pool())
-		.await?;
-
-		Ok(())
+		AcademicCategoryOption::create()
+			.id(&option.id)
+			.category_id(&option.category_id)
+			.option(option.option)
+			.hours(option.hours)
+			.execute(&mut self.database.pool())
+			.await?
+			.map_err(AppError::from)
 	}
 }

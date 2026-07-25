@@ -1,6 +1,5 @@
 use thiserror::Error;
 
-#[macro_export]
 macro_rules! model_id {
 	(struct $name:ident, key: $entity_name:literal) => {
 		#[derive(::std::fmt::Debug, ::std::default::Default, ::toasty::Embed)]
@@ -107,3 +106,5 @@ pub enum IdError {
 	#[error("Invalid id for '{entity}': '{value}'")]
 	Invalid { entity: &'static str, value: String },
 }
+
+pub(crate) use model_id;

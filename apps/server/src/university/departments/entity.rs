@@ -1,5 +1,5 @@
 use crate::{
-	model_id,
+	shared::model_id,
 	university::{Career, Faculty, FacultyId},
 };
 

@@ -1,6 +1,6 @@
 use crate::{
 	auth::{User, UserId},
-	model_id,
+	shared::model_id,
 };
 
 use jiff::Timestamp;
