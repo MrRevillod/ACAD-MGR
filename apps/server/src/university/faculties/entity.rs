@@ -1,23 +1,24 @@
-use crate::shared::{Entity, Id};
+use crate::{model_id, university::Department};
 use bon::Builder;
 use serde::Serialize;
-use sqlx::FromRow;
+use toasty::{Deferred, Model};
 
-pub type FacultyId = Id<Faculty>;
+model_id! {
+	struct FacultyId,
+	key: "faculty"
+}
 
-#[derive(Debug, Clone, Serialize, FromRow, Builder)]
+#[derive(Debug, Clone, Serialize, Builder, Model)]
 pub struct Faculty {
+	#[key]
 	#[builder(default = FacultyId::new())]
 	pub id: FacultyId,
 	pub name: String,
+
+	#[has_many]
+	departments: Deferred<Vec<Department>>,
 }
 
 pub struct FacultyFilter {
 	pub name: Option<String>,
-}
-
-impl Entity for Faculty {
-	fn key_name() -> &'static str {
-		"faculty"
-	}
 }

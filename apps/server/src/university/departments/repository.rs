@@ -1,7 +1,6 @@
-use crate::shared::{AppResult, Database};
+use crate::shared::{AppError, AppResult, Database};
 use crate::university::{Department, DepartmentFilter, DepartmentId};
 
-use sqlx::{Postgres, QueryBuilder};
 use std::sync::Arc;
 use sword::prelude::*;
 
@@ -12,60 +11,35 @@ pub struct DepartmentsRepository {
 
 impl DepartmentsRepository {
 	pub async fn list(&self, filter: DepartmentFilter) -> AppResult<Vec<Department>> {
-		let mut query =
-			QueryBuilder::<Postgres>::new("SELECT id, name, faculty_id FROM departments WHERE 1=1");
+		let mut query = Department::all();
 
 		if let Some(n) = filter.name {
-			let pattern = format!("%{}%", n.trim());
-
-			query
-				.push(" AND (name ILIKE ")
-				.push_bind(pattern.clone())
-				.push(")");
+			query = query.filter(Department::fields().name().ilike(format!("%{}%", n.trim())));
 		}
 
 		if let Some(faculty_id) = filter.faculty_id {
-			query.push(" AND faculty_id = ").push_bind(faculty_id);
+			query = query.filter(Department::fields().faculty_id().eq(faculty_id));
 		}
 
-		let departments = query
-			.build_query_as::<Department>()
-			.fetch_all(self.database.pool())
-			.await?;
-
-		Ok(departments)
-	}
-
-	pub async fn find_by_name(&self, name: &str) -> AppResult<Option<Department>> {
-		let item = sqlx::query_as::<_, Department>(
-			"SELECT id, name, faculty_id FROM departments WHERE name ILIKE $1",
-		)
-		.bind(name)
-		.fetch_optional(self.database.pool())
-		.await?;
-
-		Ok(item)
+		query
+			.exec(&mut self.database.pool())
+			.await
+			.map_err(AppError::from)
 	}
 
 	pub async fn find_by_id(&self, id: &DepartmentId) -> AppResult<Option<Department>> {
-		let item = sqlx::query_as::<_, Department>(
-			"SELECT id, name, faculty_id FROM departments WHERE id = $1",
-		)
-		.bind(id)
-		.fetch_optional(self.database.pool())
-		.await?;
-
-		Ok(item)
+		Department::get_by_id(&mut self.database.pool(), id)
+			.await?
+			.map_err(AppError::from)
 	}
 
 	pub async fn save(&self, department: &Department) -> AppResult<()> {
-		sqlx::query("INSERT INTO departments (id, name, faculty_id) VALUES ($1, $2, $3)")
-			.bind(department.id)
-			.bind(&department.name)
-			.bind(department.faculty_id)
-			.execute(self.database.pool())
-			.await?;
-
-		Ok(())
+		Department::create()
+			.id(department.id)
+			.name(&department.name)
+			.faculty_id(department.faculty_id)
+			.exec(&mut self.database.pool())
+			.await?
+			.map_err(AppError::from)
 	}
 }

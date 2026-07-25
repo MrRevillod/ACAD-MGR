@@ -1,8 +1,11 @@
-use crate::{auth::UserId, model_id};
+use crate::{
+	auth::{User, UserId},
+	model_id,
+};
 
 use jiff::Timestamp;
 use serde::{Deserialize, Serialize};
-use toasty::Model;
+use toasty::{Deferred, Model};
 
 model_id! {
 	struct SessionId, key: "session"
@@ -12,12 +15,16 @@ model_id! {
 pub struct Session {
 	#[key]
 	pub id: SessionId,
+
 	pub user_id: UserId,
 	pub refresh_token_hash: String,
 	pub created_at: Timestamp,
 	pub expires_at: Timestamp,
-	pub refresh_expires_at: Timestamp,
 	pub revoked_at: Option<Timestamp>,
+	pub refresh_expires_at: Timestamp,
+
+	#[belongs_to]
+	user: Deferred<User>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

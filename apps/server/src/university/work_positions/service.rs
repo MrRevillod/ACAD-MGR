@@ -9,10 +9,8 @@ pub struct AcademicWorkPositionsService {
 }
 
 impl AcademicWorkPositionsService {
-	pub async fn find(&self, query: GetWorkPositionsQuery) -> AppResult<Vec<AcademicWorkPosition>> {
-		let filter = WorkPositionFilter { name: query.name };
-
-		self.positions.list(filter).await
+	pub async fn find(&self) -> AppResult<Vec<AcademicWorkPosition>> {
+		self.positions.list().await
 	}
 
 	pub async fn create(

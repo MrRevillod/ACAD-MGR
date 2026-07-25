@@ -32,7 +32,7 @@ impl CareersService {
 			.department_id(input.department_id)
 			.build();
 
-		self.careers.save(&career).await?;
+		self.careers.create(&career).await?;
 
 		Ok(career)
 	}

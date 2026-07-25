@@ -14,10 +14,7 @@ pub struct WorkPositionsController {
 impl WorkPositionsController {
 	#[get("/")]
 	pub async fn get_positions(&self, req: Request) -> WebResult<Vec<AcademicWorkPosition>> {
-		let query = req.query_validator::<GetWorkPositionsQuery>()?;
-		let positions = self.positions.find(query.unwrap_or_default()).await?;
-
-		Ok(positions)
+		Ok(self.positions.find().await?)
 	}
 
 	#[post("/")]

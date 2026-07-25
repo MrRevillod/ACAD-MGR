@@ -1,28 +1,34 @@
-use crate::shared::{Entity, Id};
-use crate::university::DepartmentId;
+use crate::{
+	model_id,
+	university::{Department, DepartmentId},
+};
+
 use bon::Builder;
 use serde::Serialize;
-use sqlx::FromRow;
+use toasty::{Deferred, Model};
 
-pub type CareerId = Id<Career>;
+model_id! {
+	struct CareerId,
+	key: "career"
+}
 
-#[derive(Debug, Clone, FromRow, Serialize, Builder)]
+#[derive(Debug, Clone, Serialize, Builder, Model)]
 #[serde(rename_all = "camelCase")]
 pub struct Career {
+	#[key]
 	#[builder(default = CareerId::new())]
 	pub id: CareerId,
 	pub name: String,
+
+	#[index]
 	pub department_id: DepartmentId,
+
+	#[belongs_to]
+	department: Deferred<Department>,
 }
 
 #[derive(Debug)]
 pub struct CareerFilter {
 	pub name: Option<String>,
 	pub department_id: Option<DepartmentId>,
-}
-
-impl Entity for Career {
-	fn key_name() -> &'static str {
-		"career"
-	}
 }
