@@ -13,9 +13,6 @@ pub struct ResearchDomain {
 
 	#[unique]
 	pub openalex_id: String,
-
-	#[has_many]
-	pub fields: Deferred<Vec<ResearchField>>,
 }
 
 #[derive(Debug, Clone, Serialize, Model, Builder)]
@@ -34,6 +31,15 @@ pub struct ResearchField {
 
 	#[belongs_to]
 	pub domain: Deferred<ResearchDomain>,
+}
+
+#[derive(Debug, Clone, Serialize, Model, Builder)]
+pub struct ResearchLine {
+	#[key]
+	#[builder(default = ResearchLineId::new())]
+	pub id: ResearchLineId,
+	pub name: String,
+	pub slug: String,
 
 	#[has_many]
 	pub subfields: Deferred<Vec<ResearchSubfield>>,
@@ -60,10 +66,7 @@ pub struct ResearchSubfield {
 	pub field: Deferred<ResearchField>,
 
 	#[belongs_to]
-	pub research_line: Option<Deferred<ResearchLine>>,
-
-	#[has_many]
-	pub topics: Deferred<Vec<ResearchTopic>>,
+	pub research_line: Deferred<Option<ResearchLine>>,
 }
 
 #[derive(Debug, Clone, Serialize, Model, Builder)]
@@ -96,17 +99,6 @@ pub struct ResearchKeyword {
 	pub name: String,
 }
 
-#[derive(Debug, Clone, Serialize, Model, Builder)]
-pub struct ResearchLine {
-	#[key]
-	pub id: ResearchLineId,
-	pub name: String,
-	pub slug: String,
-
-	#[has_many]
-	pub subfields: Deferred<Vec<ResearchSubfield>>,
-}
-
 #[allow(dead_code)]
 pub struct ClassificationFilter {
 	pub domain_id: Option<ResearchDomainId>,
@@ -118,30 +110,24 @@ pub struct ClassificationFilter {
 }
 
 model_id! {
-	struct ResearchLineId,
-	key: "research_line"
+	struct ResearchLineId, key: "research_line"
 }
 
 model_id! {
-	struct ResearchDomainId,
-	key: "research_domain"
+	struct ResearchDomainId, key: "research_domain"
 }
 
 model_id! {
-	struct ResearchFieldId,
-	key: "research_field"
+	struct ResearchFieldId, key: "research_field"
 }
 
 model_id! {
-	struct ResearchSubfieldId,
-	key: "research_subfield"
+	struct ResearchSubfieldId, key: "research_subfield"
 }
 
 model_id! {
-	struct ResearchTopicId,
-	key: "research_topic"
+	struct ResearchTopicId, key: "research_topic"
 }
 model_id! {
-	struct ResearchKeywordId,
-	key: "research_keyword"
+	struct ResearchKeywordId, key: "research_keyword"
 }

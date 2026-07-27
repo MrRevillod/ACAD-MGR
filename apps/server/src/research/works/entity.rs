@@ -1,4 +1,5 @@
 use crate::{
+	academic::AcademicId,
 	research::{Source, SourceId},
 	shared::model_id,
 };
@@ -8,6 +9,34 @@ use jiff::civil::Date;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 use toasty::{Deferred, Embed, Model};
+
+#[derive(Debug, Clone, Copy, Embed, Serialize, Deserialize, Eq, PartialEq)]
+#[serde(rename_all = "lowercase")]
+#[column(rename_all = "lowercase")]
+pub enum AuthorshipPosition {
+	First,
+	Middle,
+	Last,
+}
+
+#[derive(Debug, Clone, Serialize, Model)]
+#[key(work_id, orcid)]
+#[serde(rename_all = "camelCase")]
+pub struct Authorship {
+	pub work_id: WorkId,
+	pub orcid: String,
+	pub name: String,
+	pub is_external: bool,
+	pub is_corresponding: bool,
+	pub affiliations: Vec<String>,
+	pub position: AuthorshipPosition,
+
+	#[index]
+	pub academic_id: Option<AcademicId>,
+
+	#[belongs_to]
+	pub work: Deferred<Work>,
+}
 
 #[derive(Debug, Clone, Serialize, Model, Builder)]
 #[serde(rename_all = "camelCase")]
@@ -29,18 +58,20 @@ pub struct Work {
 	pub is_published: bool,
 
 	#[index]
-	pub primary_source_id: Option<SourceId>,
+	pub source_id: Option<SourceId>,
 
 	#[column(type = "jsonb")]
 	pub overrides: serde_json::Value,
 
-	#[has_one]
-	pub primary_source: Deferred<Option<Source>>,
+	#[belongs_to]
+	pub source: Deferred<Option<Source>>,
+
+	#[has_many]
+	pub authorships: Deferred<Vec<Authorship>>,
 }
 
 model_id! {
-	struct WorkId,
-	key: "work"
+	struct WorkId, key: "work"
 }
 
 #[derive(Debug, Clone, Copy, Embed, Serialize, Deserialize, Eq, PartialEq)]

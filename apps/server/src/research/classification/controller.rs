@@ -60,7 +60,7 @@ impl WorksClassificationController {
 
 		if self
 			.work_classifications
-			.find_research_line_by_id(dto.research_line_id)
+			.find_research_line_by_id(&dto.research_line_id)
 			.await?
 			.is_none()
 		{
@@ -69,7 +69,7 @@ impl WorksClassificationController {
 
 		let Some(mut subfield) = self
 			.work_classifications
-			.find_subfield_by_openalex_id(&dto.subfield_openalex_id)
+			.find_subfield_by_id(&dto.subfield_id)
 			.await?
 		else {
 			return Err(JsonResponse::NotFound())?;

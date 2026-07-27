@@ -22,7 +22,7 @@ impl WorkClassificationRepository {
 
 		query
 			.exec(&mut self.database.pool())
-			.await?
+			.await
 			.map_err(AppError::from)
 	}
 
@@ -39,9 +39,9 @@ impl WorkClassificationRepository {
 		}
 
 		fields
-			.order_by(ResearchField::fields().name())
+			.order_by(ResearchField::fields().name().asc())
 			.exec(&mut self.database.pool())
-			.await?
+			.await
 			.map_err(AppError::from)
 	}
 
@@ -61,10 +61,10 @@ impl WorkClassificationRepository {
 		}
 
 		subfields
-			.order_by(ResearchSubfield::fields().name())
+			.order_by(ResearchSubfield::fields().name().asc())
 			.limit(50)
 			.exec(&mut self.database.pool())
-			.await?
+			.await
 			.map_err(AppError::from)
 	}
 
@@ -77,14 +77,14 @@ impl WorkClassificationRepository {
 
 		if let Some(s) = f.search {
 			let pattern = format!("%{}%", s.trim());
-			let pattern = topics = topics.filter(ResearchTopic::fields().name().ilike(pattern));
+			topics = topics.filter(ResearchTopic::fields().name().ilike(pattern));
 		}
 
 		topics
-			.order_by(ResearchTopic::fields().name())
+			.order_by(ResearchTopic::fields().name().asc())
 			.limit(50)
 			.exec(&mut self.database.pool())
-			.await?
+			.await
 			.map_err(AppError::from)
 	}
 
@@ -97,39 +97,41 @@ impl WorkClassificationRepository {
 		}
 
 		query
-			.order_by(ResearchKeyword::fields().name())
+			.order_by(ResearchKeyword::fields().name().asc())
 			.limit(50)
 			.exec(&mut self.database.pool())
-			.await?
+			.await
 			.map_err(AppError::from)
 	}
 
 	pub async fn list_research_lines(&self) -> AppResult<Vec<ResearchLine>> {
 		ResearchLine::all()
 			.include(ResearchLine::fields().subfields())
-			.order_by(ResearchLine::fields().name())
+			.order_by(ResearchLine::fields().name().asc())
 			.exec(&mut self.database.pool())
-			.await?
+			.await
 			.map_err(AppError::from)
 	}
 
 	pub async fn find_subfield_by_id(
 		&self,
-		id: ResearchSubfieldId,
+		id: &ResearchSubfieldId,
 	) -> AppResult<Option<ResearchSubfield>> {
 		ResearchSubfield::filter_by_id(id)
+			.first()
 			.exec(&mut self.database.pool())
-			.await?
+			.await
 			.map_err(AppError::from)
 	}
 
 	pub async fn find_research_line_by_id(
 		&self,
-		id: ResearchLineId,
+		id: &ResearchLineId,
 	) -> AppResult<Option<ResearchLine>> {
 		ResearchLine::filter_by_id(id)
+			.first()
 			.exec(&mut self.database.pool())
-			.await?
+			.await
 			.map_err(AppError::from)
 	}
 
@@ -137,46 +139,48 @@ impl WorkClassificationRepository {
 		&self,
 		openalex_id: &str,
 	) -> AppResult<Option<ResearchTopic>> {
-		ResearchTopic::all()
-			.filter(ResearchTopic::fields().openalex_id().eq(openalex_id))
+		ResearchTopic::filter(ResearchTopic::fields().openalex_id().eq(openalex_id))
+			.first()
 			.exec(&mut self.database.pool())
-			.await?
+			.await
 			.map_err(AppError::from)
 	}
 
 	pub async fn save_keyword(&self, keyword: &ResearchKeyword) -> AppResult<()> {
-		ResearchKeyword::upsert_by_openalex_id(keyword.openalex_id)
+		ResearchKeyword::upsert_by_openalex_id(&keyword.openalex_id)
 			.id(&keyword.id)
 			.name(&keyword.name)
 			.exec(&mut self.database.pool())
-			.await?
-			.map_err(AppError::from)
+			.await?;
+
+		Ok(())
 	}
 
 	pub async fn save_subfield(&self, subfield: &ResearchSubfield) -> AppResult<()> {
-		ResearchSubfield::upsert_by_openalex_id(subfield.openalex_id)
+		ResearchSubfield::upsert_by_openalex_id(&subfield.openalex_id)
 			.id(&subfield.id)
 			.name(&subfield.name)
 			.field_id(&subfield.field_id)
 			.research_line_id(subfield.research_line_id)
 			.exec(&mut self.database.pool())
-			.await?
-			.map_err(AppError::from)
+			.await?;
+
+		Ok(())
 	}
 
 	pub async fn unknown_keyword_id(&self) -> AppResult<Option<ResearchKeyword>> {
-		ResearchKeyword::all()
-			.filter(ResearchKeyword::fields().openalex_id().eq("unknown"))
+		ResearchKeyword::filter(ResearchKeyword::fields().openalex_id().eq("unknown"))
+			.first()
 			.exec(&mut self.database.pool())
-			.await?
+			.await
 			.map_err(AppError::from)
 	}
 
 	pub async fn unknown_topic_id(&self) -> AppResult<Option<ResearchTopic>> {
-		ResearchTopic::all()
-			.filter(ResearchTopic::fields().openalex_id().eq("unknown"))
+		ResearchTopic::filter(ResearchTopic::fields().openalex_id().eq("unknown"))
+			.first()
 			.exec(&mut self.database.pool())
-			.await?
+			.await
 			.map_err(AppError::from)
 	}
 }

@@ -1,8 +1,18 @@
-use crate::research::{JournalKind, SourceId, WorkType};
+use crate::research::*;
 use chrono::NaiveDate;
 use serde::Deserialize;
 use uuid::Uuid;
 use validator::Validate;
+
+pub struct NewAuthorship {
+	pub work_id: WorkId,
+	pub orcid: String,
+	pub name: String,
+	pub is_external: bool,
+	pub is_corresponding: bool,
+	pub affiliations: Vec<String>,
+	pub position: AuthorshipPosition,
+}
 
 pub struct NewWork {
 	pub openalex_id: String,

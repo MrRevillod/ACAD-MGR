@@ -1,10 +1,8 @@
-mod authorships;
 mod classification;
 mod sources;
 mod stats;
 mod works;
 
-pub use authorships::*;
 pub use classification::*;
 pub use sources::*;
 pub use stats::*;
@@ -30,7 +28,6 @@ impl Module for ResearchModule {
 		components.register::<WorksService>();
 		components.register::<WorksRepository>();
 		components.register::<SourcesRepository>();
-		components.register::<AuthorshipsRepository>();
 	}
 
 	async fn register_providers(config: &Config, providers: &ProviderRegistry) {
