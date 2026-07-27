@@ -4,8 +4,7 @@ use serde::Serialize;
 use toasty::{Deferred, Model};
 
 model_id! {
-	struct FacultyId,
-	key: "faculty"
+	struct FacultyId, key: "faculty"
 }
 
 #[derive(Debug, Clone, Serialize, Builder, Model)]
@@ -16,7 +15,8 @@ pub struct Faculty {
 	pub name: String,
 
 	#[has_many]
-	departments: Deferred<Vec<Department>>,
+	#[builder(default)]
+	pub departments: Deferred<Vec<Department>>,
 }
 
 pub struct FacultyFilter {

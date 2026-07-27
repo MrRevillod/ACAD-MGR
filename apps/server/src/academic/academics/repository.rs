@@ -1,5 +1,4 @@
 use crate::academic::*;
-use crate::auth::User;
 use crate::shared::{AppError, AppResult, Database, Tx};
 
 use jiff::Timestamp;
@@ -14,25 +13,21 @@ pub struct AcademicsRepository {
 impl AcademicsRepository {
 	pub async fn list(&self, filter: AcademicListFilter) -> AppResult<Vec<AcademicView>> {
 		let mut query = Academic::all()
-			.include((
-				Academic::fields().degrees(),
-				Academic::fields().department(),
-				Academic::fields().career(),
-				Academic::fields().work_position(),
-				Academic::fields().category_option().category(),
-			))
-			.exec(&mut self.database.pool())
-			.await?;
+			.include(Academic::fields().degrees())
+			.include(Academic::fields().department())
+			.include(Academic::fields().career())
+			.include(Academic::fields().work_position())
+			.include(Academic::fields().category_option().category());
 
 		if let Some(q) = filter.search {
 			let pattern = format!("%{}%", q.trim());
 
-			let pattern_chain = User::fields()
-				.name()
+			let pattern_chain = Academic::fields()
+				.names()
 				.ilike(&pattern)
-				.or(User::fields().paternal_surname().ilike(&pattern))
-				.or(User::fields().maternal_surname().ilike(&pattern))
-				.or(User::fields().email().ilike(&pattern));
+				.or(Academic::fields().paternal_surname().ilike(&pattern))
+				.or(Academic::fields().maternal_surname().ilike(&pattern))
+				.or(Academic::fields().email().ilike(&pattern));
 
 			query = query.filter(pattern_chain);
 		}
@@ -50,13 +45,13 @@ impl AcademicsRepository {
 		}
 
 		if let Some(planta) = filter.planta {
-			query = query.filter(
-				Academic::fields()
-					.category_option()
-					.category()
-					.planta()
-					.eq(planta),
-			);
+			let chain = Academic::fields()
+				.category_option()
+				.category()
+				.planta()
+				.eq(planta);
+
+			query = query.filter(chain);
 		}
 
 		if let Some(option) = filter.option {
@@ -66,7 +61,7 @@ impl AcademicsRepository {
 		let academics = query
 			.exec(&mut self.database.pool())
 			.await?
-			.iter()
+			.into_iter()
 			.map(AcademicView::from)
 			.collect();
 
@@ -78,14 +73,12 @@ impl AcademicsRepository {
 	}
 
 	pub async fn find_by_id(&self, id: &AcademicId) -> AppResult<Option<Academic>> {
-		let academic = Academic::all()
-			.include((
-				Academic::fields().degrees(),
-				Academic::fields().department(),
-				Academic::fields().career(),
-				Academic::fields().work_position(),
-				Academic::fields().category_option().category(),
-			))
+		let academic = Academic::filter_by_id(id)
+			.include(Academic::fields().degrees())
+			.include(Academic::fields().department())
+			.include(Academic::fields().career())
+			.include(Academic::fields().work_position())
+			.include(Academic::fields().category_option().category())
 			.first()
 			.exec(&mut self.database.pool())
 			.await?;
@@ -94,8 +87,7 @@ impl AcademicsRepository {
 	}
 
 	pub async fn find_by_rut(&self, rut: &str) -> AppResult<Option<Academic>> {
-		let academic = Academic::all()
-			.filter(Academic::fields().rut().eq(rut))
+		let academic = Academic::filter_by_rut(rut)
 			.first()
 			.exec(&mut self.database.pool())
 			.await?;
@@ -104,8 +96,7 @@ impl AcademicsRepository {
 	}
 
 	pub async fn find_by_orcid(&self, orcid: &str) -> AppResult<Option<Academic>> {
-		let academic = Academic::all()
-			.filter(Academic::fields().orcid().eq(orcid))
+		let academic = Academic::filter_by_orcid(orcid)
 			.first()
 			.exec(&mut self.database.pool())
 			.await?;
@@ -139,14 +130,15 @@ impl AcademicsRepository {
 			.department_id(academic.department_id)
 			.career_id(academic.career_id)
 			.jce(academic.jce)
-			.acad_category_options_id(academic.acad_category_options_id)
+			.category_option_id(academic.category_option_id)
 			.annual_discount_hours(academic.annual_discount_hours)
 			.nationality_code(&academic.nationality_code)
 			.city(&academic.city)
 			.updated_at(academic.updated_at)
 			.exec(&mut self.database.pool())
-			.await?
-			.map_err(AppError::from)?
+			.await?;
+
+		Ok(())
 	}
 
 	pub async fn save_tx(&self, tx: &mut Tx<'_>, academic: &Academic) -> AppResult<()> {
@@ -164,22 +156,23 @@ impl AcademicsRepository {
 			.department_id(academic.department_id)
 			.career_id(academic.career_id)
 			.jce(academic.jce)
-			.acad_category_options_id(academic.acad_category_options_id)
+			.category_option_id(academic.category_option_id)
 			.annual_discount_hours(academic.annual_discount_hours)
 			.nationality_code(&academic.nationality_code)
 			.city(&academic.city)
 			.updated_at(academic.updated_at)
 			.exec(tx)
-			.await?
-			.map_err(AppError::from)?
+			.await?;
+
+		Ok(())
 	}
 
-	pub async fn list_orcids(&self) -> AppResult<Vec<(AcademicId, String)>> {
+	pub async fn list_orcids(&self) -> AppResult<Vec<(AcademicId, Option<String>)>> {
 		Academic::all()
-			.filter(Academic::fields().orcid().is_not_null())
+			.filter(Academic::fields().orcid().is_some())
 			.select((Academic::fields().id(), Academic::fields().orcid()))
 			.exec(&mut self.database.pool())
-			.await?
+			.await
 			.map_err(AppError::from)
 	}
 }

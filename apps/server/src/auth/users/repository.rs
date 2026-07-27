@@ -16,7 +16,7 @@ impl UsersRepository {
 		if let Some(q) = filter.search {
 			let pattern = format!("%{}%", q.trim());
 
-			let name_pattern = User::fields().name().ilike(pattern);
+			let name_pattern = User::fields().name().ilike(pattern.clone());
 			let email_pattern = User::fields().email().ilike(pattern);
 
 			query = query.filter(email_pattern.or(name_pattern));
@@ -31,7 +31,7 @@ impl UsersRepository {
 		let users = query
 			.exec(&mut self.database.pool())
 			.await?
-			.iter()
+			.into_iter()
 			.map(UserView::from)
 			.collect();
 
@@ -63,12 +63,12 @@ impl UsersRepository {
 	pub async fn create(&self, data: &CreateUserDto) -> AppResult<User> {
 		User::create()
 			.id(UserId::new())
-			.name(data.name)
-			.email(data.email)
-			.password_hash(data.password)
+			.name(&data.name)
+			.email(&data.email)
+			.password_hash(&data.password)
 			.role(UserRole::Admin)
 			.exec(&mut self.database.pool())
-			.await?
+			.await
 			.map_err(AppError::from)
 	}
 

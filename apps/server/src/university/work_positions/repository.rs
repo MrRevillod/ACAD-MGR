@@ -13,7 +13,7 @@ impl AcademicWorkPositionsRepository {
 	pub async fn list(&self) -> AppResult<Vec<AcademicWorkPosition>> {
 		AcademicWorkPosition::all()
 			.exec(&mut self.database.pool())
-			.await?
+			.await
 			.map_err(AppError::from)
 	}
 
@@ -21,8 +21,19 @@ impl AcademicWorkPositionsRepository {
 		&self,
 		id: &AcademicWorkPositionId,
 	) -> AppResult<Option<AcademicWorkPosition>> {
-		AcademicWorkPosition::get_by_id(&mut self.database.pool(), id)
-			.await?
+		AcademicWorkPosition::filter_by_id(id)
+			.first()
+			.exec(&mut self.database.pool())
+			.await
+			.map_err(AppError::from)
+	}
+
+	pub async fn find_by_name(&self, name: &str) -> AppResult<Option<AcademicWorkPosition>> {
+		AcademicWorkPosition::all()
+			.filter(AcademicWorkPosition::fields().name().eq(name))
+			.first()
+			.exec(&mut self.database.pool())
+			.await
 			.map_err(AppError::from)
 	}
 
@@ -31,7 +42,8 @@ impl AcademicWorkPositionsRepository {
 			.id(position.id)
 			.name(position.name.clone())
 			.exec(&mut self.database.pool())
-			.await?
-			.map_err(AppError::from)
+			.await?;
+
+		Ok(())
 	}
 }

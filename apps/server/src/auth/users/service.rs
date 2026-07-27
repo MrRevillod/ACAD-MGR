@@ -56,7 +56,7 @@ impl UsersService {
 			dto.password = Some(self.hasher.hash(password)?);
 		}
 
-		let user = self.users.update(&user.id, &dto).await?;
+		self.users.update(&user.id, &dto).await?;
 
 		Ok(UserView::from(user))
 	}

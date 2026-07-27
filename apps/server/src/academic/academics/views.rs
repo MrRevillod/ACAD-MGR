@@ -78,17 +78,24 @@ impl From<Academic> for AcademicView {
 			sex: a.sex,
 			birth_date: a.birth_date,
 			joined_at: a.joined_at,
-			work_position: Some(a.work_position.get().name),
-			department: a.department.get().name,
-			career: a.career.get().name,
+			work_position: Some(a.work_position.get().name.clone()),
+			department: a.department.get().name.clone(),
+			career: a.career.get().clone().map(|c| c.name),
 			jce: a.jce,
-			category: a.category_option.get().category.get().name,
-			planta: a.category_option.get().category.get().planta,
+			category: a.category_option.get().clone().category.get().clone().name,
 			option: a.category_option.get().option,
 			acad_category_hours: a.category_option.get().hours,
 			annual_discount_hours: a.annual_discount_hours,
 			nationality: a.nationality_code,
 			city: a.city,
+			planta: a
+				.category_option
+				.get()
+				.clone()
+				.category
+				.get()
+				.clone()
+				.planta,
 		}
 	}
 }

@@ -34,6 +34,7 @@ pub struct AcademicCategoryOption {
 	pub option: AcademicOption,
 
 	#[belongs_to]
+	#[builder(default)]
 	pub category: Deferred<AcademicCategory>,
 }
 
@@ -41,4 +42,5 @@ pub struct AcademicCategoryOption {
 pub struct AcademicCategoryOptionFilter {
 	pub option: Option<AcademicOption>,
 	pub category_id: Option<AcademicCategoryId>,
+	pub category_name: Option<String>,
 }

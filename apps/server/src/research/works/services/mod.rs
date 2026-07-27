@@ -223,28 +223,28 @@ impl WorksService {
 			.and_then(|l| l.source.as_ref())
 		{
 			let source_ty = s.r#type.clone().unwrap_or_else(|| "unknown".to_string());
-			let issn_l = s.issn_l.as_deref().and_then(Source::normalize_issn);
-			let issn: Option<Vec<String>> = s.issn.as_ref().and_then(|vec| {
-				let normalized: Vec<String> = vec
-					.iter()
-					.filter_map(|v| Source::normalize_issn(v))
-					.collect();
-				if normalized.is_empty() {
-					None
-				} else {
-					Some(normalized)
-				}
+			let mut normalized_issns: Vec<String> = s.issn.as_ref().map_or_else(Vec::new, |vec| {
+				vec.iter().filter_map(|v| Source::normalize_issn(v)).collect()
 			});
+			if let Some(issn_l) = s.issn_l.as_deref().and_then(Source::normalize_issn) {
+				if !normalized_issns.contains(&issn_l) {
+					normalized_issns.push(issn_l);
+				}
+			}
+			let issn = if normalized_issns.is_empty() {
+				None
+			} else {
+				Some(normalized_issns)
+			};
 			Some(
 				self.sources
-					.save(&Source {
-						id: SourceId::new(),
-						openalex_id: s.id.clone().unwrap_or_default(),
-						display_name: s.display_name.clone().unwrap_or_default(),
-						ty: source_ty,
-						issn_l,
-						issn,
-					})
+					.save(&Source::builder()
+						.id(SourceId::new())
+						.openalex_id(s.id.clone().unwrap_or_default())
+						.display_name(s.display_name.clone().unwrap_or_default())
+						.ty(source_ty)
+						.issn(issn)
+						.build())
 					.await?,
 			)
 		} else {

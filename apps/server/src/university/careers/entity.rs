@@ -24,6 +24,7 @@ pub struct Career {
 	pub department_id: DepartmentId,
 
 	#[belongs_to]
+	#[builder(default)]
 	department: Deferred<Department>,
 }
 

@@ -18,9 +18,9 @@ impl WorksRepository {
             w.publication_date, w.publication_year, w.ty, w.lang, w.is_accepted,
             w.is_published, w.primary_source_id, w.overrides, ji.kind::text AS journal_kind,
             rl.id AS research_line_id, rl.name AS research_line_name, rl.slug AS research_line_slug
-            FROM works w LEFT JOIN sources src ON w.primary_source_id = src.id
-            LEFT JOIN LATERAL (SELECT kind FROM journal_issn WHERE issn = src.issn_l
-            OR eissn = src.issn_l OR issn = ANY(src.issn) OR eissn = ANY(src.issn) LIMIT 1) ji ON TRUE
+            FROM works w
+            LEFT JOIN sources src ON w.primary_source_id = src.id
+            LEFT JOIN journal_issn ji ON ji.id = src.journal_issn_id
             LEFT JOIN LATERAL (
                 SELECT r.id, r.name, r.slug
                 FROM work_topics wt
@@ -45,13 +45,13 @@ impl WorksRepository {
 		let mut qb = QueryBuilder::new(
 			"SELECT DISTINCT w.id, w.openalex_id, w.title, w.abstract,
 				w.doi, w.publication_date, w.publication_year, w.ty, w.lang, w.is_accepted,
-				w.is_published, w.primary_source_id, w.overrides, ji.kind::text AS journal_kind,
+				w.is_published, w.primary_source_id, w.overrides,
+				ji.kind::text AS journal_kind,
 				rl.id AS research_line_id, rl.name AS research_line_name, rl.slug AS research_line_slug
 			FROM works w
 			LEFT JOIN work_authorships wa ON w.id = wa.work_id
 			LEFT JOIN sources src ON w.primary_source_id = src.id
-			LEFT JOIN LATERAL (
-			SELECT kind FROM journal_issn WHERE issn = src.issn_l OR eissn = src.issn_l OR issn = ANY(src.issn) OR eissn = ANY(src.issn) LIMIT 1) ji ON TRUE
+			LEFT JOIN journal_issn ji ON ji.id = src.journal_issn_id
 			LEFT JOIN LATERAL (
 				SELECT r.id, r.name, r.slug
 				FROM work_topics wt

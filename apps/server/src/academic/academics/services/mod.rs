@@ -1,7 +1,6 @@
 mod imports;
 
 pub use imports::*;
-use serde_json::{Value, json};
 
 use crate::{
 	academic::*,
@@ -10,8 +9,11 @@ use crate::{
 	shared::{AppResult, JsonWebTokenService},
 	university::*,
 };
+use jiff::{Timestamp, ToSpan};
+use serde_json::{Value, json};
 use std::sync::Arc;
-use sword::{events::EventPublisher, prelude::*};
+use sword::events::EventPublisher;
+use sword::prelude::*;
 
 #[injectable]
 pub struct AcademicsService {
@@ -33,7 +35,6 @@ impl AcademicsService {
 	pub async fn find(&self, query: GetAcademicsQuery) -> AppResult<Vec<AcademicView>> {
 		let filter = AcademicListFilter {
 			search: query.search,
-			sort: query.sort,
 			career_id: query.career_id,
 			category_id: query.category_id,
 			department_id: query.department_id,
@@ -176,7 +177,7 @@ impl AcademicsService {
 				Err(AcademicError::CategoryOptionNotFound)?;
 			}
 
-			academic.acad_category_options_id = cat_opt_id;
+			academic.category_option_id = cat_opt_id;
 		}
 
 		if let Some(jce) = input.jce {
@@ -209,11 +210,12 @@ impl AcademicsService {
 		};
 
 		let updated_at = self.academics.update_updated_at(id).await?;
+		let exp = Timestamp::now().checked_add(7.days())?;
 
 		let claims = json!({
 			"academic_id": academic.id.to_string(),
-			"updated_at": updated_at.timestamp(),
-			"exp": (updated_at + chrono::Duration::days(7)).timestamp(),
+			"updated_at": &updated_at.as_second(),
+			"exp": exp.as_second(),
 		});
 
 		let one_time_token = self
@@ -259,7 +261,7 @@ impl AcademicsService {
 			return Err(AcademicError::AcademicNotFound)?;
 		};
 
-		if token_updated_at != academic.updated_at.timestamp() {
+		if token_updated_at != academic.updated_at.as_second() {
 			Err(AcademicError::InvalidOneTimeToken)?;
 		}
 

@@ -17,7 +17,7 @@ impl AcademicWorkPositionsService {
 		&self,
 		input: CreateAcademicWorkPositionDto,
 	) -> AppResult<AcademicWorkPosition> {
-		let position = AcademicWorkPosition::new(input.name);
+		let position = AcademicWorkPosition::builder().name(input.name).build();
 
 		self.positions.save(&position).await?;
 

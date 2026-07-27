@@ -1,7 +1,7 @@
 use super::ORCID_ID_REGEX;
 use crate::academic::Sex;
 
-use chrono::NaiveDate;
+use jiff::civil::Date;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
@@ -37,7 +37,7 @@ pub struct SelfUpdateAcademicDto {
 	pub sex: Option<Sex>,
 
 	#[validate(custom(function = "super::validate_birth_date"))]
-	pub birth_date: Option<NaiveDate>,
+	pub birth_date: Option<Date>,
 
 	#[validate(length(
 		min = 2,

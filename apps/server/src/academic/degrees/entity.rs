@@ -26,6 +26,7 @@ model_id! {
 #[serde(rename_all = "camelCase")]
 pub struct Degree {
 	#[key]
+	#[builder(default = DegreeId::new())]
 	pub id: DegreeId,
 	pub name: String,
 	pub university: String,
@@ -39,8 +40,10 @@ pub struct Degree {
 	pub country_code: String,
 
 	#[belongs_to]
+	#[builder(default)]
 	pub academic: Deferred<Academic>,
 
 	#[belongs_to(key = country_code, references = code)]
+	#[builder(default)]
 	pub country: Deferred<Country>,
 }

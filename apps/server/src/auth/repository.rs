@@ -15,7 +15,7 @@ pub struct SessionRepository {
 impl SessionRepository {
 	pub async fn save(&self, session: &Session) -> AppResult<Session> {
 		let session = Session::upsert_by_id(session.id)
-			.user_id(session.id)
+			.user_id(session.user_id)
 			.refresh_token_hash(session.refresh_token_hash.clone())
 			.created_at(session.created_at)
 			.expires_at(session.expires_at)

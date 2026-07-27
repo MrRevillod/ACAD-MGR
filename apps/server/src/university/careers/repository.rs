@@ -3,7 +3,6 @@ use crate::university::{Career, CareerFilter, CareerId};
 
 use std::sync::Arc;
 use sword::prelude::*;
-use toasty::schema::Model;
 
 #[injectable]
 pub struct CareersRepository {
@@ -22,12 +21,26 @@ impl CareersRepository {
 			query = query.filter(Career::fields().department_id().eq(dept_id));
 		}
 
-		query.exec(&mut self.database.pool()).await.into()
+		query
+			.exec(&mut self.database.pool())
+			.await
+			.map_err(AppError::from)
 	}
 
 	pub async fn find_by_id(&self, id: &CareerId) -> AppResult<Option<Career>> {
-		Career::get_by_id(&mut self.database.pool(), id)
-			.await?
+		Career::filter_by_id(id)
+			.first()
+			.exec(&mut self.database.pool())
+			.await
+			.map_err(AppError::from)
+	}
+
+	pub async fn find_by_name(&self, name: &str) -> AppResult<Option<Career>> {
+		Career::all()
+			.filter(Career::fields().name().eq(name))
+			.first()
+			.exec(&mut self.database.pool())
+			.await
 			.map_err(AppError::from)
 	}
 

@@ -13,7 +13,7 @@ pub struct WorkPositionsController {
 
 impl WorkPositionsController {
 	#[get("/")]
-	pub async fn get_positions(&self, req: Request) -> WebResult<Vec<AcademicWorkPosition>> {
+	pub async fn get_positions(&self, _: Request) -> WebResult<Vec<AcademicWorkPosition>> {
 		Ok(self.positions.find().await?)
 	}
 

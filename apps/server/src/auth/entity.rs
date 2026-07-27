@@ -3,6 +3,7 @@ use crate::{
 	shared::model_id,
 };
 
+use bon::Builder;
 use jiff::Timestamp;
 use serde::{Deserialize, Serialize};
 use toasty::{Deferred, Model};
@@ -11,11 +12,12 @@ model_id! {
 	struct SessionId, key: "session"
 }
 
-#[derive(Debug, Serialize, Deserialize, Model)]
+#[derive(Debug, Model, Builder)]
 pub struct Session {
 	#[key]
 	pub id: SessionId,
 
+	#[index]
 	pub user_id: UserId,
 	pub refresh_token_hash: String,
 	pub created_at: Timestamp,
@@ -24,7 +26,8 @@ pub struct Session {
 	pub refresh_expires_at: Timestamp,
 
 	#[belongs_to]
-	user: Deferred<User>,
+	#[builder(default)]
+	pub user: Deferred<User>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

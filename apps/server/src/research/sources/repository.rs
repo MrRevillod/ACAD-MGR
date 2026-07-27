@@ -1,8 +1,6 @@
-use crate::research::sources::views::SourceView;
 use crate::research::*;
-use crate::shared::{AppResult, Database};
+use crate::shared::{AppError, AppResult, Database};
 
-use sqlx::Row;
 use std::sync::Arc;
 use sword::prelude::*;
 
@@ -12,43 +10,35 @@ pub struct SourcesRepository {
 }
 
 impl SourcesRepository {
-	pub async fn find_source_view_by_id(&self, id: &SourceId) -> AppResult<Option<SourceView>> {
-		sqlx::query_as::<_, SourceView>(
-			r#"SELECT s.id, s.openalex_id, s.display_name, s.ty, s.issn_l, s.issn,
-			          (SELECT ji.kind FROM journal_issn ji
-			           WHERE ji.issn = s.issn_l
-			              OR ji.eissn = s.issn_l
-			              OR ji.issn = ANY(s.issn)
-			              OR ji.eissn = ANY(s.issn)
-			           LIMIT 1
-			          ) AS kind
-			   FROM sources s
-			   WHERE s.id = $1"#,
-		)
-		.bind(id)
-		.fetch_optional(self.database.pool())
-		.await
-		.map_err(Into::into)
+	pub async fn find_by_id(&self, id: &SourceId) -> AppResult<Option<Source>> {
+		Source::filter_by_id(id)
+			.exec(&mut self.database.pool())
+			.await?
+			.map_err(AppError::from)
 	}
 
-	pub async fn save(&self, source: &Source) -> AppResult<SourceId> {
-		let row = sqlx::query(
-			"INSERT INTO sources (openalex_id, display_name, ty, issn_l, issn)
-            VALUES ($1, $2, $3, $4, $5)
-            ON CONFLICT (openalex_id) DO UPDATE SET
-            display_name = EXCLUDED.display_name,
-            ty = EXCLUDED.ty,
-            issn_l = EXCLUDED.issn_l,
-            issn = EXCLUDED.issn RETURNING id",
-		)
-		.bind(&source.openalex_id)
-		.bind(&source.display_name)
-		.bind(&source.ty)
-		.bind(&source.issn_l)
-		.bind(&source.issn)
-		.fetch_one(self.database.pool())
-		.await?;
+	pub async fn save(&self, source: &Source) -> AppResult<()> {
+		Source::upsert_by_id(source.id)
+			.openalex_id(&source.openalex_id)
+			.display_name(&source.display_name)
+			.ty(&source.ty)
+			.issn(source.issn.clone())
+			.exec(&mut self.database.pool())
+			.await?
+			.map_err(AppError::from)?;
 
-		Ok(SourceId::from_uuid(row.get("id")))
+		if let Some(ref issns) = source.issn {
+			toasty::sql::statement(
+				"UPDATE sources SET journal_issn_id = (
+					SELECT id FROM journal_issn WHERE issn = ANY($1) LIMIT 1
+				) WHERE id = $2",
+			)
+			.bind(issns)
+			.bind(&source.id)
+			.exec(&mut self.database.pool())
+			.await?;
+		}
+
+		Ok(())
 	}
 }

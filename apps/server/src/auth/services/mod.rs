@@ -39,15 +39,15 @@ impl AuthService {
 
 		let now = Timestamp::now();
 
-		let session = Session {
-			id: session_id,
-			user_id: user.id,
-			refresh_token_hash: Self::hash_token(&refresh_token),
-			created_at: now,
-			expires_at: access_token_exp,
-			refresh_expires_at: refresh_token_exp,
-			revoked_at: None,
-		};
+		let session = Session::builder()
+			.id(session_id)
+			.user_id(user.id)
+			.refresh_token_hash(Self::hash_token(&refresh_token))
+			.created_at(now)
+			.expires_at(access_token_exp)
+			.refresh_expires_at(refresh_token_exp)
+			.maybe_revoked_at(None)
+			.build();
 
 		self.sessions.save(&session).await?;
 
@@ -123,7 +123,7 @@ impl AuthService {
 		session_id: &SessionId,
 		user_id: &UserId,
 	) -> AppResult<(String, Timestamp)> {
-		let expiration = Timestamp::now().checked_add(self.config.refresh_exp_minutes.minutes())?;
+		let expiration = Timestamp::now().checked_add(self.config.refresh_exp_days.minutes())?;
 
 		let claims = SessionClaims {
 			session_id: *session_id,

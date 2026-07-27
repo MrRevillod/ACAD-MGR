@@ -15,22 +15,24 @@ impl AcademicCategoriesRepository {
 
 		if let Some(n) = filter.name {
 			let pattern = format!("%{}%", n.trim());
-			categories = categories.filter(AcademicCategory::fields().name.ilike(pattern));
+			categories = categories.filter(AcademicCategory::fields().name().ilike(pattern));
 		}
 
 		if let Some(planta) = filter.planta {
-			categories = categories.filter(AcademicCategory::fields().planta.eq(planta));
+			categories = categories.filter(AcademicCategory::fields().planta().eq(planta));
 		}
 
 		categories
-			.execute(&mut self.database.pool())
-			.await?
+			.exec(&mut self.database.pool())
+			.await
 			.map_err(AppError::from)
 	}
 
 	pub async fn find_by_id(&self, id: &AcademicCategoryId) -> AppResult<Option<AcademicCategory>> {
-		AcademicCategory::get_by_id(&mut self.database.pool(), id)
-			.await?
+		AcademicCategory::filter_by_id(id)
+			.first()
+			.exec(&mut self.database.pool())
+			.await
 			.map_err(AppError::from)
 	}
 
@@ -39,8 +41,9 @@ impl AcademicCategoriesRepository {
 			.id(&category.id)
 			.name(&category.name)
 			.planta(category.planta)
-			.execute(&mut self.database.pool())
-			.await?
-			.map_err(AppError::from)
+			.exec(&mut self.database.pool())
+			.await?;
+
+		Ok(())
 	}
 }

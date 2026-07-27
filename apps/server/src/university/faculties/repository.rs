@@ -11,7 +11,7 @@ pub struct FacultiesRepository {
 
 impl FacultiesRepository {
 	pub async fn list(&self, filter: FacultyFilter) -> AppResult<Vec<Faculty>> {
-		let query = Faculty::all();
+		let mut query = Faculty::all();
 
 		if let Some(n) = filter.name {
 			query = query.filter(Faculty::fields().name().ilike(format!("%{}%", n.trim())))
@@ -19,13 +19,15 @@ impl FacultiesRepository {
 
 		query
 			.exec(&mut self.database.pool())
-			.await?
+			.await
 			.map_err(AppError::from)
 	}
 
 	pub async fn find_by_id(&self, id: &FacultyId) -> AppResult<Option<Faculty>> {
-		Faculty::get_by_id(&mut self.database.pool(), id)
-			.await?
+		Faculty::filter_by_id(id)
+			.first()
+			.exec(&mut self.database.pool())
+			.await
 			.map_err(AppError::from)
 	}
 
@@ -34,7 +36,8 @@ impl FacultiesRepository {
 			.id(faculty.id)
 			.name(faculty.name.clone())
 			.exec(&mut self.database.pool())
-			.await?
-			.map_err(AppError::from)
+			.await?;
+
+		Ok(())
 	}
 }

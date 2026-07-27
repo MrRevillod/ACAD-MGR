@@ -1,6 +1,5 @@
 use crate::academic::{AcademicId, DegreeKind};
-
-use chrono::NaiveDate;
+use jiff::civil::Date;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
@@ -23,7 +22,7 @@ pub struct CreateDegreeDto {
 	))]
 	pub university: String,
 
-	pub obtained_at: NaiveDate,
+	pub obtained_at: Date,
 	pub kind: DegreeKind,
 
 	#[validate(length(
@@ -50,7 +49,7 @@ pub struct UpdateDegreeDto {
 		message = "La universidad debe tener entre 1 y 255 caracteres"
 	))]
 	pub university: Option<String>,
-	pub obtained_at: Option<NaiveDate>,
+	pub obtained_at: Option<Date>,
 
 	#[validate(length(
 		min = 2,

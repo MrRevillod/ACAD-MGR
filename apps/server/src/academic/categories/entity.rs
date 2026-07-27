@@ -8,7 +8,7 @@ model_id! {
 	key: "academic_category"
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Embed)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Embed, Copy)]
 #[serde(rename_all = "lowercase")]
 #[column(rename_all = "lowercase")]
 pub enum AcademicPlanta {

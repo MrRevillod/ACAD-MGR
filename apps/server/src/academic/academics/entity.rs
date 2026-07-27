@@ -65,21 +65,27 @@ pub struct Academic {
 	pub work_position_id: AcademicWorkPositionId,
 
 	#[has_many]
+	#[builder(default)]
 	pub degrees: Deferred<Vec<Degree>>,
 
 	#[belongs_to(key = nationality_code, references = code)]
+	#[builder(default)]
 	pub nationality: Deferred<Country>,
 
 	#[belongs_to]
+	#[builder(default)]
 	pub department: Deferred<Department>,
 
 	#[belongs_to]
+	#[builder(default)]
 	pub career: Deferred<Option<Career>>,
 
 	#[belongs_to]
+	#[builder(default)]
 	pub category_option: Deferred<AcademicCategoryOption>,
 
 	#[belongs_to]
+	#[builder(default)]
 	pub work_position: Deferred<AcademicWorkPosition>,
 }
 

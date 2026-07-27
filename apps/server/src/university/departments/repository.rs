@@ -28,8 +28,19 @@ impl DepartmentsRepository {
 	}
 
 	pub async fn find_by_id(&self, id: &DepartmentId) -> AppResult<Option<Department>> {
-		Department::get_by_id(&mut self.database.pool(), id)
-			.await?
+		Department::filter_by_id(id)
+			.first()
+			.exec(&mut self.database.pool())
+			.await
+			.map_err(AppError::from)
+	}
+
+	pub async fn find_by_name(&self, name: &str) -> AppResult<Option<Department>> {
+		Department::all()
+			.filter(Department::fields().name().eq(name))
+			.first()
+			.exec(&mut self.database.pool())
+			.await
 			.map_err(AppError::from)
 	}
 
@@ -39,7 +50,8 @@ impl DepartmentsRepository {
 			.name(&department.name)
 			.faculty_id(department.faculty_id)
 			.exec(&mut self.database.pool())
-			.await?
-			.map_err(AppError::from)
+			.await?;
+
+		Ok(())
 	}
 }

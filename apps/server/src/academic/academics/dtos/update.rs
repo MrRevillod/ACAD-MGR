@@ -2,7 +2,7 @@ use super::ORCID_ID_REGEX;
 use crate::academic::{AcademicCategoryOptionId, Sex};
 use crate::university::{AcademicWorkPositionId, CareerId, DepartmentId};
 
-use chrono::NaiveDate;
+use jiff::civil::Date;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
@@ -38,10 +38,10 @@ pub struct UpdateAcademicDto {
 	pub sex: Option<Sex>,
 
 	#[validate(custom(function = "super::validate_birth_date"))]
-	pub birth_date: Option<NaiveDate>,
+	pub birth_date: Option<Date>,
 
 	#[validate(custom(function = "super::validate_joined_at"))]
-	pub joined_at: Option<NaiveDate>,
+	pub joined_at: Option<Date>,
 	pub work_position_id: Option<AcademicWorkPositionId>,
 	pub department_id: Option<DepartmentId>,
 	pub career_id: Option<CareerId>,

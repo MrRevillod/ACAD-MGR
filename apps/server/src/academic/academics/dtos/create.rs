@@ -2,7 +2,7 @@ use super::{ORCID_ID_REGEX, RUT_REGEX};
 use crate::academic::{Academic, AcademicCategoryOptionId, Sex};
 use crate::university::{AcademicWorkPositionId, CareerId, DepartmentId};
 
-use chrono::NaiveDate;
+use jiff::civil::Date;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
@@ -47,10 +47,10 @@ pub struct CreateAcademicDto {
 	pub sex: Sex,
 
 	#[validate(custom(function = "super::validate_birth_date"))]
-	pub birth_date: NaiveDate,
+	pub birth_date: Date,
 
 	#[validate(custom(function = "super::validate_joined_at"))]
-	pub joined_at: NaiveDate,
+	pub joined_at: Date,
 	pub work_position_id: AcademicWorkPositionId,
 	pub department_id: DepartmentId,
 	pub career_id: Option<CareerId>,
@@ -100,7 +100,7 @@ impl From<CreateAcademicDto> for Academic {
 			.work_position_id(input.work_position_id)
 			.department_id(input.department_id)
 			.maybe_career_id(input.career_id)
-			.acad_category_options_id(input.acad_category_options_id)
+			.category_option_id(input.acad_category_options_id)
 			.annual_discount_hours(input.annual_discount_hours)
 			.nationality_code(input.nationality_code)
 			.city(input.city)

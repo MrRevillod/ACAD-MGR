@@ -3,6 +3,15 @@ use crate::auth::{User, UserId, UserRole};
 use serde::{Deserialize, Serialize};
 use validator::{Validate, ValidationError};
 
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UserView {
+	pub id: UserId,
+	pub name: String,
+	pub email: String,
+	pub role: UserRole,
+}
+
 #[derive(Debug, Default, Validate, Deserialize)]
 pub struct GetUsersQuery {
 	#[validate(length(
@@ -28,6 +37,24 @@ pub struct CreateUserDto {
 	#[validate(custom(function = "validate_password"))]
 	pub password: String,
 	pub role: UserRole,
+}
+
+#[derive(Debug, Validate, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateUserDto {
+	#[validate(length(
+		min = 1,
+		max = 255,
+		message = "El atributo 'name' no puede tener más de 255 caracteres"
+	))]
+	pub name: Option<String>,
+
+	#[validate(email(message = "El atributo 'email' debe ser un correo electrónico válido"))]
+	pub email: Option<String>,
+	pub role: Option<UserRole>,
+
+	#[validate(custom(function = "validate_password"))]
+	pub password: Option<String>,
 }
 
 fn validate_password(password: &str) -> Result<(), ValidationError> {
@@ -60,34 +87,6 @@ fn validate_password(password: &str) -> Result<(), ValidationError> {
 		err.message = Some(format!("La contraseña debe tener {}", missing.join(", ")).into());
 		Err(err)
 	}
-}
-
-#[derive(Debug, Clone, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct UserView {
-	pub id: UserId,
-	pub name: String,
-	pub email: String,
-	pub role: UserRole,
-}
-
-#[derive(Debug, Validate, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct UpdateUserDto {
-	#[validate(length(
-		min = 1,
-		max = 255,
-		message = "El atributo 'name' no puede tener más de 255 caracteres"
-	))]
-	pub name: Option<String>,
-
-	#[validate(email(message = "El atributo 'email' debe ser un correo electrónico válido"))]
-	pub email: Option<String>,
-
-	pub role: Option<UserRole>,
-
-	#[validate(custom(function = "validate_password"))]
-	pub password: Option<String>,
 }
 
 impl From<User> for UserView {

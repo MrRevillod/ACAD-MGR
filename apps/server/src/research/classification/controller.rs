@@ -50,38 +50,33 @@ impl WorksClassificationController {
 	}
 
 	#[get("/research-lines")]
-	pub async fn get_research_lines(&self) -> WebResult<Vec<ResearchLineView>> {
+	pub async fn get_research_lines(&self) -> WebResult<Vec<ResearchLine>> {
 		Ok(self.work_classifications.list_research_lines().await?)
-	}
-
-	#[get("/research-lines/detail")]
-	pub async fn get_research_lines_detail(&self) -> WebResult<ResearchLinesDetailResponse> {
-		let lines = self
-			.work_classifications
-			.list_research_lines_with_subfields()
-			.await?;
-
-		Ok(ResearchLinesDetailResponse { lines })
 	}
 
 	#[put("/research-line-mappings")]
 	pub async fn update_research_line_mapping(&self, req: Request) -> WebResult<()> {
 		let dto = req.body::<UpdateMappingBody>()?;
 
-		self.work_classifications
-			.update_mapping(&dto.subfield_openalex_id, dto.research_line_id)
-			.await?;
+		if self
+			.work_classifications
+			.find_research_line_by_id(dto.research_line_id)
+			.await?
+			.is_none()
+		{
+			return Err(JsonResponse::NotFound())?;
+		};
 
-		Ok(())
-	}
+		let Some(mut subfield) = self
+			.work_classifications
+			.find_subfield_by_openalex_id(&dto.subfield_openalex_id)
+			.await?
+		else {
+			return Err(JsonResponse::NotFound())?;
+		};
 
-	#[delete("/research-line-mappings/{subfield_openalex_id}")]
-	pub async fn delete_research_line_mapping(&self, req: Request) -> WebResult<()> {
-		let subfield_openalex_id = req.param::<String>("subfield_openalex_id")?;
-
-		self.work_classifications
-			.delete_mapping(&subfield_openalex_id)
-			.await?;
+		subfield.research_line_id = Some(dto.research_line_id);
+		self.work_classifications.save_subfield(&subfield).await?;
 
 		Ok(())
 	}

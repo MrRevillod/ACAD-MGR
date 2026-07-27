@@ -1,6 +1,6 @@
 use crate::shared::{AppError, AppResult};
 
-use jiff::Timestamp;
+use jiff::{Timestamp, ToSpan};
 use serde::Deserialize;
 use sword::prelude::*;
 use sword::web::{Cookie, CookieBuilder, CookiesExpiration, SameSite};
@@ -61,5 +61,15 @@ impl CookieManager {
 		};
 
 		Ok(CookiesExpiration::DateTime(exp_dt))
+	}
+
+	pub fn build_logout_cookies(&self) -> AppResult<(Cookie<'static>, Cookie<'static>)> {
+		let access_cookie =
+			self.build_access_cookie("".to_string(), Timestamp::now().checked_sub(1.day())?)?;
+
+		let refresh_cookie =
+			self.build_refresh_cookie("".to_string(), Timestamp::now().checked_sub(1.day())?)?;
+
+		Ok((access_cookie, refresh_cookie))
 	}
 }

@@ -4,7 +4,6 @@ use crate::{
 };
 
 use serde::Deserialize;
-use std::sync::Arc;
 use sword::prelude::*;
 
 #[derive(Debug, Clone, Deserialize)]
@@ -16,12 +15,12 @@ pub struct SeederData {
 
 #[injectable(provider)]
 pub struct DatabaseSeeder {
-	database: Arc<Database>,
+	database: Database,
 	config: SeederData,
 }
 
 impl DatabaseSeeder {
-	pub fn new(db_ref: Arc<Database>, config: SeederData) -> Self {
+	pub fn new(db_ref: Database, config: SeederData) -> Self {
 		Self {
 			database: db_ref,
 			config,

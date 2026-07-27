@@ -1,5 +1,6 @@
 use crate::shared::AppResult;
 
+use parking_lot::RwLock;
 use serde::Deserialize;
 use std::sync::Arc;
 use sword::prelude::*;
@@ -7,9 +8,11 @@ use toasty::{Db as Pool, models};
 
 pub use toasty::Transaction as Tx;
 
+pub type DatabasePool = RwLock<Pool>;
+
 #[injectable(provider)]
 pub struct Database {
-	pool: Arc<Pool>,
+	pool: Arc<DatabasePool>,
 }
 
 #[config(key = "postgres-db")]
@@ -28,17 +31,20 @@ pub struct DatabaseConfig {
 
 impl Database {
 	pub async fn new(db_conf: DatabaseConfig) -> Self {
-		let mut db = Pool::builder()
+		let pool = Pool::builder()
 			.max_pool_size(db_conf.max_connections as usize)
 			.models(models!(crate::*))
 			.connect(&Self::create_uri(&db_conf))
-			.await?;
+			.await
+			.expect("Failed to connect to database");
 
-		db.push_schema().expect("Failed to migrate database schema");
+		pool.push_schema()
+			.await
+			.expect("Failed to push schema to database");
 
-		let a = db.transaction().await?;
-
-		Self { pool: Arc::new(db) }
+		Self {
+			pool: Arc::new(RwLock::new(pool)),
+		}
 	}
 
 	fn create_uri(db_conf: &DatabaseConfig) -> String {
@@ -48,12 +54,8 @@ impl Database {
 		)
 	}
 
-	pub fn pool(&self) -> &Pool {
-		&self.pool
-	}
-
-	pub async fn tx(&self) -> AppResult<Tx<'_>> {
-		Ok(self.pool.transaction().await?)
+	pub fn pool(&self) -> Pool {
+		self.pool.read().clone()
 	}
 }
 
@@ -63,7 +65,7 @@ pub struct TransactionManager {
 }
 
 impl TransactionManager {
-	pub async fn begin(&self) -> AppResult<Tx<'_>> {
-		self.db.tx().await
+	pub async fn database(&self) -> AppResult<Pool> {
+		Ok(self.db.pool())
 	}
 }

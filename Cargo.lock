@@ -15,6 +15,7 @@ dependencies = [
  "jsonwebtoken",
  "lettre",
  "papers-openalex",
+ "parking_lot",
  "regex",
  "reqwest 0.12.28",
  "serde",

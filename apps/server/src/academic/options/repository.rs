@@ -17,12 +17,12 @@ impl AcademicCategoryOptionsRepository {
 		let mut options = AcademicCategoryOption::all();
 
 		if let Some(cid) = filter.category_id {
-			options = options.filter(AcademicCategoryOption::fields().category_id.eq(cid));
+			options = options.filter(AcademicCategoryOption::fields().category_id().eq(cid));
 		}
 
 		options
 			.exec(&mut self.database.pool())
-			.await?
+			.await
 			.map_err(AppError::from)
 	}
 
@@ -30,20 +30,24 @@ impl AcademicCategoryOptionsRepository {
 		&self,
 		filter: AcademicCategoryOptionFilter,
 	) -> AppResult<Option<AcademicCategoryOption>> {
-		let mut option = AcademicCategoryOption::all();
+		let mut query = AcademicCategoryOption::all();
 
 		if let Some(cid) = filter.category_id {
-			option = option.filter(AcademicCategoryOption::fields().category_id.eq(cid));
+			query = query.filter(AcademicCategoryOption::fields().category_id().eq(cid));
 		}
 
 		if let Some(option) = filter.option {
-			option = option.filter(AcademicCategoryOption::fields().option.eq(option));
+			query = query.filter(AcademicCategoryOption::fields().option().eq(option));
 		}
 
-		option
+		if let Some(name) = filter.category_name {
+			query = query.filter(AcademicCategoryOption::fields().category().name().eq(name));
+		}
+
+		query
 			.first()
 			.exec(&mut self.database.pool())
-			.await?
+			.await
 			.map_err(AppError::from)
 	}
 
@@ -51,8 +55,10 @@ impl AcademicCategoryOptionsRepository {
 		&self,
 		id: &AcademicCategoryOptionId,
 	) -> AppResult<Option<AcademicCategoryOption>> {
-		AcademicCategoryOption::get_by_id(&mut self.database.pool(), id)
-			.await?
+		AcademicCategoryOption::filter_by_id(id)
+			.first()
+			.exec(&mut self.database.pool())
+			.await
 			.map_err(AppError::from)
 	}
 
@@ -62,8 +68,9 @@ impl AcademicCategoryOptionsRepository {
 			.category_id(&option.category_id)
 			.option(option.option)
 			.hours(option.hours)
-			.execute(&mut self.database.pool())
-			.await?
-			.map_err(AppError::from)
+			.exec(&mut self.database.pool())
+			.await?;
+
+		Ok(())
 	}
 }
