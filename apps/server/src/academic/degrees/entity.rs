@@ -1,37 +1,49 @@
+use crate::{
+	academic::{Academic, AcademicId},
+	shared::model_id,
+	university::Country,
+};
+
 use bon::Builder;
-
-use crate::academic::academics::AcademicId;
-use crate::shared::{Entity, Id};
-
-use chrono::NaiveDate;
+use jiff::civil::Date;
 use serde::{Deserialize, Serialize};
-use sqlx::{FromRow, Type};
+use toasty::{Deferred, Embed, Model};
 
-#[derive(Debug, Clone, Type, Serialize, Deserialize)]
-#[sqlx(type_name = "degree_kind", rename_all = "lowercase")]
+#[derive(Debug, Clone, Embed, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
+#[column(rename_all = "lowercase")]
 pub enum DegreeKind {
 	Base,
 	Advanced,
 }
 
-pub type DegreeId = Id<Degree>;
-
-#[derive(Debug, Clone, Serialize, FromRow, Builder)]
-#[serde(rename_all = "camelCase")]
-pub struct Degree {
-	#[builder(default = DegreeId::new())]
-	pub id: DegreeId,
-	pub academic_id: AcademicId,
-	pub name: String,
-	pub university: String,
-	pub obtained_at: NaiveDate,
-	pub kind: DegreeKind,
-	pub country_code: String,
+model_id! {
+	struct DegreeId,
+	key: "degree"
 }
 
-impl Entity for Degree {
-	fn key_name() -> &'static str {
-		"degree"
-	}
+#[derive(Debug, Clone, Serialize, Model, Builder)]
+#[serde(rename_all = "camelCase")]
+pub struct Degree {
+	#[key]
+	#[builder(default = DegreeId::new())]
+	pub id: DegreeId,
+	pub name: String,
+	pub university: String,
+	pub obtained_at: Date,
+	pub kind: DegreeKind,
+
+	#[index]
+	pub academic_id: AcademicId,
+
+	#[index]
+	pub country_code: String,
+
+	#[belongs_to]
+	#[builder(default)]
+	pub academic: Deferred<Academic>,
+
+	#[belongs_to(key = country_code, references = code)]
+	#[builder(default)]
+	pub country: Deferred<Country>,
 }

@@ -1,4 +1,7 @@
-use crate::shared::{AppResult, Database};
+use crate::{
+	shared::{AppError, AppResult, Database},
+	university::Country,
+};
 
 use std::sync::Arc;
 use sword::prelude::*;
@@ -10,11 +13,11 @@ pub struct CountriesRepository {
 
 impl CountriesRepository {
 	pub async fn find_by_code(&self, code: &str) -> AppResult<Option<String>> {
-		let item = sqlx::query_scalar::<_, String>("SELECT code FROM countries WHERE code = $1")
-			.bind(code)
-			.fetch_optional(self.database.pool())
-			.await?;
-
-		Ok(item)
+		Country::filter_by_code(code)
+			.select(Country::fields().code())
+			.first()
+			.exec(&mut self.database.pool())
+			.await
+			.map_err(AppError::from)
 	}
 }

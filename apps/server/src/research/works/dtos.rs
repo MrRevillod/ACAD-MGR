@@ -1,8 +1,18 @@
-use crate::research::{JournalKind, SourceId, WorkType};
+use crate::{academic::AcademicId, research::*};
 use chrono::NaiveDate;
 use serde::Deserialize;
 use uuid::Uuid;
 use validator::Validate;
+
+pub struct NewAuthorship {
+	pub work_id: WorkId,
+	pub orcid: String,
+	pub name: String,
+	pub is_external: bool,
+	pub is_corresponding: bool,
+	pub affiliations: Vec<String>,
+	pub position: AuthorshipPosition,
+}
 
 pub struct NewWork {
 	pub openalex_id: String,
@@ -21,7 +31,7 @@ pub struct NewWork {
 #[derive(Debug, Deserialize, Validate, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct GetWorksQuery {
-	pub academic_id: Option<Uuid>,
+	pub academic_id: Option<AcademicId>,
 	pub search: Option<String>,
 
 	#[validate(range(min = 1900, max = 2100))]
@@ -35,7 +45,7 @@ pub struct GetWorksQuery {
 	pub department_id: Option<Uuid>,
 	pub career_id: Option<Uuid>,
 	pub journal_kind: Option<JournalKind>,
-	pub research_line_id: Option<Uuid>,
+	pub research_line_id: Option<ResearchLineId>,
 
 	#[validate(range(min = 1, max = 1000))]
 	pub size: Option<u32>,

@@ -1,10 +1,9 @@
-use crate::academic::{AcademicId, AcademicOption, AcademicPlanta, Sex};
+use crate::academic::{Academic, AcademicId, AcademicOption, AcademicPlanta, Sex};
 
-use chrono::NaiveDate;
+use jiff::civil::Date;
 use serde::Serialize;
-use sqlx::FromRow;
 
-#[derive(Debug, Clone, Serialize, FromRow)]
+#[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AcademicView {
 	pub id: AcademicId,
@@ -14,8 +13,8 @@ pub struct AcademicView {
 	pub email: String,
 	pub orcid: Option<String>,
 	pub sex: Sex,
-	pub birth_date: NaiveDate,
-	pub joined_at: NaiveDate,
+	pub birth_date: Date,
+	pub joined_at: Date,
 	pub work_position: Option<String>,
 	pub department: String,
 	pub career: Option<String>,
@@ -39,8 +38,8 @@ pub struct AcademicPublicView {
 	pub email: String,
 	pub orcid: Option<String>,
 	pub sex: Sex,
-	pub birth_date: NaiveDate,
-	pub joined_at: NaiveDate,
+	pub birth_date: Date,
+	pub joined_at: Date,
 	pub department: String,
 	pub career: Option<String>,
 	pub nationality: String,
@@ -63,6 +62,40 @@ impl From<AcademicView> for AcademicPublicView {
 			career: view.career,
 			nationality: view.nationality,
 			city: view.city,
+		}
+	}
+}
+
+impl From<Academic> for AcademicView {
+	fn from(a: Academic) -> Self {
+		AcademicView {
+			id: a.id,
+			names: a.names,
+			paternal_surname: a.paternal_surname,
+			maternal_surname: a.maternal_surname,
+			email: a.email,
+			orcid: a.orcid,
+			sex: a.sex,
+			birth_date: a.birth_date,
+			joined_at: a.joined_at,
+			work_position: Some(a.work_position.get().name.clone()),
+			department: a.department.get().name.clone(),
+			career: a.career.get().clone().map(|c| c.name),
+			jce: a.jce,
+			category: a.category_option.get().clone().category.get().clone().name,
+			option: a.category_option.get().option,
+			acad_category_hours: a.category_option.get().hours,
+			annual_discount_hours: a.annual_discount_hours,
+			nationality: a.nationality_code,
+			city: a.city,
+			planta: a
+				.category_option
+				.get()
+				.clone()
+				.category
+				.get()
+				.clone()
+				.planta,
 		}
 	}
 }

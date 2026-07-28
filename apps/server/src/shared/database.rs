@@ -1,15 +1,18 @@
 use crate::shared::AppResult;
 
+use parking_lot::RwLock;
 use serde::Deserialize;
-use sqlx::{PgPool, migrate::Migrator, postgres::PgPoolOptions};
-use std::{path::Path, sync::Arc, time::Duration};
+use std::sync::Arc;
 use sword::prelude::*;
+use toasty::{Db as Pool, models};
 
-pub type Tx<'a> = sqlx::Transaction<'a, sqlx::Postgres>;
+pub use toasty::Transaction as Tx;
+
+pub type DatabasePool = RwLock<Pool>;
 
 #[injectable(provider)]
 pub struct Database {
-	pool: Arc<PgPool>,
+	pool: Arc<DatabasePool>,
 }
 
 #[config(key = "postgres-db")]
@@ -28,28 +31,19 @@ pub struct DatabaseConfig {
 
 impl Database {
 	pub async fn new(db_conf: DatabaseConfig) -> Self {
-		let pool = PgPoolOptions::new()
-			.min_connections(db_conf.min_connections.into())
-			.max_connections(db_conf.max_connections.into())
-			.acquire_timeout(Duration::from_millis(db_conf.acquire_timeout_ms))
+		let pool = Pool::builder()
+			.max_pool_size(db_conf.max_connections as usize)
+			.models(models!(crate::*))
 			.connect(&Self::create_uri(&db_conf))
 			.await
-			.inspect_err(|err| {
-				tracing::error!("Failed to connect to PostgreSQL database: {}", err);
-			})
-			.expect("Failed to create database connection pool");
+			.expect("Failed to connect to database");
 
-		let migrator = Migrator::new(Path::new(&db_conf.migrations_path))
+		pool.push_schema()
 			.await
-			.expect("Failed to initialize migrator");
-
-		migrator
-			.run(&pool)
-			.await
-			.expect("Failed to run database migrations");
+			.expect("Failed to push schema to database");
 
 		Self {
-			pool: Arc::new(pool),
+			pool: Arc::new(RwLock::new(pool)),
 		}
 	}
 
@@ -60,12 +54,8 @@ impl Database {
 		)
 	}
 
-	pub fn pool(&self) -> &PgPool {
-		&self.pool
-	}
-
-	pub async fn tx(&self) -> AppResult<Tx<'_>> {
-		Ok(self.pool.begin().await?)
+	pub fn pool(&self) -> Pool {
+		self.pool.read().clone()
 	}
 }
 
@@ -75,7 +65,7 @@ pub struct TransactionManager {
 }
 
 impl TransactionManager {
-	pub async fn begin(&self) -> AppResult<Tx<'_>> {
-		self.db.tx().await
+	pub async fn database(&self) -> AppResult<Pool> {
+		Ok(self.db.pool())
 	}
 }

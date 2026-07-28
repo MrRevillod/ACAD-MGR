@@ -1,10 +1,8 @@
 use crate::research::*;
-use crate::shared::{AppResult, Database};
+use crate::shared::{AppError, AppResult, Database};
 
-use sqlx::{Postgres, QueryBuilder, Row};
 use std::sync::Arc;
 use sword::prelude::*;
-use uuid::Uuid;
 
 #[injectable]
 pub struct WorkClassificationRepository {
@@ -12,263 +10,169 @@ pub struct WorkClassificationRepository {
 }
 
 impl WorkClassificationRepository {
-	pub async fn list_domains(&self, f: ClassificationFilter) -> AppResult<Vec<ResearchDomain>> {
-		let mut query = QueryBuilder::<Postgres>::new("SELECT * FROM research_domains WHERE 1=1");
+	pub async fn list_domains(&self, f: ClassificationFilter) -> AppResult<Vec<Domain>> {
+		let mut query = Domain::all();
 
-		if let Some(search) = f.search {
-			let pattern = format!("%{}%", search.trim());
-			query.push(" AND name ILIKE ").push_bind(pattern);
+		if let Some(s) = f.search {
+			let pattern = format!("%{}%", s.trim());
+			query = query.filter(Domain::fields().name().ilike(pattern))
 		}
 
-		query.push(" ORDER BY name");
+		query = query.order_by(Domain::fields().name().asc());
 
 		query
-			.build_query_as::<ResearchDomain>()
-			.fetch_all(self.database.pool())
+			.exec(&mut self.database.pool())
 			.await
-			.map_err(Into::into)
+			.map_err(AppError::from)
 	}
 
-	pub async fn list_fields(&self, f: ClassificationFilter) -> AppResult<Vec<ResearchField>> {
-		let mut query = QueryBuilder::<Postgres>::new("SELECT * FROM research_fields WHERE 1=1");
+	pub async fn list_fields(&self, f: ClassificationFilter) -> AppResult<Vec<Field>> {
+		let mut fields = Field::all();
 
 		if let Some(domain_id) = f.domain_id {
-			query.push(" AND domain_id = ").push_bind(domain_id);
+			fields = fields.filter(Field::fields().domain_id().eq(domain_id));
 		}
 
-		if let Some(search) = f.search {
-			let pattern = format!("%{}%", search.trim());
-			query.push(" AND name ILIKE ").push_bind(pattern);
+		if let Some(s) = f.search {
+			let pattern = format!("%{}%", s.trim());
+			fields = fields.filter(Field::fields().name().ilike(pattern))
 		}
 
-		query.push(" ORDER BY name");
-
-		query
-			.build_query_as::<ResearchField>()
-			.fetch_all(self.database.pool())
+		fields
+			.order_by(Field::fields().name().asc())
+			.exec(&mut self.database.pool())
 			.await
-			.map_err(Into::into)
+			.map_err(AppError::from)
 	}
 
-	pub async fn list_subfields(
-		&self,
-		f: ClassificationFilter,
-	) -> AppResult<Vec<ResearchSubfield>> {
-		let mut query = QueryBuilder::<Postgres>::new("SELECT * FROM research_subfields WHERE 1=1");
+	pub async fn list_subfields(&self, f: ClassificationFilter) -> AppResult<Vec<Subfield>> {
+		let mut subfields = Subfield::all();
 
 		if let Some(field_id) = f.field_id {
-			query.push(" AND field_id = ").push_bind(field_id);
+			subfields = subfields.filter(Subfield::fields().field_id().eq(field_id));
 		}
 
-		if let Some(search) = f.search {
-			let pattern = format!("%{}%", search.trim());
-			query.push(" AND name ILIKE ").push_bind(pattern);
+		if let Some(s) = f.search {
+			subfields = subfields.filter(Subfield::fields().name().ilike(format!("%{}%", s.trim())))
 		}
 
-		query.push(" ORDER BY name");
-		query.push(" LIMIT 50");
-
-		query
-			.build_query_as::<ResearchSubfield>()
-			.fetch_all(self.database.pool())
+		subfields
+			.order_by(Subfield::fields().name().asc())
+			.limit(50)
+			.exec(&mut self.database.pool())
 			.await
-			.map_err(Into::into)
+			.map_err(AppError::from)
 	}
 
-	pub async fn list_topics(&self, f: ClassificationFilter) -> AppResult<Vec<ResearchTopic>> {
-		let mut query = QueryBuilder::<Postgres>::new("SELECT * FROM research_topics WHERE 1=1");
+	pub async fn list_topics(&self, f: ClassificationFilter) -> AppResult<Vec<Topic>> {
+		let mut topics = Topic::all();
 
 		if let Some(subfield_id) = f.subfield_id {
-			query.push(" AND subfield_id = ").push_bind(subfield_id);
+			topics = topics.filter(Topic::fields().subfield_id().eq(subfield_id));
 		}
+
+		if let Some(s) = f.search {
+			topics = topics.filter(Topic::fields().name().ilike(format!("%{}%", s.trim())));
+		}
+
+		topics
+			.order_by(Topic::fields().name().asc())
+			.limit(50)
+			.exec(&mut self.database.pool())
+			.await
+			.map_err(AppError::from)
+	}
+
+	pub async fn list_keywords(&self, f: ClassificationFilter) -> AppResult<Vec<Keyword>> {
+		let mut query = Keyword::all();
 
 		if let Some(search) = f.search {
-			let pattern = format!("%{}%", search.trim());
-			query.push(" AND name ILIKE ").push_bind(pattern);
+			query = query.filter(
+				Keyword::fields()
+					.name()
+					.ilike(format!("%{}%", search.trim())),
+			);
 		}
 
-		query.push(" ORDER BY name");
-		query.push(" LIMIT 50");
-
 		query
-			.build_query_as::<ResearchTopic>()
-			.fetch_all(self.database.pool())
+			.order_by(Keyword::fields().name().asc())
+			.limit(50)
+			.exec(&mut self.database.pool())
 			.await
-			.map_err(Into::into)
+			.map_err(AppError::from)
 	}
 
-	pub async fn unknown_topic_id(&self) -> AppResult<Option<ResearchTopic>> {
-		let topic = sqlx::query_as::<_, ResearchTopic>(
-			"SELECT * FROM research_topics WHERE openalex_id = 'unknown'",
-		)
-		.fetch_optional(self.database.pool())
-		.await?;
-
-		Ok(topic)
+	pub async fn list_research_lines(&self) -> AppResult<Vec<ResearchLine>> {
+		ResearchLine::all()
+			.include(ResearchLine::fields().subfields())
+			.order_by(ResearchLine::fields().name().asc())
+			.exec(&mut self.database.pool())
+			.await
+			.map_err(AppError::from)
 	}
 
-	pub async fn find_topic_by_openalex_id(
+	pub async fn find_subfield_by_id(&self, id: &SubfieldId) -> AppResult<Option<Subfield>> {
+		Subfield::filter_by_id(id)
+			.first()
+			.exec(&mut self.database.pool())
+			.await
+			.map_err(AppError::from)
+	}
+
+	pub async fn find_research_line_by_id(
 		&self,
-		openalex_id: &str,
-	) -> AppResult<Option<ResearchTopic>> {
-		sqlx::query_as::<_, ResearchTopic>("SELECT * FROM research_topics WHERE openalex_id = $1")
-			.bind(openalex_id)
-			.fetch_optional(self.database.pool())
+		id: &ResearchLineId,
+	) -> AppResult<Option<ResearchLine>> {
+		ResearchLine::filter_by_id(id)
+			.first()
+			.exec(&mut self.database.pool())
 			.await
-			.map_err(Into::into)
+			.map_err(AppError::from)
 	}
 
-	pub async fn unknown_keyword_id(&self) -> AppResult<Option<ResearchKeyword>> {
-		sqlx::query_as::<_, ResearchKeyword>("SELECT * FROM keywords WHERE openalex_id = 'unknown'")
-			.fetch_optional(self.database.pool())
+	pub async fn find_topic_by_openalex_id(&self, openalex_id: &str) -> AppResult<Option<Topic>> {
+		Topic::filter(Topic::fields().openalex_id().eq(openalex_id))
+			.first()
+			.exec(&mut self.database.pool())
 			.await
-			.map_err(Into::into)
+			.map_err(AppError::from)
 	}
 
-	pub async fn upsert_keyword(
-		&self,
-		openalex_id: &str,
-		name: &str,
-	) -> AppResult<ResearchKeywordId> {
-		let row = sqlx::query(
-			"INSERT INTO keywords (openalex_id, name)
-			VALUES ($1, $2) ON CONFLICT (openalex_id)
-			DO UPDATE SET name = EXCLUDED.name RETURNING id",
-		)
-		.bind(openalex_id)
-		.bind(name)
-		.fetch_one(self.database.pool())
-		.await?;
-		Ok(ResearchKeywordId::from_uuid(row.get("id")))
-	}
-
-	pub async fn list_keywords(&self, f: ClassificationFilter) -> AppResult<Vec<ResearchKeyword>> {
-		let mut query = QueryBuilder::<Postgres>::new("SELECT * FROM keywords WHERE 1=1");
-
-		if let Some(search) = f.search {
-			let pattern = format!("%{}%", search.trim());
-			query.push(" AND name ILIKE ").push_bind(pattern);
-		}
-
-		query.push(" ORDER BY name");
-		query.push(" LIMIT 50");
-
-		query
-			.build_query_as::<ResearchKeyword>()
-			.fetch_all(self.database.pool())
-			.await
-			.map_err(Into::into)
-	}
-
-	pub async fn list_research_lines(&self) -> AppResult<Vec<ResearchLineView>> {
-		sqlx::query_as::<_, ResearchLineView>(
-			"SELECT id, name, slug FROM research_lines ORDER BY name",
-		)
-		.fetch_all(self.database.pool())
-		.await
-		.map_err(Into::into)
-	}
-
-	pub async fn list_research_lines_with_subfields(&self) -> AppResult<Vec<ResearchLineDetail>> {
-		let rows = sqlx::query(
-			"SELECT rl.id, rl.name, rl.slug,
-				COALESCE(jsonb_agg(
-					jsonb_build_object(
-						'subfieldOpenalexId', rlm.subfield_openalex_id,
-						'subfieldName', rs.name
-					)
-					ORDER BY rs.name
-				) FILTER (WHERE rlm.subfield_openalex_id IS NOT NULL), '[]'::jsonb) AS subfields
-			FROM research_lines rl
-			LEFT JOIN research_line_mappings rlm ON rlm.research_line_id = rl.id
-			LEFT JOIN research_subfields rs ON rs.openalex_id = rlm.subfield_openalex_id
-			GROUP BY rl.id, rl.name, rl.slug
-			ORDER BY rl.name",
-		)
-		.fetch_all(self.database.pool())
-		.await?;
-
-		let lines = rows
-			.into_iter()
-			.map(|row| {
-				let id: Uuid = row.get("id");
-				let name: String = row.get("name");
-				let slug: String = row.get("slug");
-				let subfields: serde_json::Value = row.get("subfields");
-				let subfields: Vec<SubfieldMapping> =
-					serde_json::from_value(subfields).unwrap_or_default();
-				ResearchLineDetail {
-					id,
-					name,
-					slug,
-					subfields,
-				}
-			})
-			.collect();
-
-		Ok(lines)
-	}
-
-	pub async fn update_mapping(
-		&self,
-		subfield_openalex_id: &str,
-		research_line_id: Uuid,
-	) -> AppResult<()> {
-		sqlx::query(
-			"UPDATE research_line_mappings SET research_line_id = $1 WHERE subfield_openalex_id = $2",
-		)
-		.bind(research_line_id)
-		.bind(subfield_openalex_id)
-		.execute(self.database.pool())
-		.await?;
-
-		Ok(())
-	}
-
-	pub async fn delete_mapping(&self, subfield_openalex_id: &str) -> AppResult<()> {
-		sqlx::query("DELETE FROM research_line_mappings WHERE subfield_openalex_id = $1")
-			.bind(subfield_openalex_id)
-			.execute(self.database.pool())
+	pub async fn save_keyword(&self, keyword: &Keyword) -> AppResult<()> {
+		Keyword::upsert_by_openalex_id(&keyword.openalex_id)
+			.id(&keyword.id)
+			.name(&keyword.name)
+			.exec(&mut self.database.pool())
 			.await?;
 
 		Ok(())
 	}
 
-	pub async fn list_topics_by_work(&self, work_id: &WorkId) -> AppResult<Vec<ResearchTopicView>> {
-		sqlx::query_as::<_, ResearchTopicView>(
-			"SELECT
-				wt.topic_id, t.name, wt.score,
-				s.id AS subfield_id, s.name AS subfield_name,
-				f.id AS field_id, f.name AS field_name,
-				d.id AS domain_id, d.name AS domain_name
-			FROM work_topics wt
-			JOIN research_topics t ON t.id = wt.topic_id
-			JOIN research_subfields s ON s.id = t.subfield_id
-			JOIN research_fields f ON f.id = s.field_id
-			JOIN research_domains d ON d.id = f.domain_id
-			WHERE wt.work_id = $1
-			ORDER BY wt.score DESC",
-		)
-		.bind(work_id)
-		.fetch_all(self.database.pool())
-		.await
-		.map_err(Into::into)
+	pub async fn save_subfield(&self, subfield: &Subfield) -> AppResult<()> {
+		Subfield::upsert_by_openalex_id(&subfield.openalex_id)
+			.id(&subfield.id)
+			.name(&subfield.name)
+			.field_id(&subfield.field_id)
+			.research_line_id(subfield.research_line_id)
+			.exec(&mut self.database.pool())
+			.await?;
+
+		Ok(())
 	}
 
-	pub async fn list_keywords_by_work(
-		&self,
-		work_id: &WorkId,
-	) -> AppResult<Vec<ResearchKeywordView>> {
-		sqlx::query_as::<_, ResearchKeywordView>(
-			"SELECT wk.keyword_id, k.name, wk.score
-			FROM work_keywords wk
-			JOIN keywords k ON k.id = wk.keyword_id
-			WHERE wk.work_id = $1
-			ORDER BY wk.score DESC",
-		)
-		.bind(work_id)
-		.fetch_all(self.database.pool())
-		.await
-		.map_err(Into::into)
+	pub async fn unknown_keyword_id(&self) -> AppResult<Option<Keyword>> {
+		Keyword::filter(Keyword::fields().openalex_id().eq("unknown"))
+			.first()
+			.exec(&mut self.database.pool())
+			.await
+			.map_err(AppError::from)
+	}
+
+	pub async fn unknown_topic_id(&self) -> AppResult<Option<Topic>> {
+		Topic::filter(Topic::fields().openalex_id().eq("unknown"))
+			.first()
+			.exec(&mut self.database.pool())
+			.await
+			.map_err(AppError::from)
 	}
 }

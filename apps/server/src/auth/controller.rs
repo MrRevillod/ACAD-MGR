@@ -1,7 +1,6 @@
 use crate::auth::*;
 use crate::shared::RequestExt;
 
-use chrono::{Duration, Utc};
 use std::sync::Arc;
 use sword::prelude::*;
 use sword::web::*;
@@ -70,17 +69,11 @@ impl AuthController {
 
 		self.auth_service.logout(&session_claims.session_id).await?;
 
-		let access_cookie = self
-			.cookie_manager
-			.build_access_cookie(String::new(), Utc::now() - Duration::days(1))?;
-
-		let refresh_cookie = self
-			.cookie_manager
-			.build_refresh_cookie(String::new(), Utc::now() - Duration::days(1))?;
+		let (access_cookie, refresh_cookie) = self.cookie_manager.build_logout_cookies()?;
 
 		req.cookies()?.remove(access_cookie);
 		req.cookies()?.remove(refresh_cookie);
 
-		Ok(JsonResponse::Ok().message("Sesión cerrada correctamente"))
+		Ok(JsonResponse::Ok())
 	}
 }

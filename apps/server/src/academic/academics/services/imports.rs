@@ -2,7 +2,7 @@ use crate::academic::*;
 use crate::shared::{AppError, AppResult, TransactionManager, Tx};
 use crate::university::*;
 
-use chrono::NaiveDate;
+use jiff::civil::Date;
 use std::path::PathBuf;
 use std::sync::Arc;
 use sword::prelude::*;
@@ -10,7 +10,7 @@ use validator::Validate;
 
 #[injectable]
 pub struct ImportsService {
-	tx: Arc<TransactionManager>,
+	tx: TransactionManager,
 	academics: Arc<AcademicsRepository>,
 	degrees: Arc<DegreesRepository>,
 	departments: Arc<DepartmentsRepository>,
@@ -71,7 +71,8 @@ impl ImportsService {
 				continue;
 			}
 
-			let mut tx = self.tx.begin().await?;
+			let mut db = self.tx.database().await?;
+			let mut tx = db.transaction().await?;
 
 			match self.process_row(&input, &mut tx).await {
 				Ok(()) => {
@@ -80,6 +81,7 @@ impl ImportsService {
 				}
 				Err(e) => {
 					tx.rollback().await?;
+
 					errors.push(ImportRowError {
 						row: row_num,
 						reasons: vec![e.to_string()],
@@ -181,7 +183,7 @@ impl ImportsService {
 			.department_id(department.id)
 			.maybe_career_id(career_id)
 			.jce(*input.jce)
-			.acad_category_options_id(category_option_id)
+			.category_option_id(category_option_id)
 			.annual_discount_hours(*input.annual_discount_hours)
 			.nationality_code(nationality_code)
 			.city(input.city.clone())
@@ -224,16 +226,18 @@ impl ImportsService {
 		academic_id: &AcademicId,
 		name: &Option<String>,
 		university: &Option<String>,
-		obtained_at: Option<NaiveDate>,
+		obtained_at: Option<Date>,
 		country_code: Option<&str>,
 		kind: DegreeKind,
 	) -> AppResult<()> {
 		let name = name.as_deref().map(|s| s.trim()).unwrap_or("");
+
 		if name.is_empty() {
 			return Ok(());
 		}
 
 		let university = university.as_deref().map(|s| s.trim()).unwrap_or("");
+
 		if university.is_empty() {
 			return Ok(());
 		}

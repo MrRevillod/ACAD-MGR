@@ -9,17 +9,15 @@ pub struct AcademicWorkPositionsService {
 }
 
 impl AcademicWorkPositionsService {
-	pub async fn find(&self, query: GetWorkPositionsQuery) -> AppResult<Vec<AcademicWorkPosition>> {
-		let filter = WorkPositionFilter { name: query.name };
-
-		self.positions.list(filter).await
+	pub async fn find(&self) -> AppResult<Vec<AcademicWorkPosition>> {
+		self.positions.list().await
 	}
 
 	pub async fn create(
 		&self,
 		input: CreateAcademicWorkPositionDto,
 	) -> AppResult<AcademicWorkPosition> {
-		let position = AcademicWorkPosition::new(input.name);
+		let position = AcademicWorkPosition::builder().name(input.name).build();
 
 		self.positions.save(&position).await?;
 

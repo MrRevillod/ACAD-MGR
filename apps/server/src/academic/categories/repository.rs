@@ -1,15 +1,8 @@
-use crate::academic::{AcademicCategory, AcademicCategoryId, AcademicPlanta};
-use crate::shared::{AppResult, Database};
+use crate::academic::{AcademicCategory, AcademicCategoryFilter, AcademicCategoryId};
+use crate::shared::{AppError, AppResult, Database};
 
-use sqlx::QueryBuilder;
 use std::sync::Arc;
 use sword::prelude::*;
-
-#[derive(Debug)]
-pub struct AcademicCategoryFilter {
-	pub name: Option<String>,
-	pub planta: Option<AcademicPlanta>,
-}
 
 #[injectable]
 pub struct AcademicCategoriesRepository {
@@ -18,43 +11,37 @@ pub struct AcademicCategoriesRepository {
 
 impl AcademicCategoriesRepository {
 	pub async fn list(&self, filter: AcademicCategoryFilter) -> AppResult<Vec<AcademicCategory>> {
-		let mut query =
-			QueryBuilder::new("SELECT id, name, planta FROM academic_categories WHERE 1=1");
+		let mut categories = AcademicCategory::all();
 
 		if let Some(n) = filter.name {
 			let pattern = format!("%{}%", n.trim());
-			query.push(" AND name ILIKE ").push_bind(pattern);
+			categories = categories.filter(AcademicCategory::fields().name().ilike(pattern));
 		}
 
 		if let Some(planta) = filter.planta {
-			query.push(" AND planta = ").push_bind(planta);
+			categories = categories.filter(AcademicCategory::fields().planta().eq(planta));
 		}
 
-		let items = query
-			.build_query_as::<AcademicCategory>()
-			.fetch_all(self.database.pool())
-			.await?;
-
-		Ok(items)
+		categories
+			.exec(&mut self.database.pool())
+			.await
+			.map_err(AppError::from)
 	}
 
 	pub async fn find_by_id(&self, id: &AcademicCategoryId) -> AppResult<Option<AcademicCategory>> {
-		let item = sqlx::query_as::<_, AcademicCategory>(
-			"SELECT id, name, planta FROM academic_categories WHERE id = $1",
-		)
-		.bind(id)
-		.fetch_optional(self.database.pool())
-		.await?;
-
-		Ok(item)
+		AcademicCategory::filter_by_id(id)
+			.first()
+			.exec(&mut self.database.pool())
+			.await
+			.map_err(AppError::from)
 	}
 
 	pub async fn save(&self, category: &AcademicCategory) -> AppResult<()> {
-		sqlx::query("INSERT INTO academic_categories (id, name, planta) VALUES ($1, $2, $3)")
-			.bind(category.id)
-			.bind(&category.name)
-			.bind(&category.planta)
-			.execute(self.database.pool())
+		AcademicCategory::create()
+			.id(&category.id)
+			.name(&category.name)
+			.planta(category.planta)
+			.exec(&mut self.database.pool())
 			.await?;
 
 		Ok(())

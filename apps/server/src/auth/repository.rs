@@ -3,7 +3,7 @@ use crate::{
 	shared::{AppResult, Database},
 };
 
-use chrono::{DateTime, Utc};
+use jiff::Timestamp;
 use std::sync::Arc;
 use sword::prelude::*;
 
@@ -14,79 +14,56 @@ pub struct SessionRepository {
 
 impl SessionRepository {
 	pub async fn save(&self, session: &Session) -> AppResult<Session> {
-		let session = sqlx::query_as::<_, Session>(
-			"INSERT INTO sessions (
-                id, user_id, refresh_token_hash, created_at,
-                expires_at, refresh_expires_at, revoked_at
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7)
-            ON CONFLICT (id)
-            DO UPDATE SET
-                user_id = EXCLUDED.user_id,
-                refresh_token_hash = EXCLUDED.refresh_token_hash,
-                created_at = EXCLUDED.created_at,
-                expires_at = EXCLUDED.expires_at,
-                refresh_expires_at = EXCLUDED.refresh_expires_at,
-                revoked_at = EXCLUDED.revoked_at
-            RETURNING *",
-		)
-		.bind(session.id)
-		.bind(session.user_id)
-		.bind(session.refresh_token_hash.clone())
-		.bind(session.created_at)
-		.bind(session.expires_at)
-		.bind(session.refresh_expires_at)
-		.bind(session.revoked_at)
-		.fetch_one(self.database.pool())
-		.await?;
+		let session = Session::upsert_by_id(session.id)
+			.user_id(session.user_id)
+			.refresh_token_hash(session.refresh_token_hash.clone())
+			.created_at(session.created_at)
+			.expires_at(session.expires_at)
+			.refresh_expires_at(session.refresh_expires_at)
+			.revoked_at(session.revoked_at)
+			.exec(&mut self.database.pool())
+			.await?;
 
 		Ok(session)
 	}
 
 	pub async fn is_active(&self, id: &SessionId) -> AppResult<bool> {
-		let res = sqlx::query_as::<_, Session>(
-			"SELECT * FROM sessions
-             WHERE id = $1 AND revoked_at IS NULL AND expires_at > NOW()",
-		)
-		.bind(id)
-		.fetch_optional(self.database.pool())
-		.await?;
+		let res = Session::filter_by_id(id)
+			.filter(Session::fields().revoked_at().is_none())
+			.filter(Session::fields().expires_at().gt(Timestamp::now()))
+			.first()
+			.exec(&mut self.database.pool())
+			.await?;
 
 		Ok(res.is_some())
 	}
 
 	pub async fn find_active_by_id(&self, id: &SessionId) -> AppResult<Option<Session>> {
-		let res = sqlx::query_as::<_, Session>(
-			"SELECT * FROM sessions
-             WHERE id = $1 AND revoked_at IS NULL AND expires_at > NOW()",
-		)
-		.bind(id)
-		.fetch_optional(self.database.pool())
-		.await?;
+		let res = Session::filter_by_id(id)
+			.filter(Session::fields().revoked_at().is_none())
+			.filter(Session::fields().expires_at().gt(Timestamp::now()))
+			.first()
+			.exec(&mut self.database.pool())
+			.await?;
 
 		Ok(res)
 	}
 
 	pub async fn find_active_by_refresh_id(&self, id: &SessionId) -> AppResult<Option<Session>> {
-		let res = sqlx::query_as::<_, Session>(
-			"SELECT * FROM sessions
-             WHERE id = $1 AND revoked_at IS NULL AND refresh_expires_at > NOW()",
-		)
-		.bind(id)
-		.fetch_optional(self.database.pool())
-		.await?;
+		let res = Session::filter_by_id(id)
+			.filter(Session::fields().revoked_at().is_none())
+			.filter(Session::fields().refresh_expires_at().gt(Timestamp::now()))
+			.first()
+			.exec(&mut self.database.pool())
+			.await?;
 
 		Ok(res)
 	}
 
-	pub async fn update_expires_at(
-		&self,
-		id: &SessionId,
-		expires_at: DateTime<Utc>,
-	) -> AppResult<()> {
-		sqlx::query("UPDATE sessions SET expires_at = $1 WHERE id = $2")
-			.bind(expires_at)
-			.bind(id)
-			.execute(self.database.pool())
+	pub async fn update_expires_at(&self, id: &SessionId, expires_at: Timestamp) -> AppResult<()> {
+		Session::update_by_id(id)
+			.expires_at(expires_at)
+			.exec(&mut self.database.pool())
 			.await?;
 
 		Ok(())

@@ -16,13 +16,12 @@ mod value_objects {
 }
 
 use database::DatabaseConfig;
-use std::sync::Arc;
 use sword::prelude::*;
 
 pub use database::{Database, TransactionManager, Tx};
 pub use errors::*;
 pub use extensions::*;
-pub use id::{Entity, Id};
+pub(crate) use id::*;
 pub use jsonwebtoken::JsonWebTokenService;
 pub use logger::LoggerLayer;
 pub use mailer::*;
@@ -40,7 +39,7 @@ impl Module for SharedModule {
 		let database = Database::new(db_config).await;
 
 		let seeder_data = config.expect::<SeederData>();
-		let seeder = DatabaseSeeder::new(Arc::new(database.clone()), seeder_data);
+		let seeder = DatabaseSeeder::new(database.clone(), seeder_data);
 
 		seeder.seed().await;
 

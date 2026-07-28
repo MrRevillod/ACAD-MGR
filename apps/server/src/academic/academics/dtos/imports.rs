@@ -4,7 +4,6 @@ use crate::{
 	shared::{CLf64, Country},
 };
 
-use chrono::NaiveDate;
 use serde::Deserialize;
 use validator::{Validate, ValidationErrors};
 
@@ -53,11 +52,11 @@ pub struct AcademicImportRowDto {
 
 	#[validate(custom(function = "validate_birth_date"))]
 	#[serde(rename = "FECHA DE NACIMIENTO")]
-	pub birth_date: NaiveDate,
+	pub birth_date: Date,
 
 	#[validate(custom(function = "validate_joined_at"))]
 	#[serde(rename = "FECHA DE INGRESO")]
-	pub joined_at: NaiveDate,
+	pub joined_at: Date,
 
 	#[serde(rename = "CARGO")]
 	pub work_position_name: String,
@@ -108,7 +107,7 @@ pub struct AcademicImportRowDto {
 
 	#[serde(rename = "FECHA (I)")]
 	#[serde(default)]
-	pub degree_1_date: Option<NaiveDate>,
+	pub degree_1_date: Option<Date>,
 
 	#[serde(rename = "PAIS (I)")]
 	#[serde(default)]
@@ -124,7 +123,7 @@ pub struct AcademicImportRowDto {
 
 	#[serde(rename = "FECHA (II)")]
 	#[serde(default)]
-	pub degree_2_date: Option<NaiveDate>,
+	pub degree_2_date: Option<Date>,
 
 	#[serde(rename = "PAIS (II)")]
 	#[serde(default)]

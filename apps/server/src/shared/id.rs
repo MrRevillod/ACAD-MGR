@@ -1,162 +1,110 @@
-use std::cmp::Ordering;
-use std::fmt;
-use std::hash::{Hash, Hasher};
-use std::marker::PhantomData;
-use std::ops::Deref;
-use std::str::FromStr;
-
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use sqlx::encode::IsNull;
-use sqlx::error::BoxDynError;
-use sqlx::postgres::{PgArgumentBuffer, PgHasArrayType, PgTypeInfo, PgValueRef};
-use sqlx::{Decode, Encode, Postgres, Type};
 use thiserror::Error;
-use uuid::Uuid;
 
-pub trait Entity {
-	fn key_name() -> &'static str;
-}
+macro_rules! model_id {
+	(struct $name:ident, key: $entity_name:literal) => {
+		#[derive(::std::fmt::Debug, ::std::default::Default, ::toasty::Embed)]
+		pub struct $name(::uuid::Uuid);
 
-#[derive(Debug, Default)]
-pub struct Id<T: Entity> {
-	value: Uuid,
-	_marker: PhantomData<T>,
-}
+		impl $name {
+			pub fn new() -> Self {
+				Self(::uuid::Uuid::new_v4())
+			}
 
-impl<T: Entity> PartialEq for Id<T> {
-	fn eq(&self, other: &Self) -> bool {
-		self.value == other.value
-	}
-}
+			pub fn from_uuid(uuid: ::uuid::Uuid) -> Self {
+				Self(uuid)
+			}
 
-impl<T: Entity> Eq for Id<T> {}
-
-impl<T: Entity> PartialOrd for Id<T> {
-	fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-		Some(self.cmp(other))
-	}
-}
-
-impl<T: Entity> Ord for Id<T> {
-	fn cmp(&self, other: &Self) -> Ordering {
-		self.value.cmp(&other.value)
-	}
-}
-
-impl<T: Entity> Hash for Id<T> {
-	fn hash<H: Hasher>(&self, state: &mut H) {
-		self.value.hash(state);
-	}
-}
-
-impl<T: Entity> Clone for Id<T> {
-	fn clone(&self) -> Self {
-		*self
-	}
-}
-
-impl<T: Entity> Copy for Id<T> {}
-
-impl<T: Entity> Id<T> {
-	pub fn new() -> Self {
-		Self {
-			value: Uuid::new_v4(),
-			_marker: PhantomData,
+			pub fn parse(input: &str) -> ::std::result::Result<Self, $crate::shared::IdError> {
+				<::uuid::Uuid as ::std::str::FromStr>::from_str(input)
+					.map(Self::from_uuid)
+					.map_err(|_| $crate::shared::IdError::Invalid {
+						entity: $entity_name,
+						value: input.to_string(),
+					})
+			}
 		}
-	}
 
-	pub fn from_uuid(uuid: Uuid) -> Self {
-		Self {
-			value: uuid,
-			_marker: PhantomData,
+		impl ::std::str::FromStr for $name {
+			type Err = $crate::shared::IdError;
+
+			fn from_str(s: &str) -> ::std::result::Result<Self, Self::Err> {
+				Self::parse(s)
+			}
 		}
-	}
 
-	pub fn parse(input: &str) -> Result<Self, IdError<T>> {
-		Uuid::from_str(input)
-			.map(Self::from_uuid)
-			.map_err(|_| IdError::Invalid {
-				entity: T::key_name(),
-				value: input.to_string(),
-				_marker: PhantomData,
-			})
-	}
-}
+		impl ::std::fmt::Display for $name {
+			fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+				::std::write!(f, "{}", self.0)
+			}
+		}
 
-impl<T: Entity> FromStr for Id<T> {
-	type Err = IdError<T>;
+		impl ::serde::Serialize for $name {
+			fn serialize<S>(&self, serializer: S) -> ::std::result::Result<S::Ok, S::Error>
+			where
+				S: ::serde::Serializer,
+			{
+				::serde::Serialize::serialize(&self.0, serializer)
+			}
+		}
 
-	fn from_str(s: &str) -> Result<Self, Self::Err> {
-		Self::parse(s)
-	}
-}
+		impl<'de> ::serde::Deserialize<'de> for $name {
+			fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
+			where
+				D: ::serde::Deserializer<'de>,
+			{
+				let value = <::uuid::Uuid as ::serde::Deserialize>::deserialize(deserializer)?;
+				Ok(Self::from_uuid(value))
+			}
+		}
 
-impl<T: Entity> fmt::Display for Id<T> {
-	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		write!(f, "{}", self.value)
-	}
-}
+		impl ::std::ops::Deref for $name {
+			type Target = ::uuid::Uuid;
 
-impl<T: Entity> Serialize for Id<T> {
-	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-	where
-		S: Serializer,
-	{
-		self.value.serialize(serializer)
-	}
-}
+			fn deref(&self) -> &Self::Target {
+				&self.0
+			}
+		}
 
-impl<'de, T: Entity> Deserialize<'de> for Id<T> {
-	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-	where
-		D: Deserializer<'de>,
-	{
-		let value = Uuid::deserialize(deserializer)?;
-		Ok(Self::from_uuid(value))
-	}
-}
+		impl ::std::cmp::PartialEq for $name {
+			fn eq(&self, other: &Self) -> bool {
+				self.0 == other.0
+			}
+		}
 
-impl<T: Entity> PgHasArrayType for Id<T> {
-	fn array_type_info() -> PgTypeInfo {
-		<Uuid as PgHasArrayType>::array_type_info()
-	}
+		impl ::std::cmp::Eq for $name {}
+
+		impl ::std::cmp::PartialOrd for $name {
+			fn partial_cmp(&self, other: &Self) -> ::std::option::Option<::std::cmp::Ordering> {
+				::std::option::Option::Some(::std::cmp::Ord::cmp(self, other))
+			}
+		}
+
+		impl ::std::cmp::Ord for $name {
+			fn cmp(&self, other: &Self) -> ::std::cmp::Ordering {
+				::std::cmp::Ord::cmp(&self.0, &other.0)
+			}
+		}
+
+		impl ::std::hash::Hash for $name {
+			fn hash<H: ::std::hash::Hasher>(&self, state: &mut H) {
+				::std::hash::Hash::hash(&self.0, state);
+			}
+		}
+
+		impl ::std::clone::Clone for $name {
+			fn clone(&self) -> Self {
+				Self(self.0)
+			}
+		}
+
+		impl ::std::marker::Copy for $name {}
+	};
 }
 
 #[derive(Debug, Error)]
-pub enum IdError<T: Entity> {
+pub enum IdError {
 	#[error("Invalid id for '{entity}': '{value}'")]
-	Invalid {
-		entity: &'static str,
-		value: String,
-		_marker: PhantomData<T>,
-	},
+	Invalid { entity: &'static str, value: String },
 }
 
-impl<T: Entity> Type<Postgres> for Id<T> {
-	fn type_info() -> PgTypeInfo {
-		<Uuid as Type<Postgres>>::type_info()
-	}
-}
-
-impl<T: Entity> Encode<'_, Postgres> for Id<T> {
-	fn encode_by_ref(&self, buf: &mut PgArgumentBuffer) -> Result<IsNull, BoxDynError> {
-		<Uuid as Encode<Postgres>>::encode_by_ref(&self.value, buf)
-	}
-}
-
-impl<'r, T: Entity> Decode<'r, Postgres> for Id<T> {
-	fn decode(value: PgValueRef<'r>) -> Result<Self, BoxDynError> {
-		Ok(Self {
-			value: <Uuid as Decode<Postgres>>::decode(value)?,
-			_marker: PhantomData,
-		})
-	}
-}
-
-impl<T: Entity> Deref for Id<T> {
-	type Target = Uuid;
-
-	fn deref(&self) -> &Self::Target {
-		&self.value
-	}
-}
+pub(crate) use model_id;

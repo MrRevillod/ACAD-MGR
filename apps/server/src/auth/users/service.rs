@@ -1,7 +1,4 @@
-use crate::auth::{
-	AuthError, CreateUserDto, GetUsersQuery, Hasher, UpdateUserDto, User, UserFilter, UserId,
-	UserView, UsersRepository,
-};
+use crate::auth::*;
 use crate::shared::AppResult;
 
 use std::sync::Arc;
@@ -31,25 +28,19 @@ impl UsersService {
 		Ok(UserView::from(user))
 	}
 
-	pub async fn create(&self, dto: CreateUserDto) -> AppResult<UserView> {
+	pub async fn create(&self, mut dto: CreateUserDto) -> AppResult<UserView> {
 		if self.users.find_by_email(&dto.email).await?.is_some() {
 			Err(AuthError::EmailAlreadyExists)?;
 		}
 
-		let user = User {
-			id: UserId::new(),
-			name: dto.name,
-			email: dto.email,
-			role: dto.role,
-			password_hash: self.hasher.hash(&dto.password)?,
-		};
+		dto.password = self.hasher.hash(&dto.password)?;
 
-		let user = self.users.save(&user).await?;
+		let user = self.users.create(&dto).await?;
 
 		Ok(UserView::from(user))
 	}
 
-	pub async fn update(&self, id: &UserId, dto: UpdateUserDto) -> AppResult<UserView> {
+	pub async fn update(&self, id: &UserId, mut dto: UpdateUserDto) -> AppResult<UserView> {
 		let Some(user) = self.users.find_by_id(id).await? else {
 			return Err(AuthError::UserNotFound)?;
 		};
@@ -61,18 +52,11 @@ impl UsersService {
 			Err(AuthError::EmailAlreadyExists)?;
 		}
 
-		let updated = User {
-			name: dto.name.unwrap_or(user.name),
-			email: dto.email.unwrap_or(user.email),
-			role: dto.role.unwrap_or(user.role),
-			password_hash: match dto.password {
-				Some(p) => self.hasher.hash(&p)?,
-				None => user.password_hash,
-			},
-			..user
-		};
+		if let Some(ref password) = dto.password {
+			dto.password = Some(self.hasher.hash(password)?);
+		}
 
-		let user = self.users.save(&updated).await?;
+		self.users.update(&user.id, &dto).await?;
 
 		Ok(UserView::from(user))
 	}

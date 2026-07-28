@@ -9,8 +9,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
 	let database_url = std::env::var("LOCAL_POSTGRES_DATABASE_URL")
 		.or_else(|_| std::env::var("POSTGRES_DATABASE_URL"))?;
 
-	let pool = sqlx::postgres::PgPoolOptions::new()
-		.max_connections(5)
+	let mut db = toasty::Db::builder()
+		.max_pool_size(5)
 		.connect(&database_url)
 		.await?;
 
@@ -55,7 +55,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 		let records = reader::read_csv(&path)?;
 		eprintln!("  {} records loaded, inserting...", records.len());
 
-		let affected = seeder::seed_records(&pool, &records, kind).await?;
+		let affected = seeder::seed_records(&mut db, &records, kind).await?;
 		eprintln!("  Done — {} rows affected", affected);
 	}
 

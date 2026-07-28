@@ -1,31 +1,17 @@
-use crate::shared::{Entity, Id};
-
+use crate::shared::model_id;
+use bon::Builder;
 use serde::Serialize;
-use sqlx::FromRow;
+use toasty::Model;
 
-pub type AcademicWorkPositionId = Id<AcademicWorkPosition>;
+model_id! {
+	struct AcademicWorkPositionId,
+	key: "academic_work_position"
+}
 
-#[derive(Debug, Clone, Serialize, FromRow)]
+#[derive(Debug, Clone, Serialize, Builder, Model)]
 pub struct AcademicWorkPosition {
+	#[key]
+	#[builder(default = AcademicWorkPositionId::new())]
 	pub id: AcademicWorkPositionId,
 	pub name: String,
-}
-
-pub struct WorkPositionFilter {
-	pub name: Option<String>,
-}
-
-impl Entity for AcademicWorkPosition {
-	fn key_name() -> &'static str {
-		"academic_work_position"
-	}
-}
-
-impl AcademicWorkPosition {
-	pub fn new(name: String) -> Self {
-		Self {
-			id: AcademicWorkPositionId::new(),
-			name,
-		}
-	}
 }

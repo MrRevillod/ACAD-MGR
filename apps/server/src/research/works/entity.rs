@@ -1,54 +1,167 @@
-use crate::research::sources::SourceId;
-use crate::shared::{Entity, Id};
-
+use crate::{academic::AcademicId, research::*, shared::model_id};
 use bon::Builder;
-use chrono::NaiveDate;
+use jiff::civil::Date;
 use serde::{Deserialize, Serialize};
-use sqlx::{FromRow, Type};
 use std::str::FromStr;
-use uuid::Uuid;
+use toasty::{Deferred, Embed, Model};
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-#[serde(default)]
-pub struct WorkOverrides {
-	pub title: Option<String>,
-	pub r#abstract: Option<String>,
-	pub doi: Option<String>,
-	pub publication_year: Option<i16>,
-	pub is_accepted: Option<bool>,
-	pub is_published: Option<bool>,
+#[derive(Debug, Clone, Copy, Embed, Serialize, Deserialize, Eq, PartialEq)]
+#[serde(rename_all = "lowercase")]
+#[column(rename_all = "lowercase")]
+pub enum AuthorshipPosition {
+	First,
+	Middle,
+	Last,
 }
 
-impl WorkOverrides {
-	pub fn non_null_fields(&self) -> Vec<String> {
-		let mut fields = Vec::new();
-		if self.title.is_some() {
-			fields.push("title".into());
+#[derive(Debug, Clone, Serialize, Model)]
+#[key(work_id, orcid)]
+#[serde(rename_all = "camelCase")]
+pub struct Authorship {
+	pub work_id: WorkId,
+	pub orcid: String,
+	pub name: String,
+	pub is_external: bool,
+	pub is_corresponding: bool,
+	pub affiliations: Vec<String>,
+	pub position: AuthorshipPosition,
+
+	#[index]
+	pub academic_id: Option<AcademicId>,
+
+	#[belongs_to]
+	#[serde(skip)]
+	pub work: Deferred<Work>,
+}
+
+#[derive(Debug, Clone, Serialize, Model, Builder)]
+#[serde(rename_all = "camelCase")]
+pub struct Work {
+	#[key]
+	#[builder(default = WorkId::new())]
+	pub id: WorkId,
+
+	#[unique]
+	pub openalex_id: String,
+	pub title: String,
+	pub abstract_text: Option<String>,
+	pub doi: Option<String>,
+	pub publication_date: Option<Date>,
+	pub publication_year: Option<i16>,
+	pub ty: WorkType,
+	pub lang: String,
+	pub is_accepted: bool,
+	pub is_published: bool,
+
+	#[index]
+	pub source_id: Option<SourceId>,
+
+	#[column(type = "jsonb")]
+	pub overrides: serde_json::Value,
+
+	#[belongs_to]
+	pub source: Option<Source>,
+
+	#[has_many]
+	pub authorships: Deferred<Vec<Authorship>>,
+
+	#[has_many]
+	#[serde(skip)]
+	pub topic_scores: Deferred<Vec<WorkTopicScore>>,
+
+	#[serde(skip)]
+	#[has_many(via = topic_scores.topic)]
+	pub topics: Deferred<Vec<Topic>>,
+
+	#[has_many]
+	#[serde(skip)]
+	pub keyword_scores: Deferred<Vec<WorkKeyWordScore>>,
+
+	#[serde(skip)]
+	#[has_many(via = keyword_scores.keyword)]
+	pub keywords: Deferred<Vec<Keyword>>,
+}
+
+#[derive(Debug, Clone, Serialize, Model)]
+#[key(work_id, topic_id)]
+pub struct WorkTopicScore {
+	#[index]
+	pub work_id: WorkId,
+
+	#[index]
+	pub topic_id: TopicId,
+	pub score: f64,
+
+	#[belongs_to(key = work_id)]
+	pub work: Deferred<Work>,
+
+	#[belongs_to(key = topic_id)]
+	pub topic: Topic,
+}
+
+#[derive(Debug, Clone, Serialize, Model)]
+#[key(work_id, keyword_id)]
+pub struct WorkKeyWordScore {
+	#[index]
+	pub work_id: WorkId,
+
+	#[index]
+	pub keyword_id: KeywordId,
+	pub score: f64,
+
+	#[belongs_to(key = work_id)]
+	pub work: Deferred<Work>,
+
+	#[belongs_to(key = keyword_id)]
+	pub keyword: Keyword,
+}
+
+impl Work {
+	pub fn resolve_overrides(&mut self) {
+		// pub title: Option<Option<String>>,
+		// pub r#abstract: Option<Option<String>>,
+		// pub doi: Option<Option<String>>,
+		// pub publication_year: Option<Option<i16>>,
+		// pub is_accepted: Option<Option<bool>>,
+		// pub is_published: Option<Option<bool>>,
+
+		if let Some(title) = self.overrides.get("title").and_then(|v| v.as_str()) {
+			self.title = title.to_string();
 		}
-		if self.r#abstract.is_some() {
-			fields.push("abstract".into());
+
+		if let Some(abstract_text) = self.overrides.get("abstract").and_then(|v| v.as_str()) {
+			self.abstract_text = Some(abstract_text.to_string());
 		}
-		if self.doi.is_some() {
-			fields.push("doi".into());
+
+		if let Some(doi) = self.overrides.get("doi").and_then(|v| v.as_str()) {
+			self.doi = Some(doi.to_string());
 		}
-		if self.publication_year.is_some() {
-			fields.push("publicationYear".into());
+
+		if let Some(publication_year) = self
+			.overrides
+			.get("publication_year")
+			.and_then(|v| v.as_i64())
+		{
+			self.publication_year = Some(publication_year as i16);
 		}
-		if self.is_accepted.is_some() {
-			fields.push("isAccepted".into());
+
+		if let Some(is_accepted) = self.overrides.get("is_accepted").and_then(|v| v.as_bool()) {
+			self.is_accepted = is_accepted;
 		}
-		if self.is_published.is_some() {
-			fields.push("isPublished".into());
+
+		if let Some(is_published) = self.overrides.get("is_published").and_then(|v| v.as_bool()) {
+			self.is_published = is_published;
 		}
-		fields
 	}
 }
 
-pub type WorkId = Id<Work>;
+model_id! {
+	struct WorkId, key: "work"
+}
 
-#[derive(Debug, Clone, Copy, Type, Serialize, Deserialize, Eq, PartialEq)]
-#[sqlx(type_name = "work_type", rename_all = "kebab-case")]
+#[derive(Debug, Clone, Copy, Embed, Serialize, Deserialize, Eq, PartialEq)]
 #[serde(rename_all = "kebab-case")]
+#[column(rename_all = "kebab-case")]
 pub enum WorkType {
 	Article,
 	Book,
@@ -107,55 +220,5 @@ impl FromStr for WorkType {
 			"supplementary-materials" => Ok(WorkType::SupplementaryMaterials),
 			other => Err(format!("unknown work type: {other}")),
 		}
-	}
-}
-
-#[derive(Debug, Clone, Serialize, FromRow, Builder)]
-#[serde(rename_all = "camelCase")]
-pub struct Work {
-	#[builder(default = WorkId::new())]
-	pub id: WorkId,
-	pub openalex_id: String,
-	pub title: String,
-	pub r#abstract: Option<String>,
-	pub doi: Option<String>,
-	pub publication_date: Option<NaiveDate>,
-	pub publication_year: Option<i16>,
-	pub ty: WorkType,
-	pub lang: String,
-	pub is_accepted: bool,
-	pub is_published: bool,
-	pub primary_source_id: Option<SourceId>,
-	pub journal_kind: Option<String>,
-	pub research_line_id: Option<Uuid>,
-	pub research_line_name: Option<String>,
-	pub research_line_slug: Option<String>,
-	#[serde(skip)]
-	pub overrides: serde_json::Value,
-	#[serde(rename = "overriddenFields")]
-	#[sqlx(default)]
-	pub overridden_fields: Vec<String>,
-}
-
-impl Work {
-	pub fn resolve(&self) -> Self {
-		let o: WorkOverrides = serde_json::from_value(self.overrides.clone()).unwrap_or_default();
-
-		Self {
-			title: o.title.clone().unwrap_or_else(|| self.title.clone()),
-			r#abstract: o.r#abstract.clone().or(self.r#abstract.clone()),
-			doi: o.doi.clone().or(self.doi.clone()),
-			publication_year: o.publication_year.or(self.publication_year),
-			is_accepted: o.is_accepted.unwrap_or(self.is_accepted),
-			is_published: o.is_published.unwrap_or(self.is_published),
-			overridden_fields: o.non_null_fields(),
-			..self.clone()
-		}
-	}
-}
-
-impl Entity for Work {
-	fn key_name() -> &'static str {
-		"work"
 	}
 }

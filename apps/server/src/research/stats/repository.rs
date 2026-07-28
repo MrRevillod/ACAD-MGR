@@ -59,12 +59,7 @@ fn base_from() -> &'static str {
 	JOIN departments d ON a.department_id = d.id
 	JOIN academic_category_options aco ON a.acad_category_options_id = aco.id
 	LEFT JOIN sources src ON w.primary_source_id = src.id
-	LEFT JOIN LATERAL (
-		SELECT kind FROM journal_issn
-		WHERE issn = src.issn_l OR eissn = src.issn_l
-			OR issn = ANY(src.issn) OR eissn = ANY(src.issn)
-		LIMIT 1
-	) ji ON TRUE
+	LEFT JOIN journal_issn ji ON ji.id = src.journal_issn_id
 	WHERE w.publication_year >= $1
 		AND ($2::smallint IS NULL OR w.publication_year <= $2)
 		AND ($3::uuid IS NULL OR a.department_id = $3)
@@ -237,10 +232,7 @@ impl StatsRepository {
 			JOIN departments d ON a.department_id = d.id
 			JOIN academic_category_options aco ON a.acad_category_options_id = aco.id
 			LEFT JOIN sources src ON w.primary_source_id = src.id
-			LEFT JOIN LATERAL (
-				SELECT kind FROM journal_issn WHERE issn = src.issn_l OR eissn = src.issn_l
-					OR issn = ANY(src.issn) OR eissn = ANY(src.issn) LIMIT 1
-			) ji ON TRUE
+			LEFT JOIN journal_issn ji ON ji.id = src.journal_issn_id
 			WHERE d.id = $1 AND w.publication_year >= $2
 				AND ($3::smallint IS NULL OR w.publication_year <= $3)
 				AND ($4::academic_option IS NULL OR aco.option = $4)
@@ -270,10 +262,7 @@ impl StatsRepository {
 			JOIN departments d ON a.department_id = d.id
 			JOIN academic_category_options aco ON a.acad_category_options_id = aco.id
 			LEFT JOIN sources src ON w.primary_source_id = src.id
-			LEFT JOIN LATERAL (
-				SELECT kind FROM journal_issn WHERE issn = src.issn_l OR eissn = src.issn_l
-					OR issn = ANY(src.issn) OR eissn = ANY(src.issn) LIMIT 1
-			) ji ON TRUE
+			LEFT JOIN journal_issn ji ON ji.id = src.journal_issn_id
 			WHERE d.id = $1 AND w.publication_year >= $2
 				AND ($3::smallint IS NULL OR w.publication_year <= $3)
 				AND ($4::academic_option IS NULL OR aco.option = $4)
