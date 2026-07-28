@@ -5,10 +5,10 @@ use validator::Validate;
 
 #[derive(Debug, Clone, Default, Deserialize, Validate)]
 pub struct WorkClassificationQueryDto {
-	pub domain_id: Option<ResearchDomainId>,
-	pub field_id: Option<ResearchFieldId>,
-	pub subfield_id: Option<ResearchSubfieldId>,
-	pub topic_id: Option<ResearchTopicId>,
+	pub domain_id: Option<DomainId>,
+	pub field_id: Option<FieldId>,
+	pub subfield_id: Option<SubfieldId>,
+	pub topic_id: Option<TopicId>,
 
 	#[validate(length(min = 1, max = 255))]
 	pub openalex_id: Option<String>,
@@ -19,21 +19,21 @@ pub struct WorkClassificationQueryDto {
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct ResearchTopicView {
-	pub topic_id: ResearchTopicId,
+pub struct TopicView {
+	pub topic_id: TopicId,
 	pub name: String,
 	pub score: f64,
-	pub subfield_id: ResearchSubfieldId,
+	pub subfield_id: SubfieldId,
 	pub subfield_name: String,
-	pub field_id: ResearchFieldId,
+	pub field_id: FieldId,
 	pub field_name: String,
-	pub domain_id: ResearchDomainId,
+	pub domain_id: DomainId,
 	pub domain_name: String,
 }
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct ResearchKeywordView {
+pub struct KeywordView {
 	pub keyword_id: Uuid,
 	pub name: String,
 	pub score: f64,
@@ -55,27 +55,13 @@ impl From<WorkClassificationQueryDto> for ClassificationFilter {
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateMappingBody {
-	pub subfield_id: ResearchSubfieldId,
+	pub subfield_id: SubfieldId,
 	pub research_line_id: ResearchLineId,
 }
 
-impl
-	From<(
-		ResearchTopic,
-		ResearchSubfield,
-		ResearchField,
-		ResearchDomain,
-		f64,
-	)> for ResearchTopicView
-{
+impl From<(Topic, Subfield, Field, Domain, f64)> for TopicView {
 	fn from(
-		(topic, subfield, field, domain, score): (
-			ResearchTopic,
-			ResearchSubfield,
-			ResearchField,
-			ResearchDomain,
-			f64,
-		),
+		(topic, subfield, field, domain, score): (Topic, Subfield, Field, Domain, f64),
 	) -> Self {
 		Self {
 			topic_id: topic.id,

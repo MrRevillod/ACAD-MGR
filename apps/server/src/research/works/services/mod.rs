@@ -8,6 +8,7 @@ pub use openalex::*;
 
 use html_escape::decode_html_entities;
 use papers_openalex::Work as OpenAlexWork;
+use std::cmp::Ordering;
 use std::str::FromStr;
 use std::sync::Arc;
 use sword::prelude::*;
@@ -17,7 +18,6 @@ use uuid::Uuid;
 pub struct WorksService {
 	works: Arc<WorksRepository>,
 	sources: Arc<SourcesRepository>,
-	authorships: Arc<AuthorshipsRepository>,
 	classification: Arc<WorkClassificationRepository>,
 	academics: Arc<AcademicsRepository>,
 	openalex: Arc<OpenAlexClient>,
@@ -28,31 +28,34 @@ impl WorksService {
 		self.works.list(query).await
 	}
 
-	pub async fn find_by_id(&self, id: WorkId) -> AppResult<WorkDetailView> {
-		let Some(work) = self.works.find_by_id(&id).await? else {
+	pub async fn find_by_id(&self, id: WorkId) -> AppResult<WorkView> {
+		let Some(mut work) = self.works.find_by_id(&id).await? else {
 			return Err(WorksError::NotFound)?;
 		};
 
-		let resolved = work.resolve();
-		let source = match resolved.primary_source_id {
-			Some(sid) => self.sources.find_source_view_by_id(&sid).await?,
-			None => None,
-		};
+		let topics = work.topic_scores.get().clone();
 
-		let authorships = self.authorships.list(&resolved.id).await?;
-		let topics = self
-			.classification
-			.list_topics_by_work(&resolved.id)
-			.await?;
-		let keywords = self
-			.classification
-			.list_keywords_by_work(&resolved.id)
-			.await?;
+		let max_score_research_line = topics
+			.iter()
+			.max_by(|a, b| a.score.partial_cmp(&b.score).unwrap_or(Ordering::Equal))
+			.map(|score| score.topic.subfield.research_line.clone())
+			.flatten();
 
-		Ok(WorkDetailView {
-			work: resolved,
-			source,
-			authorships,
+		let topics = topics.into_iter().map(WorkTopicView::from).collect();
+
+		let keywords = work
+			.keyword_scores
+			.get()
+			.clone()
+			.into_iter()
+			.map(WorkKeywordView::from)
+			.collect();
+
+		work.resolve_overrides();
+
+		Ok(WorkView {
+			work,
+			research_line: max_score_research_line,
 			topics,
 			keywords,
 		})
@@ -224,7 +227,9 @@ impl WorksService {
 		{
 			let source_ty = s.r#type.clone().unwrap_or_else(|| "unknown".to_string());
 			let mut normalized_issns: Vec<String> = s.issn.as_ref().map_or_else(Vec::new, |vec| {
-				vec.iter().filter_map(|v| Source::normalize_issn(v)).collect()
+				vec.iter()
+					.filter_map(|v| Source::normalize_issn(v))
+					.collect()
 			});
 			if let Some(issn_l) = s.issn_l.as_deref().and_then(Source::normalize_issn) {
 				if !normalized_issns.contains(&issn_l) {
@@ -238,13 +243,15 @@ impl WorksService {
 			};
 			Some(
 				self.sources
-					.save(&Source::builder()
-						.id(SourceId::new())
-						.openalex_id(s.id.clone().unwrap_or_default())
-						.display_name(s.display_name.clone().unwrap_or_default())
-						.ty(source_ty)
-						.issn(issn)
-						.build())
+					.save(
+						&Source::builder()
+							.id(SourceId::new())
+							.openalex_id(s.id.clone().unwrap_or_default())
+							.display_name(s.display_name.clone().unwrap_or_default())
+							.ty(source_ty)
+							.issn(issn)
+							.build(),
+					)
 					.await?,
 			)
 		} else {

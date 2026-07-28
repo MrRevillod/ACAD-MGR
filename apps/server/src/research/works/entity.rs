@@ -1,9 +1,4 @@
-use crate::{
-	academic::AcademicId,
-	research::{Source, SourceId},
-	shared::model_id,
-};
-
+use crate::{academic::AcademicId, research::*, shared::model_id};
 use bon::Builder;
 use jiff::civil::Date;
 use serde::{Deserialize, Serialize};
@@ -35,6 +30,7 @@ pub struct Authorship {
 	pub academic_id: Option<AcademicId>,
 
 	#[belongs_to]
+	#[serde(skip)]
 	pub work: Deferred<Work>,
 }
 
@@ -48,7 +44,7 @@ pub struct Work {
 	#[unique]
 	pub openalex_id: String,
 	pub title: String,
-	pub r#abstract: Option<String>,
+	pub abstract_text: Option<String>,
 	pub doi: Option<String>,
 	pub publication_date: Option<Date>,
 	pub publication_year: Option<i16>,
@@ -64,10 +60,99 @@ pub struct Work {
 	pub overrides: serde_json::Value,
 
 	#[belongs_to]
-	pub source: Deferred<Option<Source>>,
+	pub source: Option<Source>,
 
 	#[has_many]
 	pub authorships: Deferred<Vec<Authorship>>,
+
+	#[has_many]
+	#[serde(skip)]
+	pub topic_scores: Deferred<Vec<WorkTopicScore>>,
+
+	#[serde(skip)]
+	#[has_many(via = topic_scores.topic)]
+	pub topics: Deferred<Vec<Topic>>,
+
+	#[has_many]
+	#[serde(skip)]
+	pub keyword_scores: Deferred<Vec<WorkKeyWordScore>>,
+
+	#[serde(skip)]
+	#[has_many(via = keyword_scores.keyword)]
+	pub keywords: Deferred<Vec<Keyword>>,
+}
+
+#[derive(Debug, Clone, Serialize, Model)]
+#[key(work_id, topic_id)]
+pub struct WorkTopicScore {
+	#[index]
+	pub work_id: WorkId,
+
+	#[index]
+	pub topic_id: TopicId,
+	pub score: f64,
+
+	#[belongs_to(key = work_id)]
+	pub work: Deferred<Work>,
+
+	#[belongs_to(key = topic_id)]
+	pub topic: Topic,
+}
+
+#[derive(Debug, Clone, Serialize, Model)]
+#[key(work_id, keyword_id)]
+pub struct WorkKeyWordScore {
+	#[index]
+	pub work_id: WorkId,
+
+	#[index]
+	pub keyword_id: KeywordId,
+	pub score: f64,
+
+	#[belongs_to(key = work_id)]
+	pub work: Deferred<Work>,
+
+	#[belongs_to(key = keyword_id)]
+	pub keyword: Keyword,
+}
+
+impl Work {
+	pub fn resolve_overrides(&mut self) {
+		// pub title: Option<Option<String>>,
+		// pub r#abstract: Option<Option<String>>,
+		// pub doi: Option<Option<String>>,
+		// pub publication_year: Option<Option<i16>>,
+		// pub is_accepted: Option<Option<bool>>,
+		// pub is_published: Option<Option<bool>>,
+
+		if let Some(title) = self.overrides.get("title").and_then(|v| v.as_str()) {
+			self.title = title.to_string();
+		}
+
+		if let Some(abstract_text) = self.overrides.get("abstract").and_then(|v| v.as_str()) {
+			self.abstract_text = Some(abstract_text.to_string());
+		}
+
+		if let Some(doi) = self.overrides.get("doi").and_then(|v| v.as_str()) {
+			self.doi = Some(doi.to_string());
+		}
+
+		if let Some(publication_year) = self
+			.overrides
+			.get("publication_year")
+			.and_then(|v| v.as_i64())
+		{
+			self.publication_year = Some(publication_year as i16);
+		}
+
+		if let Some(is_accepted) = self.overrides.get("is_accepted").and_then(|v| v.as_bool()) {
+			self.is_accepted = is_accepted;
+		}
+
+		if let Some(is_published) = self.overrides.get("is_published").and_then(|v| v.as_bool()) {
+			self.is_published = is_published;
+		}
+	}
 }
 
 model_id! {

@@ -1,4 +1,4 @@
-use crate::research::*;
+use crate::{academic::AcademicId, research::*};
 use chrono::NaiveDate;
 use serde::Deserialize;
 use uuid::Uuid;
@@ -31,7 +31,7 @@ pub struct NewWork {
 #[derive(Debug, Deserialize, Validate, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct GetWorksQuery {
-	pub academic_id: Option<Uuid>,
+	pub academic_id: Option<AcademicId>,
 	pub search: Option<String>,
 
 	#[validate(range(min = 1900, max = 2100))]
@@ -45,7 +45,7 @@ pub struct GetWorksQuery {
 	pub department_id: Option<Uuid>,
 	pub career_id: Option<Uuid>,
 	pub journal_kind: Option<JournalKind>,
-	pub research_line_id: Option<Uuid>,
+	pub research_line_id: Option<ResearchLineId>,
 
 	#[validate(range(min = 1, max = 1000))]
 	pub size: Option<u32>,

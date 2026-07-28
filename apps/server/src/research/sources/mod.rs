@@ -16,7 +16,7 @@ model_id! {
 #[serde(rename_all = "camelCase")]
 pub struct Source {
 	#[key]
-	#[builder(default = SourceId::new())]
+	#[builder(default)]
 	pub id: SourceId,
 
 	#[unique]
@@ -26,9 +26,11 @@ pub struct Source {
 	pub issn: Vec<String>,
 
 	#[has_one]
-	pub journal_issn: Deferred<Option<JournalIssn>>,
+	pub journal_info: Option<JournalIssn>,
 
 	#[has_many]
+	#[serde(skip)]
+	#[builder(default)]
 	pub works: Deferred<Vec<Work>>,
 }
 

@@ -1,14 +1,17 @@
-use crate::shared::model_id;
+use crate::{
+	research::{Work, WorkKeyWordScore, WorkTopicScore},
+	shared::model_id,
+};
 use bon::Builder;
 use serde::Serialize;
 use toasty::{Deferred, Model};
 
 #[derive(Debug, Clone, Serialize, Model, Builder)]
 #[serde(rename_all = "camelCase")]
-pub struct ResearchDomain {
+pub struct Domain {
 	#[key]
-	#[builder(default = ResearchDomainId::new())]
-	pub id: ResearchDomainId,
+	#[builder(default)]
+	pub id: DomainId,
 	pub name: String,
 
 	#[unique]
@@ -17,94 +20,107 @@ pub struct ResearchDomain {
 
 #[derive(Debug, Clone, Serialize, Model, Builder)]
 #[serde(rename_all = "camelCase")]
-pub struct ResearchField {
+pub struct Field {
 	#[key]
-	#[builder(default = ResearchFieldId::new())]
-	pub id: ResearchFieldId,
+	#[builder(default)]
+	pub id: FieldId,
 	pub name: String,
 
 	#[unique]
 	pub openalex_id: String,
 
 	#[index]
-	pub domain_id: ResearchDomainId,
+	pub domain_id: DomainId,
 
 	#[belongs_to]
-	pub domain: Deferred<ResearchDomain>,
+	pub domain: Domain,
 }
 
 #[derive(Debug, Clone, Serialize, Model, Builder)]
 pub struct ResearchLine {
 	#[key]
-	#[builder(default = ResearchLineId::new())]
+	#[builder(default)]
 	pub id: ResearchLineId,
 	pub name: String,
 	pub slug: String,
 
 	#[has_many]
-	pub subfields: Deferred<Vec<ResearchSubfield>>,
+	#[serde(skip)]
+	pub subfields: Deferred<Vec<Subfield>>,
 }
 
 #[derive(Debug, Clone, Serialize, Model, Builder)]
 #[serde(rename_all = "camelCase")]
-pub struct ResearchSubfield {
+pub struct Subfield {
 	#[key]
-	#[builder(default = ResearchSubfieldId::new())]
-	pub id: ResearchSubfieldId,
+	#[builder(default)]
+	pub id: SubfieldId,
 	pub name: String,
 
 	#[unique]
 	pub openalex_id: String,
 
 	#[index]
-	pub field_id: ResearchFieldId,
+	pub field_id: FieldId,
 
 	#[index]
 	pub research_line_id: Option<ResearchLineId>,
 
 	#[belongs_to]
-	pub field: Deferred<ResearchField>,
+	pub field: Field,
 
 	#[belongs_to]
-	pub research_line: Deferred<Option<ResearchLine>>,
+	pub research_line: Option<ResearchLine>,
 }
 
 #[derive(Debug, Clone, Serialize, Model, Builder)]
 #[serde(rename_all = "camelCase")]
-pub struct ResearchTopic {
+pub struct Topic {
 	#[key]
-	#[builder(default = ResearchTopicId::new())]
-	pub id: ResearchTopicId,
+	#[builder(default)]
+	pub id: TopicId,
 
 	#[unique]
 	pub openalex_id: String,
 	pub name: String,
 
 	#[index]
-	pub subfield_id: ResearchSubfieldId,
+	pub subfield_id: SubfieldId,
 
 	#[belongs_to]
-	pub subfield: Deferred<ResearchSubfield>,
+	pub subfield: Subfield,
+
+	#[has_many]
+	pub work_scores: Deferred<Vec<WorkTopicScore>>,
+
+	#[has_many(via = work_scores.work)]
+	pub works: Deferred<Vec<Work>>,
 }
 
 #[derive(Debug, Clone, Serialize, Model, Builder)]
 #[serde(rename_all = "camelCase")]
-pub struct ResearchKeyword {
+pub struct Keyword {
 	#[key]
-	#[builder(default = ResearchKeywordId::new())]
-	pub id: ResearchKeywordId,
+	#[builder(default)]
+	pub id: KeywordId,
 
 	#[unique]
 	pub openalex_id: String,
 	pub name: String,
+
+	#[has_many]
+	pub work_scores: Deferred<Vec<WorkKeyWordScore>>,
+
+	#[has_many(via = work_scores.work)]
+	pub works: Deferred<Vec<Work>>,
 }
 
 #[allow(dead_code)]
 pub struct ClassificationFilter {
-	pub domain_id: Option<ResearchDomainId>,
-	pub field_id: Option<ResearchFieldId>,
-	pub subfield_id: Option<ResearchSubfieldId>,
-	pub topic_id: Option<ResearchTopicId>,
+	pub domain_id: Option<DomainId>,
+	pub field_id: Option<FieldId>,
+	pub subfield_id: Option<SubfieldId>,
+	pub topic_id: Option<TopicId>,
 	pub openalex_id: Option<String>,
 	pub search: Option<String>,
 }
@@ -114,20 +130,20 @@ model_id! {
 }
 
 model_id! {
-	struct ResearchDomainId, key: "research_domain"
+	struct DomainId, key: "domain"
 }
 
 model_id! {
-	struct ResearchFieldId, key: "research_field"
+	struct FieldId, key: "field"
 }
 
 model_id! {
-	struct ResearchSubfieldId, key: "research_subfield"
+	struct SubfieldId, key: "subfield"
 }
 
 model_id! {
-	struct ResearchTopicId, key: "research_topic"
+	struct TopicId, key: "topic"
 }
 model_id! {
-	struct ResearchKeywordId, key: "research_keyword"
+	struct KeywordId, key: "keyword"
 }
