@@ -1,5 +1,6 @@
 use crate::{
-	academic::AcademicError, auth::AuthError, research::WorksError, university::UniversityError,
+	academic::AcademicError, auth::AuthError, research::StatsError, research::WorksError,
+	university::UniversityError,
 };
 
 use sqlx::Error as SqlxError;
@@ -26,6 +27,10 @@ pub enum AppError {
 	#[http(transparent)]
 	#[error(transparent)]
 	Research(#[from] WorksError),
+
+	#[http(transparent)]
+	#[error(transparent)]
+	Stats(#[from] StatsError),
 
 	#[http(code = 500)]
 	#[tracing(error)]
