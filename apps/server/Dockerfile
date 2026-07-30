@@ -1,28 +1,42 @@
 # ==============================================================================
+# Base Stage
+# ==============================================================================
+
+ARG RUST_VERSION=1.97
+FROM rust:${RUST_VERSION}-slim AS base
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    pkg-config \
+    libssl-dev \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# ==============================================================================
 # Development Stage
 # ==============================================================================
 
 ARG RUST_VERSION=1.97
-FROM rust:${RUST_VERSION}-alpine AS dev
+FROM base AS dev
 
-RUN apk add --no-cache \
-	openssl-dev \
-	openssl-libs-static \
-	unzip \
+RUN apt-get update && apt-get install -y --no-install-recommends \
 	netcat-openbsd \
-	xz \
-	build-base \
-	pkgconf \
-	bash \
-	curl \
-	&& rm -rf /var/cache/apk/*
+	xz-utils \
+	gosu \
+	&& rm -rf /var/lib/apt/lists/*
 
-RUN wget https://github.com/watchexec/cargo-watch/releases/download/v8.5.3/cargo-watch-v8.5.3-x86_64-unknown-linux-musl.tar.xz && \
-	tar -xf cargo-watch-v8.5.3-x86_64-unknown-linux-musl.tar.xz && \
-	mv cargo-watch-v8.5.3-x86_64-unknown-linux-musl/cargo-watch /usr/local/bin/ && \
-	rm -rf cargo-watch-v8.5.3-x86_64-unknown-linux-musl.tar.xz cargo-watch-v8.5.3-x86_64-unknown-linux-musl
+ADD --chmod=755 \
+	https://github.com/watchexec/cargo-watch/releases/download/v8.5.3/cargo-watch-v8.5.3-x86_64-unknown-linux-gnu.tar.xz \
+	/tmp/cargo-watch.tar.xz
 
-WORKDIR /app
+RUN tar -xf /tmp/cargo-watch.tar.xz -C /usr/local/bin --strip-components=1 \
+	&& rm /tmp/cargo-watch.tar.xz
+
+ARG UID=1000
+ARG GID=1000
+RUN groupadd -g $GID appuser \
+	&& useradd -m -u $UID -g appuser appuser
 
 CMD ["/bin/bash", "/app/apps/server/config/scripts/entrypoint.sh"]
 
@@ -31,17 +45,8 @@ CMD ["/bin/bash", "/app/apps/server/config/scripts/entrypoint.sh"]
 # ==============================================================================
 
 ARG RUST_VERSION=1.97
-FROM rust:${RUST_VERSION}-alpine AS builder
+FROM base AS builder
 
-RUN apk add --no-cache \
-	build-base \
-	pkgconf \
-	openssl-dev \
-	openssl-libs-static \
-	curl \
-	&& rm -rf /var/cache/apk/*
-
-WORKDIR /app
 COPY . .
 
 RUN cargo build -p acad-mgr-server --release
@@ -50,13 +55,15 @@ RUN cargo build -p acad-mgr-server --release
 # Production Stage
 # ==============================================================================
 
-FROM alpine:latest AS prod
+FROM debian:trixie-slim AS prod
 
-RUN apk add --no-cache ca-certificates openssl ripgrep tree && rm -rf /var/cache/apk/*
+RUN apt-get update && apt-get install -y --no-install-recommends \
+	ca-certificates \
+	&& rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-RUN adduser -D appuser
+RUN adduser --disabled-password appuser
 USER appuser
 
 COPY --from=builder /app/target/release/orcid-acad-mgr-server ./server

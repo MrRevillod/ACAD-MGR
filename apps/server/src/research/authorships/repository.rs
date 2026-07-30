@@ -24,7 +24,7 @@ impl AuthorshipsRepository {
 		.map_err(Into::into)
 	}
 
-	pub async fn insert(&self, authorship: &NewAuthorship) -> AppResult<()> {
+	pub async fn save(&self, authorship: &Authorship) -> AppResult<()> {
 		sqlx::query(
 			"INSERT INTO work_authorships (
             	work_id, orcid, name, is_external,

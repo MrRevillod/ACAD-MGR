@@ -8,9 +8,8 @@ use sqlx::FromRow;
 pub struct SourceView {
 	pub id: SourceId,
 	pub openalex_id: String,
-	pub display_name: String,
+	pub name: String,
 	pub ty: String,
-	pub issn_l: Option<String>,
 	pub issn: Option<Vec<String>>,
 	pub kind: Option<JournalKind>,
 }

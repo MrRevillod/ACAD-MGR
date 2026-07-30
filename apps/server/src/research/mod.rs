@@ -28,6 +28,7 @@ impl Module for ResearchModule {
 		components.register::<StatsRepository>();
 		components.register::<WorkClassificationRepository>();
 		components.register::<WorksService>();
+		components.register::<WorksImportService>();
 		components.register::<WorksRepository>();
 		components.register::<SourcesRepository>();
 		components.register::<AuthorshipsRepository>();

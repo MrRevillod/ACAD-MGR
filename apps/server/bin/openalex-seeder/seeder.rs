@@ -6,28 +6,28 @@ const UNKNOWN_ID: Uuid = Uuid::from_u128(1);
 
 pub async fn seed_unknown_taxonomy(pool: &PgPool) -> Result<(), Box<dyn std::error::Error>> {
 	sqlx::query(
-        "INSERT INTO research_domains (id, openalex_id, name) VALUES ($1, 'unknown', 'Unknown') ON CONFLICT (openalex_id) DO NOTHING",
+        "INSERT INTO domains (id, openalex_id, name) VALUES ($1, 'unknown', 'Unknown') ON CONFLICT (openalex_id) DO NOTHING",
     )
     .bind(UNKNOWN_ID)
     .execute(pool)
     .await?;
 
 	sqlx::query(
-        "INSERT INTO research_fields (id, openalex_id, name, domain_id) VALUES ($1, 'unknown', 'Unknown', $1) ON CONFLICT (openalex_id) DO NOTHING",
+        "INSERT INTO fields (id, openalex_id, name, domain_id) VALUES ($1, 'unknown', 'Unknown', $1) ON CONFLICT (openalex_id) DO NOTHING",
     )
     .bind(UNKNOWN_ID)
     .execute(pool)
     .await?;
 
 	sqlx::query(
-        "INSERT INTO research_subfields (id, openalex_id, name, field_id) VALUES ($1, 'unknown', 'Unknown', $1) ON CONFLICT (openalex_id) DO NOTHING",
+        "INSERT INTO subfields (id, openalex_id, name, field_id) VALUES ($1, 'unknown', 'Unknown', $1) ON CONFLICT (openalex_id) DO NOTHING",
     )
     .bind(UNKNOWN_ID)
     .execute(pool)
     .await?;
 
 	sqlx::query(
-        "INSERT INTO research_topics (id, openalex_id, name, subfield_id) VALUES ($1, 'unknown', 'Unknown', $1) ON CONFLICT (openalex_id) DO NOTHING",
+        "INSERT INTO topics (id, openalex_id, name, subfield_id) VALUES ($1, 'unknown', 'Unknown', $1) ON CONFLICT (openalex_id) DO NOTHING",
     )
     .bind(UNKNOWN_ID)
     .execute(pool)
@@ -51,12 +51,12 @@ pub async fn seed_domains(
 	for domain in domains {
 		let name = domain.display_name.as_deref().unwrap_or("Unknown");
 		let result = sqlx::query(
-            "INSERT INTO research_domains (openalex_id, name) VALUES ($1, $2) ON CONFLICT (openalex_id) DO NOTHING",
-        )
-        .bind(&domain.id)
-        .bind(name)
-        .execute(pool)
-        .await?;
+			"INSERT INTO domains (openalex_id, name) VALUES ($1, $2) ON CONFLICT (openalex_id) DO NOTHING",
+		)
+		.bind(&domain.id)
+		.bind(name)
+		.execute(pool)
+		.await?;
 		inserted += result.rows_affected();
 	}
 	Ok(inserted)
@@ -75,7 +75,7 @@ pub async fn seed_fields(
 			.and_then(|d| d.id.as_deref())
 			.unwrap_or("unknown");
 		let result = sqlx::query(
-            "INSERT INTO research_fields (openalex_id, name, domain_id) VALUES ($1, $2, COALESCE((SELECT id FROM research_domains WHERE openalex_id = $3), $4::uuid)) ON CONFLICT (openalex_id) DO NOTHING",
+            "INSERT INTO fields (openalex_id, name, domain_id) VALUES ($1, $2, COALESCE((SELECT id FROM domains WHERE openalex_id = $3), $4::uuid)) ON CONFLICT (openalex_id) DO NOTHING",
         )
         .bind(&field.id)
         .bind(name)
@@ -101,7 +101,7 @@ pub async fn seed_subfields(
 			.and_then(|f| f.id.as_deref())
 			.unwrap_or("unknown");
 		let result = sqlx::query(
-            "INSERT INTO research_subfields (openalex_id, name, field_id) VALUES ($1, $2, COALESCE((SELECT id FROM research_fields WHERE openalex_id = $3), $4::uuid)) ON CONFLICT (openalex_id) DO NOTHING",
+            "INSERT INTO subfields (openalex_id, name, field_id) VALUES ($1, $2, COALESCE((SELECT id FROM fields WHERE openalex_id = $3), $4::uuid)) ON CONFLICT (openalex_id) DO NOTHING",
         )
         .bind(&subfield.id)
         .bind(name)
@@ -127,7 +127,7 @@ pub async fn seed_topics(
 			.and_then(|s| extract_hierarchy_id(&s.id))
 			.unwrap_or_else(|| "unknown".to_string());
 		let result = sqlx::query(
-            "INSERT INTO research_topics (openalex_id, name, subfield_id) VALUES ($1, $2, COALESCE((SELECT id FROM research_subfields WHERE openalex_id = $3), $4::uuid)) ON CONFLICT (openalex_id) DO NOTHING",
+            "INSERT INTO topics (openalex_id, name, subfield_id) VALUES ($1, $2, COALESCE((SELECT id FROM subfields WHERE openalex_id = $3), $4::uuid)) ON CONFLICT (openalex_id) DO NOTHING",
         )
         .bind(&topic.id)
         .bind(name)

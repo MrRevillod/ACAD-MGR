@@ -18,8 +18,12 @@ CREATE TABLE academics (
 	acad_category_options_id UUID NOT NULL REFERENCES academic_category_options(id),
 	annual_discount_hours DOUBLE PRECISION NOT NULL,
 	nationality_code TEXT NOT NULL REFERENCES countries(code),
-	city TEXT NOT NULL
+	city TEXT NOT NULL,
+	updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+CREATE INDEX idx_academics_orcid ON academics(orcid);
+CREATE INDEX idx_academics_department_id ON academics(department_id);
 
 CREATE TYPE degree_kind AS ENUM (
     'base',
@@ -35,3 +39,5 @@ CREATE TABLE degrees (
 	kind degree_kind NOT NULL,
 	country_code TEXT NOT NULL REFERENCES countries(code)
 );
+
+CREATE INDEX idx_degrees_academic_id ON degrees(academic_id);

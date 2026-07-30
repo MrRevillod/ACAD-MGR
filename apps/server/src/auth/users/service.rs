@@ -36,21 +36,20 @@ impl UsersService {
 			Err(AuthError::EmailAlreadyExists)?;
 		}
 
-		let user = User {
-			id: UserId::new(),
-			name: dto.name,
-			email: dto.email,
-			role: dto.role,
-			password_hash: self.hasher.hash(&dto.password)?,
-		};
+		let user = User::builder()
+			.name(dto.name)
+			.email(dto.email)
+			.role(dto.role)
+			.password_hash(self.hasher.hash(&dto.password)?)
+			.build();
 
-		let user = self.users.save(&user).await?;
+		self.users.save(&user).await?;
 
 		Ok(UserView::from(user))
 	}
 
 	pub async fn update(&self, id: &UserId, dto: UpdateUserDto) -> AppResult<UserView> {
-		let Some(user) = self.users.find_by_id(id).await? else {
+		let Some(mut user) = self.users.find_by_id(id).await? else {
 			return Err(AuthError::UserNotFound)?;
 		};
 
@@ -61,18 +60,20 @@ impl UsersService {
 			Err(AuthError::EmailAlreadyExists)?;
 		}
 
-		let updated = User {
-			name: dto.name.unwrap_or(user.name),
-			email: dto.email.unwrap_or(user.email),
-			role: dto.role.unwrap_or(user.role),
-			password_hash: match dto.password {
-				Some(p) => self.hasher.hash(&p)?,
-				None => user.password_hash,
-			},
-			..user
-		};
+		if let Some(name) = dto.name {
+			user.name = name;
+		}
+		if let Some(email) = dto.email {
+			user.email = email;
+		}
+		if let Some(role) = dto.role {
+			user.role = role;
+		}
+		if let Some(password) = dto.password {
+			user.password_hash = self.hasher.hash(&password)?;
+		}
 
-		let user = self.users.save(&updated).await?;
+		self.users.save(&user).await?;
 
 		Ok(UserView::from(user))
 	}

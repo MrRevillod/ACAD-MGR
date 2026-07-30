@@ -2,12 +2,6 @@ use std::path::Path;
 
 use csv::ReaderBuilder;
 
-#[derive(Debug)]
-pub struct IssnRecord {
-	pub issn: Option<String>,
-	pub eissn: Option<String>,
-}
-
 fn normalize(value: &str) -> Option<String> {
 	let cleaned = value.trim().replace('-', "").to_uppercase();
 	if cleaned.is_empty() {
@@ -17,7 +11,7 @@ fn normalize(value: &str) -> Option<String> {
 	}
 }
 
-pub fn read_csv(path: &Path) -> Result<Vec<IssnRecord>, Box<dyn std::error::Error>> {
+pub fn read_csv(path: &Path) -> Result<Vec<String>, Box<dyn std::error::Error>> {
 	let mut reader = ReaderBuilder::new()
 		.has_headers(true)
 		.trim(csv::Trim::All)
@@ -27,14 +21,13 @@ pub fn read_csv(path: &Path) -> Result<Vec<IssnRecord>, Box<dyn std::error::Erro
 
 	for result in reader.records() {
 		let row = result?;
-		let issn = normalize(&row[0]);
-		let eissn = normalize(&row[1]);
 
-		if issn.is_none() && eissn.is_none() {
-			continue;
+		if let Some(issn) = normalize(&row[0]) {
+			records.push(issn);
 		}
-
-		records.push(IssnRecord { issn, eissn });
+		if let Some(eissn) = normalize(&row[1]) {
+			records.push(eissn);
+		}
 	}
 
 	Ok(records)

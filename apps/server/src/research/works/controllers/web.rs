@@ -1,3 +1,4 @@
+use crate::academic::AcademicId;
 use crate::auth::{SessionCheck, UsersRepository};
 use crate::research::*;
 use crate::shared::RequestExt;
@@ -11,6 +12,7 @@ use uuid::Uuid;
 #[controller(kind = ControllerKind::Web, path = "/works")]
 pub struct WorksController {
 	works: Arc<WorksService>,
+	works_import: Arc<WorksImportService>,
 	events: Arc<EventPublisher>,
 	users_repo: Arc<UsersRepository>,
 }
@@ -19,8 +21,8 @@ impl WorksController {
 	#[post("/sync/{id}")]
 	#[interceptor(SessionCheck)]
 	pub async fn sync_works(&self, req: Request) -> WebResult<SyncResultView> {
-		let academic_id = req.param::<Uuid>("id")?;
-		Ok(self.works.sync_from_openalex(academic_id).await?)
+		let academic_id = req.param::<AcademicId>("id")?;
+		Ok(self.works_import.sync_from_openalex(academic_id).await?)
 	}
 
 	#[post("/sync-all")]
@@ -43,13 +45,13 @@ impl WorksController {
 	}
 
 	#[get("/")]
-	pub async fn list_works(&self, req: Request) -> WebResult<Vec<Work>> {
+	pub async fn list_works(&self, req: Request) -> WebResult<Vec<WorkView>> {
 		let query = req.query_validator::<GetWorksQuery>()?;
 		Ok(self.works.list(&query.unwrap_or_default()).await?)
 	}
 
 	#[get("/academic/{id}")]
-	pub async fn list_works_by_academic(&self, req: Request) -> WebResult<Vec<Work>> {
+	pub async fn list_works_by_academic(&self, req: Request) -> WebResult<Vec<WorkView>> {
 		let academic_id = req.param::<Uuid>("id")?;
 		let mut query = req.query_validator::<GetWorksQuery>()?.unwrap_or_default();
 
@@ -59,11 +61,9 @@ impl WorksController {
 	}
 
 	#[get("/{id}")]
-	pub async fn get_work(&self, req: Request) -> WebResult<WorkDetailView> {
+	pub async fn get_work(&self, req: Request) -> WebResult<WorkView> {
 		let work_id = req.param::<WorkId>("id")?;
-		let work = self.works.find_by_id(work_id).await?;
-
-		Ok(work)
+		Ok(self.works.find_by_id(work_id).await?)
 	}
 
 	#[put("/{id}/overrides")]

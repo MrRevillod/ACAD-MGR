@@ -49,8 +49,12 @@ struct DeptSummaryRow {
 	research: Option<i64>,
 }
 
-fn base_from() -> &'static str {
-	r#"
+const EFFECTIVE_YEAR: &str =
+	"COALESCE((w.overrides).publication_year, w.publication_year)";
+
+fn base_from() -> String {
+	format!(
+		r#"
 	FROM works w
 	JOIN work_authorships wa ON w.id = wa.work_id
 		AND wa.is_external = false
@@ -58,19 +62,19 @@ fn base_from() -> &'static str {
 		AND a.orcid != 'https://orcid.org/0000-0000-0000-0000'
 	JOIN departments d ON a.department_id = d.id
 	JOIN academic_category_options aco ON a.acad_category_options_id = aco.id
-	LEFT JOIN sources src ON w.primary_source_id = src.id
+	LEFT JOIN sources src ON w.source_id = src.id
 	LEFT JOIN LATERAL (
 		SELECT kind FROM journal_issn
-		WHERE issn = src.issn_l OR eissn = src.issn_l
-			OR issn = ANY(src.issn) OR eissn = ANY(src.issn)
+		WHERE issn = ANY(src.issn)
 		LIMIT 1
 	) ji ON TRUE
-	WHERE w.publication_year >= $1
-		AND ($2::smallint IS NULL OR w.publication_year <= $2)
+	WHERE {EFFECTIVE_YEAR} >= $1
+		AND ($2::smallint IS NULL OR {EFFECTIVE_YEAR} <= $2)
 		AND ($3::uuid IS NULL OR a.department_id = $3)
 		AND ($4::academic_option IS NULL OR aco.option = $4)
 		AND ($5::journal_kind IS NULL OR ji.kind = $5)
 	"#
+	)
 }
 
 #[injectable]
@@ -84,12 +88,12 @@ impl StatsRepository {
 		query: &WorksStatsQuery,
 	) -> AppResult<Vec<TimeSeriesStat>> {
 		let rows = sqlx::query_as::<_, JournalKindRow>(&format!(
-			r#"SELECT w.publication_year AS year,
+			r#"SELECT {EFFECTIVE_YEAR} AS year,
 					COUNT(DISTINCT w.id) FILTER (WHERE ji.kind = 'wos')::bigint AS wos,
 					COUNT(DISTINCT w.id) FILTER (WHERE ji.kind = 'scopus')::bigint AS scopus
 				{}
-				GROUP BY w.publication_year
-				ORDER BY w.publication_year"#,
+				GROUP BY {EFFECTIVE_YEAR}
+				ORDER BY {EFFECTIVE_YEAR}"#,
 			base_from()
 		))
 		.bind(query.year_from.unwrap_or(1900))
@@ -130,12 +134,12 @@ impl StatsRepository {
 
 	pub async fn stats_by_option(&self, query: &WorksStatsQuery) -> AppResult<Vec<TimeSeriesStat>> {
 		let rows = sqlx::query_as::<_, OptionRow>(&format!(
-			r#"SELECT w.publication_year AS year,
+			r#"SELECT {EFFECTIVE_YEAR} AS year,
 					COUNT(DISTINCT w.id) FILTER (WHERE aco.option = 'teaching')::bigint AS teaching,
 					COUNT(DISTINCT w.id) FILTER (WHERE aco.option = 'research')::bigint AS research
 				{}
-				GROUP BY w.publication_year
-				ORDER BY w.publication_year"#,
+				GROUP BY {EFFECTIVE_YEAR}
+				ORDER BY {EFFECTIVE_YEAR}"#,
 			base_from()
 		))
 		.bind(query.year_from.unwrap_or(1900))
@@ -179,13 +183,13 @@ impl StatsRepository {
 		query: &WorksStatsQuery,
 	) -> AppResult<Vec<TimeSeriesStat>> {
 		let rows = sqlx::query_as::<_, DepartmentRow>(&format!(
-			r#"SELECT w.publication_year AS year,
+			r#"SELECT {EFFECTIVE_YEAR} AS year,
 					d.id AS department_id,
 					d.name AS department,
 					COUNT(DISTINCT w.id)::bigint AS count
 				{}
-				GROUP BY w.publication_year, d.id, d.name
-				ORDER BY d.name, w.publication_year"#,
+				GROUP BY {EFFECTIVE_YEAR}, d.id, d.name
+				ORDER BY d.name, {EFFECTIVE_YEAR}"#,
 			base_from()
 		))
 		.bind(query.year_from.unwrap_or(1900))
@@ -223,7 +227,7 @@ impl StatsRepository {
 	) -> AppResult<DepartmentDetailResponse> {
 		let pool = self.database.pool();
 
-		let summary_query = sqlx::query_as::<_, DeptSummaryRow>(
+		let summary_sql = format!(
 			r#"
 			SELECT d.name AS department,
 				COUNT(DISTINCT w.id)::bigint AS total,
@@ -236,25 +240,19 @@ impl StatsRepository {
 			JOIN academics a ON a.orcid = wa.orcid AND a.orcid != 'https://orcid.org/0000-0000-0000-0000'
 			JOIN departments d ON a.department_id = d.id
 			JOIN academic_category_options aco ON a.acad_category_options_id = aco.id
-			LEFT JOIN sources src ON w.primary_source_id = src.id
+			LEFT JOIN sources src ON w.source_id = src.id
 			LEFT JOIN LATERAL (
-				SELECT kind FROM journal_issn WHERE issn = src.issn_l OR eissn = src.issn_l
-					OR issn = ANY(src.issn) OR eissn = ANY(src.issn) LIMIT 1
+				SELECT kind FROM journal_issn WHERE issn = ANY(src.issn) LIMIT 1
 			) ji ON TRUE
-			WHERE d.id = $1 AND w.publication_year >= $2
-				AND ($3::smallint IS NULL OR w.publication_year <= $3)
+			WHERE d.id = $1 AND {EFFECTIVE_YEAR} >= $2
+				AND ($3::smallint IS NULL OR {EFFECTIVE_YEAR} <= $3)
 				AND ($4::academic_option IS NULL OR aco.option = $4)
 				AND ($5::journal_kind IS NULL OR ji.kind = $5)
 			GROUP BY d.id, d.name
-			"#,
-		)
-		.bind(id)
-		.bind(query.year_from.unwrap_or(1900))
-		.bind(query.year_to)
-		.bind(query.option)
-		.bind(query.journal_kind);
+			"#
+		);
 
-		let publishers_query = sqlx::query_as::<_, TopPublisherRow>(
+		let publishers_sql = format!(
 			r#"
 			SELECT
 				a.id AS academic_id,
@@ -269,29 +267,37 @@ impl StatsRepository {
 			JOIN academics a ON a.orcid = wa.orcid AND a.orcid != 'https://orcid.org/0000-0000-0000-0000'
 			JOIN departments d ON a.department_id = d.id
 			JOIN academic_category_options aco ON a.acad_category_options_id = aco.id
-			LEFT JOIN sources src ON w.primary_source_id = src.id
+			LEFT JOIN sources src ON w.source_id = src.id
 			LEFT JOIN LATERAL (
-				SELECT kind FROM journal_issn WHERE issn = src.issn_l OR eissn = src.issn_l
-					OR issn = ANY(src.issn) OR eissn = ANY(src.issn) LIMIT 1
+				SELECT kind FROM journal_issn WHERE issn = ANY(src.issn) LIMIT 1
 			) ji ON TRUE
-			WHERE d.id = $1 AND w.publication_year >= $2
-				AND ($3::smallint IS NULL OR w.publication_year <= $3)
+			WHERE d.id = $1 AND {EFFECTIVE_YEAR} >= $2
+				AND ($3::smallint IS NULL OR {EFFECTIVE_YEAR} <= $3)
 				AND ($4::academic_option IS NULL OR aco.option = $4)
 				AND ($5::journal_kind IS NULL OR ji.kind = $5)
 			GROUP BY a.id, a.names, a.paternal_surname, a.maternal_surname, aco.option
 			ORDER BY total DESC
 			LIMIT 20
-			"#,
-		)
-		.bind(id)
-		.bind(query.year_from.unwrap_or(1900))
-		.bind(query.year_to)
-		.bind(query.option)
-		.bind(query.journal_kind);
+			"#
+		);
+
+		let year_from = query.year_from.unwrap_or(1900);
 
 		let (summary, publishers) = tokio::join!(
-			summary_query.fetch_one(pool),
-			publishers_query.fetch_all(pool),
+			sqlx::query_as::<_, DeptSummaryRow>(&summary_sql)
+				.bind(id)
+				.bind(year_from)
+				.bind(query.year_to)
+				.bind(query.option)
+				.bind(query.journal_kind)
+				.fetch_one(pool),
+			sqlx::query_as::<_, TopPublisherRow>(&publishers_sql)
+				.bind(id)
+				.bind(year_from)
+				.bind(query.year_to)
+				.bind(query.option)
+				.bind(query.journal_kind)
+				.fetch_all(pool),
 		);
 		let summary = summary?;
 		let publishers = publishers?;

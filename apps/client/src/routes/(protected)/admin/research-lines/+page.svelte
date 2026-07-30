@@ -49,7 +49,7 @@
 	}
 
 	async function handleDelete(lineId: string, subfieldOpenalexId: string) {
-		const sinAsignar = query.data?.lines.find((l) => l.slug === "sin-asignar")
+		const sinAsignar = query.data?.find((l) => l.slug === "sin-asignar")
 		if (!sinAsignar) return
 		if (lineId === sinAsignar.id) return
 
@@ -84,7 +84,7 @@
 			class="flex min-h-0 flex-1 gap-4 overflow-x-auto pb-4"
 			style="scrollbar-width: thin; scrollbar-color: oklch(0.87 0.01 258.34) transparent;"
 		>
-			{#each query.data?.lines ?? [] as line (line.id)}
+			{#each query.data ?? [] as line (line.id)}
 				<div
 					class="group/col flex w-72 shrink-0 flex-col rounded-xl border border-corp-gray/20 bg-white max-h-full"
 				>

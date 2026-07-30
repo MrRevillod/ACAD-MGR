@@ -2,19 +2,20 @@ use crate::shared::{Entity, Id};
 use bon::Builder;
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, Type};
+use uuid::Uuid;
 
 pub type SourceId = Id<Source>;
 
-#[derive(Debug, Clone, Serialize, FromRow, Builder)]
+#[derive(Debug, Clone, Serialize, FromRow, Builder, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct Source {
 	#[builder(default = SourceId::new())]
 	pub id: SourceId,
 	pub openalex_id: String,
-	pub display_name: String,
+	pub name: String,
 	pub ty: String,
-	pub issn_l: Option<String>,
 	pub issn: Option<Vec<String>>,
+	pub journal_issn_id: Option<Uuid>,
 }
 
 impl Source {
@@ -35,7 +36,7 @@ impl Entity for Source {
 	}
 }
 
-#[derive(Debug, Clone, Copy, Type, Serialize, Deserialize, Eq, PartialEq)]
+#[derive(Debug, Clone, Copy, Type, Serialize, Deserialize, Eq, PartialEq, Hash)]
 #[sqlx(type_name = "journal_kind", rename_all = "lowercase")]
 #[serde(rename_all = "lowercase")]
 pub enum JournalKind {

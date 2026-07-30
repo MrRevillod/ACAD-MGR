@@ -3,8 +3,8 @@ import type {
 	ResearchDomain,
 	ResearchField,
 	ResearchKeyword,
+	ResearchLineDetailDTO,
 	ResearchLineDTO,
-	ResearchLinesDetailResponseDTO,
 	ResearchSubfield,
 	ResearchTopic,
 } from "./dtos"
@@ -55,8 +55,8 @@ class ClassificationService {
 		})
 	}
 
-	public async researchLineDetails(): Promise<ResearchLinesDetailResponseDTO> {
-		return http.request<ResearchLinesDetailResponseDTO>({
+	public async researchLineDetails(): Promise<ResearchLineDetailDTO[]> {
+		return http.request<ResearchLineDetailDTO[]>({
 			method: "GET",
 			url: "/works-classification/research-lines/detail",
 		})

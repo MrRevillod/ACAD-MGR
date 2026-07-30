@@ -5,6 +5,9 @@ services:
       context: .
       dockerfile: ./apps/server/Dockerfile
       target: dev
+      args:
+        UID: ${UID:-1000}
+        GID: ${GID:-1000}
     env_file:
       - .env
     depends_on:
@@ -23,6 +26,7 @@ services:
     volumes:
       - ./:/app
       - server_target:/app/target
+      - cargo_cache:/home/appuser/.cargo
 
   nginx:
     container_name: acad-mgr-nginx

@@ -3,7 +3,6 @@ use crate::{
 	shared::{AppResult, Database},
 };
 
-use chrono::{DateTime, Utc};
 use std::sync::Arc;
 use sword::prelude::*;
 
@@ -13,8 +12,8 @@ pub struct SessionRepository {
 }
 
 impl SessionRepository {
-	pub async fn save(&self, session: &Session) -> AppResult<Session> {
-		let session = sqlx::query_as::<_, Session>(
+	pub async fn save(&self, session: &Session) -> AppResult<()> {
+		sqlx::query(
 			"INSERT INTO sessions (
                 id, user_id, refresh_token_hash, created_at,
                 expires_at, refresh_expires_at, revoked_at
@@ -26,8 +25,7 @@ impl SessionRepository {
                 created_at = EXCLUDED.created_at,
                 expires_at = EXCLUDED.expires_at,
                 refresh_expires_at = EXCLUDED.refresh_expires_at,
-                revoked_at = EXCLUDED.revoked_at
-            RETURNING *",
+                revoked_at = EXCLUDED.revoked_at",
 		)
 		.bind(session.id)
 		.bind(session.user_id)
@@ -36,10 +34,10 @@ impl SessionRepository {
 		.bind(session.expires_at)
 		.bind(session.refresh_expires_at)
 		.bind(session.revoked_at)
-		.fetch_one(self.database.pool())
+		.execute(self.database.pool())
 		.await?;
 
-		Ok(session)
+		Ok(())
 	}
 
 	pub async fn is_active(&self, id: &SessionId) -> AppResult<bool> {
@@ -78,17 +76,4 @@ impl SessionRepository {
 		Ok(res)
 	}
 
-	pub async fn update_expires_at(
-		&self,
-		id: &SessionId,
-		expires_at: DateTime<Utc>,
-	) -> AppResult<()> {
-		sqlx::query("UPDATE sessions SET expires_at = $1 WHERE id = $2")
-			.bind(expires_at)
-			.bind(id)
-			.execute(self.database.pool())
-			.await?;
-
-		Ok(())
-	}
 }

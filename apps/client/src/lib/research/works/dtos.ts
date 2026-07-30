@@ -5,19 +5,23 @@ export interface WorkDTO {
 	id: string
 	openalexId: string
 	title: string
-	abstract: string | null
+	abstractText: string | null
 	doi: string | null
 	publicationDate: string | null
 	publicationYear: number | null
-	type: string
+	ty: string
 	lang: string
 	isAccepted: boolean
 	isPublished: boolean
-	primarySourceId: string | null
+	sourceId: string | null
 	journalKind: string | null
 	researchLineId?: string
 	researchLineName?: string
 	overriddenFields?: string[]
+	source?: SourceDTO | null
+	authorships?: AuthorshipDTO[]
+	topics?: WorkTopicDTO[]
+	keywords?: WorkKeywordDTO[]
 }
 
 export const WORK_TYPE_LABELS: Record<string, string> = {
@@ -50,9 +54,8 @@ export const WORK_TYPE_LABELS: Record<string, string> = {
 export interface SourceDTO {
 	id: string
 	openalexId: string
-	displayName: string
+	name: string
 	ty: string
-	issnL: string | null
 	issn: string[] | null
 	kind: JournalKind | null
 }
@@ -85,12 +88,8 @@ export interface WorkKeywordDTO {
 	score: number
 }
 
-export interface WorkDetailDTO extends WorkDTO {
-	source: SourceDTO | null
-	authorships: AuthorshipDTO[]
-	topics: WorkTopicDTO[]
-	keywords: WorkKeywordDTO[]
-}
+/** Detail response is the same shape; relations are present when loaded. */
+export type WorkDetailDTO = WorkDTO
 
 export interface GetWorksParams {
 	academicId?: string
@@ -108,11 +107,12 @@ export interface GetWorksParams {
 
 export interface WorkOverridesInput {
 	title?: string | null
-	abstract?: string | null
+	abstractText?: string | null
 	doi?: string | null
 	publicationYear?: number | null
 	isAccepted?: boolean | null
 	isPublished?: boolean | null
+	researchLineId?: string | null
 }
 
 export interface SyncResult {

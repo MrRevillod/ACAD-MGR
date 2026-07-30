@@ -5,6 +5,8 @@ endif
 
 RUST_VERSION := $(shell grep 'channel' rust-toolchain.toml | head -1 | sed 's/.*"//;s/"//')
 export RUST_VERSION
+export UID := $(shell id -u)
+export GID := $(shell id -g)
 
 SERVER=apps/server
 CLIENT=apps/client

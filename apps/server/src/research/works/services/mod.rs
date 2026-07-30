@@ -1,17 +1,14 @@
+mod import;
 mod openalex;
 
-use crate::academic::AcademicsRepository;
 use crate::research::*;
-use crate::shared::{AppError, AppResult};
+use crate::shared::AppResult;
 
+pub use import::WorksImportService;
 pub use openalex::*;
 
-use html_escape::decode_html_entities;
-use papers_openalex::Work as OpenAlexWork;
-use std::str::FromStr;
 use std::sync::Arc;
 use sword::prelude::*;
-use uuid::Uuid;
 
 #[injectable]
 pub struct WorksService {
@@ -19,100 +16,21 @@ pub struct WorksService {
 	sources: Arc<SourcesRepository>,
 	authorships: Arc<AuthorshipsRepository>,
 	classification: Arc<WorkClassificationRepository>,
-	academics: Arc<AcademicsRepository>,
-	openalex: Arc<OpenAlexClient>,
 }
 
 impl WorksService {
-	pub async fn list(&self, query: &GetWorksQuery) -> AppResult<Vec<Work>> {
-		self.works.list(query).await
+	pub async fn list(&self, query: &GetWorksQuery) -> AppResult<Vec<WorkView>> {
+		let works = self.works.list(query).await?;
+		self.to_work_views(works, false).await
 	}
 
-	pub async fn find_by_id(&self, id: WorkId) -> AppResult<WorkDetailView> {
+	pub async fn find_by_id(&self, id: WorkId) -> AppResult<WorkView> {
 		let Some(work) = self.works.find_by_id(&id).await? else {
 			return Err(WorksError::NotFound)?;
 		};
 
-		let resolved = work.resolve();
-		let source = match resolved.primary_source_id {
-			Some(sid) => self.sources.find_source_view_by_id(&sid).await?,
-			None => None,
-		};
-
-		let authorships = self.authorships.list(&resolved.id).await?;
-		let topics = self
-			.classification
-			.list_topics_by_work(&resolved.id)
-			.await?;
-		let keywords = self
-			.classification
-			.list_keywords_by_work(&resolved.id)
-			.await?;
-
-		Ok(WorkDetailView {
-			work: resolved,
-			source,
-			authorships,
-			topics,
-			keywords,
-		})
-	}
-
-	pub async fn sync_from_openalex(&self, academic_id: Uuid) -> AppResult<SyncResultView> {
-		let academic = self
-			.academics
-			.find_by_id(&crate::academic::AcademicId::from_uuid(academic_id))
-			.await?
-			.ok_or(WorksError::AcademicNotFound)?;
-
-		let orcid = academic.orcid.ok_or(WorksError::AcademicWithoutOrcid)?;
-
-		let oa_works = self.openalex.list_all_works_by_orcid(&orcid).await?;
-		let works_fetched = oa_works.len();
-
-		let mut created = 0usize;
-		let mut skipped = 0usize;
-		let mut authorships_count = 0usize;
-		let mut topics_count = 0usize;
-		let mut keywords_count = 0usize;
-		let mut errors = Vec::new();
-
-		for oa_work in &oa_works {
-			if oa_work.r#type != Some("article".to_string()) {
-				skipped += 1;
-				continue;
-			}
-
-			let work_result = self.process_single_work(oa_work).await;
-
-			match work_result {
-				Ok(stats) => {
-					if stats.was_inserted {
-						created += 1;
-						authorships_count += stats.authorships;
-						topics_count += stats.topics;
-						keywords_count += stats.keywords;
-					} else {
-						skipped += 1;
-					}
-				}
-				Err(e) => {
-					errors.push(format!("{}: {}", oa_work.id, e));
-				}
-			}
-		}
-
-		Ok(SyncResultView {
-			academic_id,
-			academic_orcid: orcid,
-			works_fetched,
-			works_created: created,
-			works_skipped: skipped,
-			authorships_inserted: authorships_count,
-			topics_linked: topics_count,
-			keywords_linked: keywords_count,
-			errors,
-		})
+		let mut views = self.to_work_views(vec![work], true).await?;
+		Ok(views.pop().unwrap())
 	}
 
 	pub async fn update_overrides(
@@ -120,272 +38,108 @@ impl WorksService {
 		work_id: WorkId,
 		input: WorkOverridesInput,
 	) -> AppResult<()> {
-		use crate::research::WorkOverrides;
-
-		let mut overrides: WorkOverrides = self
-			.works
-			.find_by_id(&work_id)
-			.await?
-			.and_then(|w| serde_json::from_value(w.overrides).ok())
-			.unwrap_or_default();
+		let Some(mut work) = self.works.find_by_id(&work_id).await? else {
+			return Err(WorksError::NotFound)?;
+		};
 
 		if let Some(v) = input.title {
-			overrides.title = v;
+			work.overrides.title = v;
 		}
-		if let Some(v) = input.r#abstract {
-			overrides.r#abstract = v;
+		if let Some(v) = input.abstract_text {
+			work.overrides.abstract_text = v;
 		}
 		if let Some(v) = input.doi {
-			overrides.doi = v;
+			work.overrides.doi = v;
 		}
 		if let Some(v) = input.publication_year {
-			overrides.publication_year = v;
+			work.overrides.publication_year = v;
 		}
 		if let Some(v) = input.is_accepted {
-			overrides.is_accepted = v;
+			work.overrides.is_accepted = v;
 		}
 		if let Some(v) = input.is_published {
-			overrides.is_published = v;
+			work.overrides.is_published = v;
+		}
+		if let Some(v) = input.research_line_id {
+			work.overrides.research_line_id = v;
 		}
 
-		let value = serde_json::to_value(overrides)
-			.map_err(|e| AppError::from(WorksError::Other(format!("serialization error: {e}"))))?;
-		self.works.update_overrides(&work_id, &value).await
+		work.updated_at = chrono::Utc::now();
+		self.works.save(&work).await
 	}
 
 	pub async fn clear_overrides(&self, work_id: WorkId) -> AppResult<()> {
-		self.works.clear_overrides(&work_id).await
+		let Some(mut work) = self.works.find_by_id(&work_id).await? else {
+			return Err(WorksError::NotFound)?;
+		};
+
+		work.overrides = WorkOverrides::default();
+		work.updated_at = chrono::Utc::now();
+		self.works.save(&work).await
 	}
 
-	pub async fn sync_all_academics(&self) -> AppResult<Vec<SyncResultView>> {
-		let academics = self.academics.list_orcids().await?;
-		let mut results = Vec::with_capacity(academics.len());
-
-		for (academic_id, orcid) in &academics {
-			match self.sync_from_openalex(*academic_id).await {
-				Ok(result) => results.push(result),
-				Err(e) => {
-					results.push(SyncResultView {
-						academic_id: *academic_id,
-						academic_orcid: orcid.clone(),
-						works_fetched: 0,
-						works_created: 0,
-						works_skipped: 0,
-						authorships_inserted: 0,
-						topics_linked: 0,
-						keywords_linked: 0,
-						errors: vec![e.to_string()],
-					});
-				}
-			}
+	async fn to_work_views(&self, works: Vec<Work>, detail: bool) -> AppResult<Vec<WorkView>> {
+		if works.is_empty() {
+			return Ok(Vec::new());
 		}
 
-		Ok(results)
-	}
+		let source_ids: Vec<SourceId> = works.iter().filter_map(|w| w.source_id).collect();
+		let kinds = self.sources.find_kinds_by_source_ids(&source_ids).await?;
 
-	async fn process_single_work(
-		&self,
-		oa_work: &OpenAlexWork,
-	) -> AppResult<WorkImportProcessStats> {
-		let title = oa_work
-			.title
-			.clone()
-			.or_else(|| oa_work.display_name.clone())
-			.unwrap_or_default();
+		let work_ids: Vec<WorkId> = works.iter().map(|w| w.id).collect();
+		let override_lines: Vec<(WorkId, Option<uuid::Uuid>)> = works
+			.iter()
+			.map(|w| (w.id, w.overrides.research_line_id))
+			.collect();
 
-		let pub_date = oa_work
-			.publication_date
-			.as_deref()
-			.and_then(|d| chrono::NaiveDate::parse_from_str(d, "%Y-%m-%d").ok());
+		let lines = self
+			.classification
+			.resolve_research_lines_for_works(&work_ids, &override_lines)
+			.await?;
 
-		let work_type = oa_work
-			.r#type
-			.as_deref()
-			.and_then(|s| WorkType::from_str(s).ok())
-			.unwrap_or(WorkType::Other);
+		let mut views = Vec::with_capacity(works.len());
 
-		let lang = oa_work.language.clone().unwrap_or_else(|| "en".to_string());
+		for work in works {
+			let overridden_fields = work.overrides.overridden_field_names();
+			let journal_kind = work
+				.source_id
+				.and_then(|sid| kinds.get(&sid).copied().flatten());
+			let line = lines.get(&work.id);
+			let research_line_id = line.map(|l| l.id);
+			let research_line_name = line.map(|l| l.name.clone());
+			let id = work.id;
 
-		let (is_accepted, is_published) = oa_work
-			.primary_location
-			.as_ref()
-			.map(|loc| {
+			let (source, authorships, topics, keywords) = if detail {
+				let source = match work.source_id {
+					Some(sid) => self.sources.find_source_view_by_id(&sid).await?,
+					None => None,
+				};
+				let authorships = self.authorships.list(&id).await?;
+				let topics = self.classification.list_topics_by_work(&id).await?;
+				let keywords = self.classification.list_keywords_by_work(&id).await?;
 				(
-					loc.is_accepted.unwrap_or(false),
-					loc.is_published.unwrap_or(false),
+					source,
+					Some(authorships),
+					Some(topics),
+					Some(keywords),
 				)
-			})
-			.unwrap_or((false, false));
+			} else {
+				(None, None, None, None)
+			};
 
-		let source_id = if let Some(s) = oa_work
-			.primary_location
-			.as_ref()
-			.and_then(|l| l.source.as_ref())
-		{
-			let source_ty = s.r#type.clone().unwrap_or_else(|| "unknown".to_string());
-			let issn_l = s.issn_l.as_deref().and_then(Source::normalize_issn);
-			let issn: Option<Vec<String>> = s.issn.as_ref().and_then(|vec| {
-				let normalized: Vec<String> = vec
-					.iter()
-					.filter_map(|v| Source::normalize_issn(v))
-					.collect();
-				if normalized.is_empty() {
-					None
-				} else {
-					Some(normalized)
-				}
-			});
-			Some(
-				self.sources
-					.save(&Source {
-						id: SourceId::new(),
-						openalex_id: s.id.clone().unwrap_or_default(),
-						display_name: s.display_name.clone().unwrap_or_default(),
-						ty: source_ty,
-						issn_l,
-						issn,
-					})
-					.await?,
-			)
-		} else {
-			None
-		};
-
-		let new_work = NewWork {
-			openalex_id: oa_work.id.clone(),
-			title,
-			abstract_text: oa_work.abstract_text.clone(),
-			doi: oa_work.doi.clone(),
-			publication_date: pub_date,
-			publication_year: oa_work.publication_year.map(|y| y as i16),
-			ty: work_type,
-			lang,
-			is_accepted,
-			is_published,
-			primary_source_id: source_id,
-		};
-		let (work_id, was_inserted) = self.works.upsert_work(&new_work).await?;
-
-		if !was_inserted {
-			self.works.apply_overrides_sync(&work_id).await?;
-
-			return Ok(WorkImportProcessStats {
-				was_inserted: false,
-				authorships: 0,
-				topics: 0,
-				keywords: 0,
+			views.push(WorkView {
+				work: work.resolve(),
+				overridden_fields,
+				journal_kind,
+				research_line_id,
+				research_line_name,
+				source,
+				authorships,
+				topics,
+				keywords,
 			});
 		}
 
-		let unknown_topic_id = self
-			.classification
-			.unknown_topic_id()
-			.await
-			.ok()
-			.flatten()
-			.map(|t| t.id);
-
-		let unknown_keyword_id = self
-			.classification
-			.unknown_keyword_id()
-			.await
-			.ok()
-			.flatten()
-			.map(|k| k.id);
-
-		let mut authorships = 0usize;
-		if let Some(auths) = &oa_work.authorships {
-			for auth in auths {
-				let orcid = match auth.author.as_ref().and_then(|a| a.orcid.as_deref()) {
-					Some(o) => o,
-					None => continue,
-				};
-
-				let (is_external, name) = match self.academics.find_by_orcid(orcid).await? {
-					Some(a) => (false, a.full_name()),
-					None => {
-						let display = auth
-							.author
-							.as_ref()
-							.and_then(|a| a.display_name.as_deref())
-							.unwrap_or("Unknown")
-							.to_string();
-						(true, display)
-					}
-				};
-
-				let position = match auth.author_position.as_deref() {
-					Some("first") => AuthorshipPosition::First,
-					Some("last") => AuthorshipPosition::Last,
-					_ => AuthorshipPosition::Middle,
-				};
-
-				let new_authorship = NewAuthorship {
-					work_id,
-					orcid: orcid.to_string(),
-					name,
-					is_external,
-					is_corresponding: auth.is_corresponding.unwrap_or(false),
-					affiliations: auth
-						.raw_affiliation_strings
-						.clone()
-						.unwrap_or_default()
-						.into_iter()
-						.map(|s| decode_html_entities(&s).to_string())
-						.collect(),
-					position,
-				};
-				self.authorships.insert(&new_authorship).await?;
-				authorships += 1;
-			}
-		}
-
-		let mut topics = 0usize;
-		if let Some(work_topics) = &oa_work.topics {
-			for t in work_topics {
-				let topic_id = match &t.id {
-					Some(id) => self
-						.classification
-						.find_topic_by_openalex_id(id)
-						.await?
-						.map(|rt| *rt.id)
-						.or(unknown_topic_id.map(|id| *id)),
-					None => unknown_topic_id.map(|id| *id),
-				};
-
-				if let Some(tid) = topic_id {
-					self.works
-						.link_topic(&work_id, tid, t.score.unwrap_or(0.0))
-						.await?;
-					topics += 1;
-				}
-			}
-		}
-
-		let mut kw_count = 0usize;
-		if let Some(kws) = &oa_work.keywords {
-			for k in kws {
-				let keyword_id = match &k.id {
-					Some(id) => {
-						let name = k.display_name.as_deref().unwrap_or("Unknown");
-						Some(self.classification.upsert_keyword(id, name).await?)
-					}
-					None => unknown_keyword_id,
-				};
-
-				if let Some(kid) = keyword_id {
-					let score = k.score.unwrap_or(0.0);
-					self.works.link_keyword(&work_id, *kid, score).await?;
-					kw_count += 1;
-				}
-			}
-		}
-
-		Ok(WorkImportProcessStats {
-			was_inserted: true,
-			authorships,
-			topics,
-			keywords: kw_count,
-		})
+		Ok(views)
 	}
 }

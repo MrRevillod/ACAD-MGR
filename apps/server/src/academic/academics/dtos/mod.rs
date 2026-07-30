@@ -30,16 +30,6 @@ static ORCID_ID_REGEX: LazyLock<Regex> = LazyLock::new(|| {
 
 static UCT_FOUNDATION_DATE: NaiveDate = NaiveDate::from_ymd_opt(1959, 9, 8).unwrap();
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum AcademicSortField {
-	Names,
-	PaternalSurname,
-	MaternalSurname,
-	JoinedAt,
-	BirthDate,
-}
-
 #[derive(Debug, Serialize, Deserialize, Validate, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct GetAcademicsQuery {
@@ -49,7 +39,6 @@ pub struct GetAcademicsQuery {
 		message = "El atributo 'search' debe tener entre 1 y 255 caracteres"
 	))]
 	pub search: Option<String>,
-	pub sort: Option<AcademicSortField>,
 	pub career_id: Option<CareerId>,
 	pub department_id: Option<DepartmentId>,
 	pub category_id: Option<AcademicCategoryId>,

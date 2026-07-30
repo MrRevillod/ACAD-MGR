@@ -4,7 +4,7 @@ use sqlx::FromRow;
 use uuid::Uuid;
 use validator::Validate;
 
-#[derive(Debug, Serialize, FromRow)]
+#[derive(Debug, Clone, Serialize, FromRow)]
 #[serde(rename_all = "camelCase")]
 pub struct ResearchLineView {
 	pub id: Uuid,
@@ -75,12 +75,6 @@ pub struct ResearchLineDetail {
 	pub name: String,
 	pub slug: String,
 	pub subfields: Vec<SubfieldMapping>,
-}
-
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ResearchLinesDetailResponse {
-	pub lines: Vec<ResearchLineDetail>,
 }
 
 #[derive(Debug, Deserialize)]

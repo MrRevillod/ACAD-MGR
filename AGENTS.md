@@ -31,7 +31,7 @@ make machete           # cargo machete (unused deps)
 - **Auth**: `#[interceptor(SessionCheck)]` on routes requiring session; JWT via `JsonWebTokenService`
 - **Value objects**: `CLf64` (Chilean-format float), `Country`, custom `Id<T>` types
 - **Entity builder**: `bon` crate — `Academic::builder().field(value).build()`
-- **No tests exist** anywhere in the Rust codebase (`#[cfg(test)]` absent)
+- **No tests exist** in Rust codebase (`#[cfg(test)]` absent)
 - **OpenAPI specs**: 3 YAML files in `apps/server/docs/*.yaml`, served via Swagger UI (registered in `config/config.toml` web.openapi)
 
 ## Client conventions

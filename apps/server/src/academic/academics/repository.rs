@@ -1,11 +1,9 @@
-use crate::academic::{Academic, AcademicId, AcademicListFilter, AcademicSortField, AcademicView};
+use crate::academic::{Academic, AcademicId, AcademicListFilter, AcademicView};
 use crate::shared::{AppResult, Database, Tx};
 
-use chrono::{DateTime, Utc};
 use sqlx::QueryBuilder;
 use std::sync::Arc;
 use sword::prelude::*;
-use uuid::Uuid;
 
 #[injectable]
 pub struct AcademicsRepository {
@@ -72,24 +70,6 @@ impl AcademicsRepository {
 
 		if let Some(option) = filter.option {
 			query.push(" AND aco.option = ").push_bind(option);
-		}
-
-		match filter.sort {
-			Some(AcademicSortField::Names) => {
-				query.push(" ORDER BY a.names ASC");
-			}
-			Some(AcademicSortField::MaternalSurname) => {
-				query.push(" ORDER BY a.maternal_surname, a.paternal_surname, a.names ASC");
-			}
-			Some(AcademicSortField::JoinedAt) => {
-				query.push(" ORDER BY a.joined_at ASC");
-			}
-			Some(AcademicSortField::BirthDate) => {
-				query.push(" ORDER BY a.birth_date ASC");
-			}
-			Some(AcademicSortField::PaternalSurname) | None => {
-				query.push(" ORDER BY a.paternal_surname, a.maternal_surname, a.names ASC");
-			}
 		}
 
 		let items = query
@@ -167,17 +147,6 @@ impl AcademicsRepository {
 			.await?;
 
 		Ok(item)
-	}
-
-	pub async fn update_updated_at(&self, id: &AcademicId) -> AppResult<DateTime<Utc>> {
-		let updated_at = sqlx::query_scalar::<_, DateTime<Utc>>(
-			"UPDATE academics SET updated_at = NOW() WHERE id = $1 RETURNING updated_at",
-		)
-		.bind(id)
-		.fetch_one(self.database.pool())
-		.await?;
-
-		Ok(updated_at)
 	}
 
 	pub async fn save(&self, academic: &Academic) -> AppResult<()> {
@@ -273,15 +242,5 @@ impl AcademicsRepository {
 			.await?;
 
 		Ok(())
-	}
-
-	pub async fn list_orcids(&self) -> AppResult<Vec<(Uuid, String)>> {
-		let rows = sqlx::query_as::<_, (Uuid, String)>(
-			"SELECT id, orcid FROM academics WHERE orcid IS NOT NULL",
-		)
-		.fetch_all(self.database.pool())
-		.await?;
-
-		Ok(rows)
 	}
 }

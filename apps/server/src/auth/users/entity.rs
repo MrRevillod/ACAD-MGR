@@ -1,4 +1,5 @@
 use crate::shared::{Entity, Id};
+use bon::Builder;
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, Type};
 
@@ -11,8 +12,9 @@ pub enum UserRole {
 
 pub type UserId = Id<User>;
 
-#[derive(Debug, Clone, FromRow, Serialize)]
+#[derive(Debug, Clone, FromRow, Serialize, Builder)]
 pub struct User {
+	#[builder(default = UserId::new())]
 	pub id: UserId,
 	pub name: String,
 	pub email: String,

@@ -3,14 +3,16 @@ use crate::{
 	shared::{Entity, Id},
 };
 
+use bon::Builder;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::prelude::FromRow;
 
 pub type SessionId = Id<Session>;
 
-#[derive(Debug, Serialize, Deserialize, FromRow)]
+#[derive(Debug, Serialize, Deserialize, FromRow, Builder)]
 pub struct Session {
+	#[builder(default = SessionId::new())]
 	pub id: SessionId,
 	pub user_id: UserId,
 	pub refresh_token_hash: String,

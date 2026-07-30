@@ -19,7 +19,6 @@ pub enum AcademicError {
 	#[error("Category option does not match the academic planta")]
 	CategoryPlantaMismatch,
 
-	// Academic Option Mismatch errors
 	#[http(
 		code = 400,
 		message = "La opción de categoría no coincide con la categoría académica"
@@ -41,12 +40,10 @@ pub enum AcademicError {
 	#[error("Category option hours do not match the provided hours")]
 	CategoryOptionHoursMismatch,
 
-	// Degree errors
 	#[http(code = 404, message = "Grado académico no encontrado")]
 	#[error("Degree not found")]
 	DegreeNotFound,
 
-	// Academic errors
 	#[http(code = 409, message = "Ya existe un académico con el mismo RUT")]
 	#[error("Academic with the same RUT already exists")]
 	AcademicRutAlreadyExists,

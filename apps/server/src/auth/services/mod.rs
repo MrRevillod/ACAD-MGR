@@ -38,17 +38,14 @@ impl AuthService {
 		let (refresh_token, refresh_token_exp) =
 			self.generate_refresh_token(&session_id, &user.id)?;
 
-		let now = Utc::now();
-
-		let session = Session {
-			id: session_id,
-			user_id: user.id,
-			refresh_token_hash: Self::hash_token(&refresh_token),
-			created_at: now,
-			expires_at: access_token_exp,
-			refresh_expires_at: refresh_token_exp,
-			revoked_at: None,
-		};
+		let session = Session::builder()
+			.id(session_id)
+			.user_id(user.id)
+			.refresh_token_hash(Self::hash_token(&refresh_token))
+			.created_at(Utc::now())
+			.expires_at(access_token_exp)
+			.refresh_expires_at(refresh_token_exp)
+			.build();
 
 		self.sessions.save(&session).await?;
 
@@ -79,9 +76,9 @@ impl AuthService {
 		let (access_token, access_token_exp) =
 			self.generate_access_token(&session.id, &session.user_id)?;
 
-		self.sessions
-			.update_expires_at(&session.id, access_token_exp)
-			.await?;
+		let mut session = session;
+		session.expires_at = access_token_exp;
+		self.sessions.save(&session).await?;
 
 		Ok(RefreshResponse {
 			access_token,

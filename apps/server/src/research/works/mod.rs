@@ -20,5 +20,7 @@ pub use entity::*;
 pub use errors::*;
 pub use events::*;
 pub use repository::WorksRepository;
-pub use services::{OpenAlexClient, OpenAlexConfig, WorksService};
+pub use services::{
+	OpenAlexClient, OpenAlexConfig, OpenAlexWorkExt, WorksImportService, WorksService,
+};
 pub use views::*;

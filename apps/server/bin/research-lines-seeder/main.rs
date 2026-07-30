@@ -621,27 +621,25 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
 	eprintln!("Connected to database");
 
-	let mut inserted = 0u64;
+	let mut updated = 0u64;
 	for (openalex_id, slug) in MAPPINGS {
 		let result = sqlx::query(
 			r#"
-			INSERT INTO research_line_mappings (research_line_id, subfield_openalex_id)
-			SELECT rl.id, $1
-			FROM research_lines rl
-			WHERE rl.slug = $2
-			ON CONFLICT (subfield_openalex_id) DO NOTHING
+			UPDATE subfields
+			SET research_line_id = (SELECT id FROM research_lines WHERE slug = $1)
+			WHERE openalex_id = $2
 			"#,
 		)
-		.bind(openalex_id)
 		.bind(slug)
+		.bind(openalex_id)
 		.execute(&pool)
 		.await?;
 
-		inserted += result.rows_affected();
+		updated += result.rows_affected();
 	}
 
 	eprintln!(
-		"Done — {inserted} mappings inserted ({} total)",
+		"Done — {updated} subfields updated ({} total)",
 		MAPPINGS.len()
 	);
 	Ok(())

@@ -49,6 +49,7 @@ pub struct ResearchSubfield {
 	pub openalex_id: String,
 	pub name: String,
 	pub field_id: ResearchFieldId,
+	pub research_line_id: Option<uuid::Uuid>,
 }
 
 impl Entity for ResearchSubfield {

@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use crate::research::{SyncWorksRequest, WorksService};
+use crate::research::{SyncWorksRequest, WorksImportService};
 use crate::shared::{Mail, Mailer, TemplateRenderer};
 
 use sword::events::*;
@@ -10,39 +10,39 @@ use sword::prelude::*;
 #[controller(kind = Controller::MemEventHandler, namespace = "works")]
 pub struct WorksEventsController {
 	mailer: Arc<Mailer>,
-	works: Arc<WorksService>,
+	works_import: Arc<WorksImportService>,
 }
 
 impl WorksEventsController {
 	#[handle("sync-requested")]
 	async fn handle_sync_requested(&self, event: SyncWorksRequest) -> EventHandlerResult<()> {
 		tracing::info!("processing sync-requested event for {}", event.user_email);
-		let result = self.works.sync_all_academics().await;
+		let result = self.works_import.sync_all_academics().await;
 
 		match result {
 			Ok(results) => {
 				let total = results.len();
-				let error_orcids: Vec<&str> = results
+				let error_ids: Vec<String> = results
 					.iter()
 					.filter(|r| !r.errors.is_empty())
-					.map(|r| r.academic_orcid.as_str())
+					.map(|r| r.academic_id.to_string())
 					.collect();
 
 				tracing::info!(
 					"sync completed: {} academics, {} errors",
 					total,
-					error_orcids.len()
+					error_ids.len()
 				);
 
-				let (status_suffix, error_details, subject) = if error_orcids.is_empty() {
+				let (status_suffix, error_details, subject) = if error_ids.is_empty() {
 					(
 						" exitosamente".to_string(),
 						String::new(),
 						"Sincronización completada exitosamente",
 					)
 				} else {
-					let n = error_orcids.len();
-					let items: String = error_orcids
+					let n = error_ids.len();
+					let items: String = error_ids
 						.iter()
 						.map(|o| format!("<li>{}</li>", o))
 						.collect();

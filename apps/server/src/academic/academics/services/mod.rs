@@ -6,7 +6,7 @@ use serde_json::{Value, json};
 use crate::{
 	academic::*,
 	auth::AuthConfig,
-	research::{SyncResultView, WorksService},
+	research::{SyncResultView, WorksImportService},
 	shared::{AppResult, JsonWebTokenService},
 	university::*,
 };
@@ -26,14 +26,13 @@ pub struct AcademicsService {
 	auth_config: AuthConfig,
 	jwt_service: Arc<JsonWebTokenService>,
 
-	works_service: Arc<WorksService>,
+	works_import: Arc<WorksImportService>,
 }
 
 impl AcademicsService {
 	pub async fn find(&self, query: GetAcademicsQuery) -> AppResult<Vec<AcademicView>> {
 		let filter = AcademicListFilter {
 			search: query.search,
-			sort: query.sort,
 			career_id: query.career_id,
 			category_id: query.category_id,
 			department_id: query.department_id,
@@ -204,11 +203,13 @@ impl AcademicsService {
 	}
 
 	pub async fn update_profile_request(&self, id: &AcademicId) -> AppResult<AcademicView> {
-		let Some(academic) = self.academics.find_by_id(id).await? else {
+		let Some(mut academic) = self.academics.find_by_id(id).await? else {
 			return Err(AcademicError::AcademicNotFound)?;
 		};
 
-		let updated_at = self.academics.update_updated_at(id).await?;
+		academic.updated_at = chrono::Utc::now();
+		self.academics.save(&academic).await?;
+		let updated_at = academic.updated_at;
 
 		let claims = json!({
 			"academic_id": academic.id.to_string(),
@@ -339,6 +340,6 @@ impl AcademicsService {
 	pub async fn sync_works_by_token(&self, token: &str) -> AppResult<SyncResultView> {
 		let academic_id = self.validate_one_time_token(token).await?;
 
-		self.works_service.sync_from_openalex(*academic_id).await
+		self.works_import.sync_from_openalex(academic_id).await
 	}
 }

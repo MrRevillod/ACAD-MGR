@@ -1,22 +1,7 @@
-use crate::research::{JournalKind, SourceId, WorkType};
-use chrono::NaiveDate;
+use crate::research::JournalKind;
 use serde::Deserialize;
 use uuid::Uuid;
 use validator::Validate;
-
-pub struct NewWork {
-	pub openalex_id: String,
-	pub title: String,
-	pub abstract_text: Option<String>,
-	pub doi: Option<String>,
-	pub publication_date: Option<NaiveDate>,
-	pub publication_year: Option<i16>,
-	pub ty: WorkType,
-	pub lang: String,
-	pub is_accepted: bool,
-	pub is_published: bool,
-	pub primary_source_id: Option<SourceId>,
-}
 
 #[derive(Debug, Deserialize, Validate, Default)]
 #[serde(rename_all = "camelCase")]
@@ -52,9 +37,10 @@ pub struct WorkImportProcessStats {
 #[serde(rename_all = "camelCase")]
 pub struct WorkOverridesInput {
 	pub title: Option<Option<String>>,
-	pub r#abstract: Option<Option<String>>,
+	pub abstract_text: Option<Option<String>>,
 	pub doi: Option<Option<String>>,
 	pub publication_year: Option<Option<i16>>,
 	pub is_accepted: Option<Option<bool>>,
 	pub is_published: Option<Option<bool>>,
+	pub research_line_id: Option<Option<Uuid>>,
 }

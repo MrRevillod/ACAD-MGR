@@ -14,3 +14,5 @@ CREATE TABLE work_authorships (
 	position authorship_position NOT NULL,
 	PRIMARY KEY (work_id, orcid)
 );
+
+CREATE INDEX idx_work_authorships_orcid ON work_authorships(orcid);

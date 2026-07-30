@@ -75,7 +75,7 @@
 			<article class="mt-6 space-y-8">
 				<header>
 					<div class="flex flex-wrap items-center gap-2">
-						<Badge variant="base">{WORK_TYPE_LABELS[work.type] ?? work.type}</Badge>
+						<Badge variant="base">{WORK_TYPE_LABELS[work.ty] ?? work.ty}</Badge>
 						{#if work.publicationYear}
 							<span class="text-sm text-corp-gray">
 								<span class="tabular-nums">{work.publicationYear}</span>
@@ -129,16 +129,21 @@
 					</div>
 				</header>
 
-				{#if work.abstract}
+				{#if work.abstractText}
 					<section>
 						<h2
 							class="mb-3 text-xs font-semibold tracking-widest uppercase text-corp-blue"
 						>
 							Abstract
+							{#if work.isFieldOverridden("abstractText")}
+								<span class="ml-1 text-[10px] italic font-normal text-corp-blue/60"
+									>(editado)</span
+								>
+							{/if}
 						</h2>
 						<HtmlRenderer
 							tag="p"
-							html={work.abstract}
+							html={work.abstractText}
 							class="text-pretty text-sm leading-relaxed text-[#1A1A1A]"
 						/>
 					</section>
@@ -152,7 +157,7 @@
 							Publicado en
 						</h2>
 						<p class="text-sm font-medium text-[#1A1A1A]">
-							{work.source.displayName}
+							{work.source.name}
 							<span class="text-corp-gray">· {work.source.ty}</span>
 							<span class="mx-1.5 text-corp-gray/40">|</span>
 							Indexación:
@@ -181,6 +186,11 @@
 							class="mb-3 text-xs font-semibold tracking-widest uppercase text-corp-blue"
 						>
 							Línea de Investigación
+							{#if work.isFieldOverridden("researchLineId")}
+								<span class="ml-1 text-[10px] italic font-normal text-corp-blue/60"
+									>(editado)</span
+								>
+							{/if}
 						</h2>
 						<p class="text-sm font-medium text-[#1A1A1A]">
 							{work.researchLineName}

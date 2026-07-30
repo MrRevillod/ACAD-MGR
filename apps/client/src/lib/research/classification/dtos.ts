@@ -48,7 +48,3 @@ export interface ResearchLineDetailDTO {
 	slug: string
 	subfields: SubfieldMappingDTO[]
 }
-
-export interface ResearchLinesDetailResponseDTO {
-	lines: ResearchLineDetailDTO[]
-}

@@ -2,6 +2,7 @@
 	import { RotateCcw } from "@lucide/svelte"
 	import { createForm, Field, Form, reset } from "@formisch/svelte"
 	import * as v from "valibot"
+	import { useQuery } from "$shared/http/tanstack"
 
 	import type { WorkDetail } from "$works/entity"
 
@@ -11,6 +12,7 @@
 	import TextInput from "$shared/components/ui/form/text-input.svelte"
 	import FormFooter from "$shared/components/ui/form/footer.svelte"
 
+	import { classificationService } from "$research/classification/service"
 	import { useClearOverridesMutation, useUpdateOverridesMutation } from "$works/queries"
 
 	const currentYear = new Date().getFullYear()
@@ -22,11 +24,12 @@
 
 	const editSchema = v.object({
 		title: v.pipe(v.string(), v.maxLength(2000)),
-		abstract: v.nullable(v.pipe(v.string())),
+		abstractText: v.nullable(v.pipe(v.string())),
 		doi: v.nullable(v.pipe(v.string(), v.maxLength(500))),
 		publicationYear: v.nullable(v.pipe(v.string())),
 		isAccepted: v.boolean(),
 		isPublished: v.boolean(),
+		researchLineId: v.nullable(v.pipe(v.string())),
 	})
 
 	type EditData = v.InferInput<typeof editSchema>
@@ -40,16 +43,28 @@
 
 	const form = createForm({ schema: editSchema })
 
+	const researchLinesQuery = useQuery(() => ({
+		queryKey: ["research-lines"],
+		queryFn: () => classificationService.researchLines(),
+		staleTime: 300_000,
+	}))
+
+	const researchLineItems = $derived([
+		{ value: "", label: "Sin línea / automática" },
+		...(researchLinesQuery.data?.map((rl) => ({ value: rl.id, label: rl.name })) ?? []),
+	])
+
 	$effect(() => {
 		if (open)
 			reset(form, {
 				initialInput: {
 					title: work.title,
-					abstract: work.abstract,
+					abstractText: work.abstractText,
 					doi: work.doi,
 					publicationYear: work.publicationYear?.toString() ?? null,
 					isAccepted: work.isAccepted,
 					isPublished: work.isPublished,
+					researchLineId: work.researchLineId ?? null,
 				} satisfies EditData,
 			})
 	})
@@ -60,12 +75,19 @@
 	function handleSubmit(output: EditData) {
 		const data: Record<string, unknown> = {}
 		if (output.title !== work.title) data.title = output.title
-		if (output.abstract !== work.abstract) data.abstract = output.abstract
+		if (output.abstractText !== work.abstractText) data.abstractText = output.abstractText
 		if (output.doi !== work.doi) data.doi = output.doi
 		if (output.publicationYear !== (work.publicationYear?.toString() ?? null))
 			data.publicationYear = output.publicationYear ? Number(output.publicationYear) : null
 		if (output.isAccepted !== work.isAccepted) data.isAccepted = output.isAccepted
 		if (output.isPublished !== work.isPublished) data.isPublished = output.isPublished
+
+		const nextLine = output.researchLineId || null
+		const prevLine = work.researchLineId ?? null
+		if (nextLine !== prevLine) {
+			// empty select = clear override (null) so auto-derived line returns
+			data.researchLineId = nextLine
+		}
 
 		updateMutation.mutate(
 			{ id: work.id, data },
@@ -101,7 +123,7 @@
 				{/snippet}
 			</Field>
 
-			<Field of={form} path={["abstract"]}>
+			<Field of={form} path={["abstractText"]}>
 				{#snippet children(field)}
 					<TextInput
 						{...field.props}
@@ -133,6 +155,25 @@
 						>
 						<Select
 							items={yearItems}
+							value={field.input ?? ""}
+							onValueChange={(v) => field.onInput(v || null)}
+							placeholder="Seleccionar"
+						/>
+						{#if field.errors}
+							<p class="text-xs text-red-500">{field.errors[0]}</p>
+						{/if}
+					</div>
+				{/snippet}
+			</Field>
+
+			<Field of={form} path={["researchLineId"]}>
+				{#snippet children(field)}
+					<div class="space-y-1">
+						<span class="block text-xs font-medium text-corp-gray"
+							>Línea de investigación</span
+						>
+						<Select
+							items={researchLineItems}
 							value={field.input ?? ""}
 							onValueChange={(v) => field.onInput(v || null)}
 							placeholder="Seleccionar"

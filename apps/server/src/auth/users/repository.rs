@@ -75,24 +75,23 @@ impl UsersRepository {
 		Ok(())
 	}
 
-	pub async fn save(&self, user: &User) -> AppResult<User> {
-		let user = sqlx::query_as::<_, User>(
+	pub async fn save(&self, user: &User) -> AppResult<()> {
+		sqlx::query(
 			"INSERT INTO users (id, name, email, role, password_hash) VALUES ($1, $2, $3, $4, $5)
              ON CONFLICT (id) DO UPDATE SET
                 name = EXCLUDED.name,
                 email = EXCLUDED.email,
                 role = EXCLUDED.role,
-                password_hash = EXCLUDED.password_hash
-             RETURNING id, name, email, role, password_hash",
+                password_hash = EXCLUDED.password_hash",
 		)
 		.bind(user.id)
 		.bind(&user.name)
 		.bind(&user.email)
 		.bind(user.role)
 		.bind(&user.password_hash)
-		.fetch_one(self.database.pool())
+		.execute(self.database.pool())
 		.await?;
 
-		Ok(user)
+		Ok(())
 	}
 }
