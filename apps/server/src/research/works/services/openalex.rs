@@ -1,9 +1,7 @@
 use std::{str::FromStr, time::Duration};
 
 use crate::{
-	research::{
-		AuthorshipPosition, Source, SourceId, Work, WorkType, WorksError,
-	},
+	research::{AuthorshipPosition, Source, SourceId, Work, WorkType, WorksError},
 	shared::AppResult,
 };
 
@@ -320,10 +318,7 @@ impl OpenAlexWorkExt for OaWork {
 				kws.iter()
 					.map(|k| OaKeywordRef {
 						openalex_id: k.id.clone(),
-						name: k
-							.display_name
-							.clone()
-							.unwrap_or_else(|| "Unknown".into()),
+						name: k.display_name.clone().unwrap_or_else(|| "Unknown".into()),
 						score: k.score.unwrap_or(0.0),
 					})
 					.collect()

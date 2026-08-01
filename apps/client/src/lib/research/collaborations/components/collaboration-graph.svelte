@@ -198,7 +198,9 @@
 								class="fill-corp-gray text-[11px] font-medium"
 								opacity={nodeOpacity(node)}
 							>
-								{node.id === academic.id ? "Este académico" : shortLabel(node.displayName)}
+								{node.id === academic.id
+									? "Este académico"
+									: shortLabel(node.displayName)}
 							</text>
 						{/each}
 					{/snippet}
