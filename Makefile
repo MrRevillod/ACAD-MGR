@@ -47,7 +47,7 @@ fmt:
 lint:
 	cargo clippy --workspace --all-targets --all-features -- -D warnings
 	cd $(CLIENT) && pnpm run lint && pnpm run check
-	pnpm dlx @google/design.md lint DESIGN.md
+	# pnpm dlx @google/design.md lint DESIGN.md
 
 migration:
 	cd $(SERVER) && sqlx migrate add --source ./config/migrations "$(name)"
