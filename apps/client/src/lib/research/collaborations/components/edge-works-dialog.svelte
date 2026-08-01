@@ -1,0 +1,68 @@
+<script lang="ts">
+	import type { CollaborationWorkRefDTO } from "$collaborations/dtos"
+
+	import { FileText } from "@lucide/svelte"
+
+	import Dialog from "$shared/components/ui/dialog.svelte"
+	import HtmlRenderer from "$shared/components/ui/html-renderer.svelte"
+	import WorkDetailDialog from "$works/components/work-detail-dialog.svelte"
+
+	interface Props {
+		open: boolean
+		works: CollaborationWorkRefDTO[] | null
+		coauthor: string | null
+	}
+
+	let { open = $bindable(false), works, coauthor }: Props = $props()
+
+	let workDetailOpen = $state(false)
+	let selectedWorkId = $state<string | null>(null)
+
+	function openWork(id: string) {
+		selectedWorkId = id
+		workDetailOpen = true
+	}
+</script>
+
+<Dialog
+	bind:open
+	title="Publicaciones compartidas"
+	description={coauthor ? `Colaboración con ${coauthor}` : undefined}
+	class="max-w-xl"
+>
+	{#if !works || works.length === 0}
+		<p class="py-8 text-center text-sm text-corp-gray">No hay publicaciones para mostrar.</p>
+	{:else}
+		<ul class="divide-y divide-corp-gray/10">
+			{#each works as work (work.id)}
+				<li>
+					<button
+						type="button"
+						class="group flex w-full items-start gap-3 px-1 py-3 text-left transition-colors"
+						onclick={() => openWork(work.id)}
+					>
+						<span
+							class="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-corp-blue/5"
+						>
+							<FileText class="size-4 text-corp-blue/60" />
+						</span>
+						<span class="min-w-0 flex-1">
+							<span
+								class="block text-[14px] font-medium leading-snug text-[#1A1A1A] group-hover:text-corp-blue"
+							>
+								<HtmlRenderer html={work.title} />
+							</span>
+							{#if work.publicationYear}
+								<span class="mt-0.5 block text-xs text-corp-gray tabular-nums">
+									{work.publicationYear}
+								</span>
+							{/if}
+						</span>
+					</button>
+				</li>
+			{/each}
+		</ul>
+	{/if}
+</Dialog>
+
+<WorkDetailDialog bind:open={workDetailOpen} bind:workId={selectedWorkId} />

@@ -1,11 +1,13 @@
 mod authorships;
 mod classification;
+mod collaborations;
 mod sources;
 mod stats;
 mod works;
 
 pub use authorships::*;
 pub use classification::*;
+pub use collaborations::*;
 pub use sources::*;
 pub use stats::*;
 pub use works::*;
@@ -21,6 +23,8 @@ impl Module for ResearchModule {
 
 		controllers.register::<WorksController>();
 		controllers.register::<WorksEventsController>();
+
+		controllers.register::<CollaborationsController>();
 	}
 
 	fn register_components(components: &ComponentRegistry) {
@@ -32,6 +36,8 @@ impl Module for ResearchModule {
 		components.register::<WorksRepository>();
 		components.register::<SourcesRepository>();
 		components.register::<AuthorshipsRepository>();
+		components.register::<CollaborationsService>();
+		components.register::<CollaborationsRepository>();
 	}
 
 	async fn register_providers(config: &Config, providers: &ProviderRegistry) {

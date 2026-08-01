@@ -16,6 +16,7 @@ const config = {
 			"$research": "src/lib/research",
 			"$works": "src/lib/research/works",
 			"$stats": "src/lib/research/stats",
+			"$collaborations": "src/lib/research/collaborations",
 			"$careers": "src/lib/university/careers",
 			"$departments": "src/lib/university/departments",
 			"$faculties": "src/lib/university/faculties",

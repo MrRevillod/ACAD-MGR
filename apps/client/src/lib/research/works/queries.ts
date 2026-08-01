@@ -38,6 +38,7 @@ export function useSyncWorksMutation() {
 		mutationFn: (academicId: string) => worksService.sync(academicId),
 		onSuccess: () => {
 			void qc.invalidateQueries({ queryKey: ["works"] })
+			void qc.invalidateQueries({ queryKey: ["collaborations"] })
 		},
 	}))
 }

@@ -9,6 +9,7 @@
 	import WorksTable from "./works-table.svelte"
 	import SyncWorksButton from "./sync-works-button.svelte"
 	import WorkDetailDialog from "./work-detail-dialog.svelte"
+	import CollaborationGraph from "$collaborations/components/collaboration-graph.svelte"
 
 	interface Props {
 		academic: Academic
@@ -35,6 +36,7 @@
 
 	let selectedWorkId = $state<string | null>(null)
 	let dialogOpen = $state(false)
+	let view = $state<"list" | "graph">("list")
 
 	function openWork(work: Work) {
 		selectedWorkId = work.id
@@ -43,7 +45,7 @@
 </script>
 
 <section class="rounded-xl border border-corp-gray/20 bg-white p-6">
-	<div class="mb-6 flex items-center justify-between gap-3">
+	<div class="mb-6 flex flex-wrap items-center justify-between gap-3">
 		<div
 			class="flex items-center gap-2 text-xs font-semibold tracking-widest uppercase text-corp-blue"
 		>
@@ -58,22 +60,48 @@
 			{/if}
 		</div>
 		<div class="flex items-center gap-3">
-			<YearRange
-				bind:yearFrom
-				bind:yearTo
-				showLabels={false}
-				placeholderFrom="DESDE"
-				placeholderTo="HASTA"
-				minYear={1900}
-				class="min-w-72"
-			/>
-			{#if !readonly}
-				<SyncWorksButton academicId={academic.id} orcid={academic.orcid ?? null} />
+			{#if view === "list"}
+				<YearRange
+					bind:yearFrom
+					bind:yearTo
+					showLabels={false}
+					placeholderFrom="DESDE"
+					placeholderTo="HASTA"
+					minYear={1900}
+					class="min-w-72"
+				/>
+				{#if !readonly}
+					<SyncWorksButton academicId={academic.id} orcid={academic.orcid ?? null} />
+				{/if}
 			{/if}
+			<div class="flex rounded-lg bg-corp-gray/10 p-1">
+				<button
+					type="button"
+					class="rounded-md px-3 py-1.5 text-xs font-semibold transition-colors {view ===
+					'list'
+						? 'bg-white text-corp-blue shadow-sm'
+						: 'text-corp-gray hover:text-[#1a1a1a]'}"
+					onclick={() => (view = "list")}
+				>
+					Lista
+				</button>
+				<button
+					type="button"
+					class="rounded-md px-3 py-1.5 text-xs font-semibold transition-colors {view ===
+					'graph'
+						? 'bg-white text-corp-blue shadow-sm'
+						: 'text-corp-gray hover:text-[#1a1a1a]'}"
+					onclick={() => (view = "graph")}
+				>
+					Red de colaboración
+				</button>
+			</div>
 		</div>
 	</div>
 
-	{#if worksQuery.isPending}
+	{#if view === "graph"}
+		<CollaborationGraph {academic} />
+	{:else if worksQuery.isPending}
 		<div class="flex items-center justify-center py-8">
 			<Loader class="size-5 animate-spin text-corp-gray" />
 		</div>
