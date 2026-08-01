@@ -63,7 +63,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-RUN adduser --disabled-password appuser
+RUN useradd -m -U appuser
 USER appuser
 
 COPY --from=builder /app/target/release/orcid-acad-mgr-server ./server
