@@ -3,7 +3,8 @@
 	import type { TableFeatures } from "@tanstack/svelte-table"
 
 	import { toast } from "svelte-sonner"
-	import { createQuery } from "@tanstack/svelte-query"
+	import { useQuery } from "$shared/http/tanstack"
+
 	import { usersService } from "$users/service"
 	import { inlineTryAsync } from "$shared/try"
 	import { createColumnHelper } from "@tanstack/svelte-table"
@@ -16,7 +17,7 @@
 	let showDialog = $state(false)
 	let editingUser: User | null = $state(null)
 
-	const usersQuery = createQuery(() => ({
+	const usersQuery = useQuery(() => ({
 		queryKey: ["users", search],
 		queryFn: () => usersService.list(search ? { search } : undefined),
 	}))

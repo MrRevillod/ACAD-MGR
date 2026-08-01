@@ -1,33 +1,34 @@
 <script lang="ts">
-	import { createQuery } from "@tanstack/svelte-query"
-	import { academicService } from "$lib/academic/academics/service"
-	import { categoryService } from "$lib/academic/categories/service"
-	import { optionService } from "$lib/academic/options/service"
-	import { positionService } from "$lib/university/work-positions/service"
-	import { usersService } from "$lib/users/service"
+	import { useQuery } from "$shared/http/tanstack"
 	import { GraduationCap, Users, Tags, ListOrdered, Briefcase } from "@lucide/svelte"
 
-	const academicsQuery = createQuery(() => ({
+	import { usersService } from "$users/service"
+	import { optionService } from "$options/service"
+	import { academicService } from "$academics/service"
+	import { categoryService } from "$categories/service"
+	import { positionService } from "$work-positions/service"
+
+	const academicsQuery = useQuery(() => ({
 		queryKey: ["admin", "academics"],
 		queryFn: () => academicService.list(),
 	}))
 
-	const usersQuery = createQuery(() => ({
+	const usersQuery = useQuery(() => ({
 		queryKey: ["admin", "users"],
 		queryFn: () => usersService.list(),
 	}))
 
-	const categoriesQuery = createQuery(() => ({
+	const categoriesQuery = useQuery(() => ({
 		queryKey: ["admin", "categories"],
 		queryFn: () => categoryService.list(),
 	}))
 
-	const optionsQuery = createQuery(() => ({
+	const optionsQuery = useQuery(() => ({
 		queryKey: ["admin", "options"],
 		queryFn: () => optionService.list(),
 	}))
 
-	const positionsQuery = createQuery(() => ({
+	const positionsQuery = useQuery(() => ({
 		queryKey: ["admin", "positions"],
 		queryFn: () => positionService.list(),
 	}))

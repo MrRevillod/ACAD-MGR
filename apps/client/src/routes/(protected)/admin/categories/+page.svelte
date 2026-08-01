@@ -3,7 +3,7 @@
 	import type { TableFeatures } from "@tanstack/svelte-table"
 	import type { AcademicCategory } from "$categories/entity"
 
-	import { createQuery } from "@tanstack/svelte-query"
+	import { useQuery } from "$shared/http/tanstack"
 	import { categoryService } from "$categories/service"
 	import { Plus, Loader, Pencil, Trash2 } from "@lucide/svelte"
 	import { renderSnippet, createColumnHelper } from "@tanstack/svelte-table"
@@ -13,7 +13,7 @@
 	import DataTable from "$shared/components/ui/data-table.svelte"
 	import CategoryDialog from "$categories/components/category-dialog.svelte"
 
-	const query = createQuery(() => ({
+	const query = useQuery(() => ({
 		queryKey: ["admin", "categories"],
 		queryFn: () => categoryService.list(),
 	}))

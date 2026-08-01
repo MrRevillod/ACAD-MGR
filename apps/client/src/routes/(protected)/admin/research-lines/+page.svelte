@@ -1,15 +1,13 @@
 <script lang="ts">
-	import { useQueryClient } from "@tanstack/svelte-query"
-	import { Loader, Trash2, GripVertical } from "@lucide/svelte"
 	import { toast } from "svelte-sonner"
+	import { queryClient } from "$shared/http/tanstack"
+	import { Loader, Trash2, GripVertical } from "@lucide/svelte"
 
 	import { classificationService } from "$research/classification/service"
 	import { useAllSubfieldsQuery, useResearchLinesQuery } from "$research/classification/queries"
 
-	const researchLinesQuery = useResearchLinesQuery()
 	const subfieldsQuery = useAllSubfieldsQuery()
-
-	const qc = useQueryClient()
+	const researchLinesQuery = useResearchLinesQuery()
 
 	let draggingId = $state<string | null>(null)
 
@@ -44,8 +42,8 @@
 	})
 
 	function invalidateAdmin() {
-		void qc.invalidateQueries({ queryKey: ["research-lines"] })
-		void qc.invalidateQueries({ queryKey: ["research-subfields"] })
+		void queryClient.invalidateQueries({ queryKey: ["research-lines"] })
+		void queryClient.invalidateQueries({ queryKey: ["research-subfields"] })
 	}
 
 	function handleDragStart(e: DragEvent, subfieldOpenalexId: string) {
@@ -138,7 +136,7 @@
 					<div
 						role="region"
 						class="flex-1 space-y-1.5 overflow-y-hidden group-hover/col:overflow-y-auto p-2 {draggingId
-							? 'bg-corp-blue/[0.02]'
+							? 'bg-corp-blue/2'
 							: ''}"
 						ondragover={handleDragOver}
 						ondrop={(e) => handleDrop(e, line.id)}

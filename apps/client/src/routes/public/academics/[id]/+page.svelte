@@ -1,14 +1,16 @@
 <script lang="ts">
 	import * as v from "valibot"
+
 	import { page } from "$app/state"
-	import { useSearchParams } from "runed/kit"
 	import { useQuery } from "$shared/http/tanstack"
+	import { useSearchParams } from "runed/kit"
 	import { academicService } from "$academics/service"
 	import { Loader, CircleAlert, Construction } from "@lucide/svelte"
-	import WorksSection from "$works/components/works-section.svelte"
-	import AcademicSidebar from "$academics/components/academic-sidebar.svelte"
+
 	import Dialog from "$shared/components/ui/dialog.svelte"
 	import Button from "$shared/components/ui/button.svelte"
+	import WorksSection from "$works/components/works-section.svelte"
+	import AcademicSidebar from "$academics/components/academic-sidebar.svelte"
 
 	const id = $derived(page.params.id ?? "")
 

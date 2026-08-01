@@ -15,16 +15,16 @@
 	import { goto } from "$app/navigation"
 	import { toast } from "svelte-sonner"
 
-	import Badge from "$lib/shared/components/ui/badge.svelte"
-	import HtmlRenderer from "$shared/components/ui/html-renderer.svelte"
-
-	import { DateValue } from "$shared/value-objects/date.value"
 	import { FullName } from "$shared/value-objects/full-name.value"
+	import { DateValue } from "$shared/value-objects/date.value"
 	import { WORK_TYPE_LABELS } from "$works/dtos"
+
+	import { authStore } from "$auth/store.svelte"
 	import { useWorkDetailQuery } from "$works/queries"
 	import { AuthorshipPositionValue } from "$works/value-objects/position.value"
-	import { authStore } from "$lib/auth/store.svelte"
-	import { resolve } from "$app/paths"
+
+	import Badge from "$shared/components/ui/badge.svelte"
+	import HtmlRenderer from "$shared/components/ui/html-renderer.svelte"
 	import WorkEditDialog from "$works/components/work-edit-dialog.svelte"
 
 	const id = $derived(page.params.id ?? "")
@@ -235,10 +235,8 @@
 										{#if !auth.isExternal && auth.academicId}
 											<a
 												href={authStore.isAuthenticated
-													? resolve(`/academics/${auth.academicId}`)
-													: resolve(
-															`/public/academics/${auth.academicId}`,
-														)}
+													? `/academics/${auth.academicId}`
+													: `/public/academics/${auth.academicId}`}
 												class="shrink-0 text-xs font-medium text-corp-blue hover:underline"
 											>
 												Ir al perfil académico →

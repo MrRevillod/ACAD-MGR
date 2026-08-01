@@ -4,12 +4,12 @@
 	import type { TableFeatures } from "@tanstack/svelte-table"
 	import type { GetAcademicsParams } from "$academics/dtos"
 
-	import { toast } from "svelte-sonner"
 	import { goto } from "$app/navigation"
-	import { Loader, CircleAlert } from "@lucide/svelte"
+	import { toast } from "svelte-sonner"
 	import { useSearchParams } from "runed/kit"
 	import { createColumnHelper } from "@tanstack/svelte-table"
-	import { createMutation, createQuery, useQueryClient } from "@tanstack/svelte-query"
+	import { Loader, CircleAlert } from "@lucide/svelte"
+	import { queryClient, useMutation, useQuery } from "$shared/http/tanstack"
 
 	import { FullName } from "$shared/value-objects/full-name.value"
 	import { careerService } from "$careers/service"
@@ -35,12 +35,12 @@
 		pushHistory: false,
 	})
 
-	const departmentsQuery = createQuery(() => ({
+	const departmentsQuery = useQuery(() => ({
 		queryKey: ["departments"],
 		queryFn: () => departmentService.list(),
 	}))
 
-	const careersQuery = createQuery(() => ({
+	const careersQuery = useQuery(() => ({
 		queryKey: ["careers", params.departmentId],
 		queryFn: () =>
 			careerService.list(
@@ -48,7 +48,7 @@
 			),
 	}))
 
-	const categoriesQuery = createQuery(() => ({
+	const categoriesQuery = useQuery(() => ({
 		queryKey: ["categories"],
 		queryFn: () => categoryService.list(),
 	}))
@@ -68,14 +68,12 @@
 		params.reset()
 	}
 
-	const query = createQuery(() => ({
+	const query = useQuery(() => ({
 		queryKey: ["academics", filters],
 		queryFn: () => academicService.list(filters),
 	}))
 
-	const queryClient = useQueryClient()
-
-	const importMutation = createMutation(() => ({
+	const importMutation = useMutation(() => ({
 		mutationFn: (file: File) => academicService.import(file),
 		onSuccess: (result) => {
 			void queryClient.invalidateQueries({ queryKey: ["academics"] })

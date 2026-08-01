@@ -2,17 +2,18 @@
 	import * as v from "valibot"
 	import type { Academic } from "$academics/entity"
 	import type { GetAcademicsParams } from "$academics/dtos"
+	import type { TableFeatures } from "@tanstack/svelte-table"
 
 	import { goto } from "$app/navigation"
-	import { Loader, CircleAlert, Search, RotateCcw } from "@lucide/svelte"
 	import { useSearchParams } from "runed/kit"
-	import { createColumnHelper, type TableFeatures } from "@tanstack/svelte-table"
-	import { createQuery } from "@tanstack/svelte-query"
+	import { createColumnHelper } from "@tanstack/svelte-table"
+	import { Loader, CircleAlert, Search, RotateCcw } from "@lucide/svelte"
 
 	import { FullName } from "$shared/value-objects/full-name.value"
+	import { useQuery } from "$shared/http/tanstack"
+	import { careerService } from "$careers/service"
 	import { academicService } from "$academics/service"
 	import { departmentService } from "$departments/service"
-	import { careerService } from "$careers/service"
 
 	import DataTable from "$shared/components/ui/data-table.svelte"
 	import Label from "$shared/components/ui/label.svelte"
@@ -30,12 +31,12 @@
 		pushHistory: false,
 	})
 
-	const departmentsQuery = createQuery(() => ({
+	const departmentsQuery = useQuery(() => ({
 		queryKey: ["departments"],
 		queryFn: () => departmentService.list(),
 	}))
 
-	const careersQuery = createQuery(() => ({
+	const careersQuery = useQuery(() => ({
 		queryKey: ["careers", params.departmentId],
 		queryFn: () =>
 			careerService.list(
@@ -53,7 +54,7 @@
 		params.reset()
 	}
 
-	const query = createQuery(() => ({
+	const query = useQuery(() => ({
 		queryKey: ["public-academics", filters],
 		queryFn: () => academicService.listPublic(filters),
 	}))

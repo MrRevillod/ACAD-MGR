@@ -3,7 +3,7 @@
 	import type { AcademicOptionValue } from "$options/value-objects/option.value"
 	import type { AcademicCategoryOption } from "$options/entity"
 
-	import { createQuery } from "@tanstack/svelte-query"
+	import { useQuery } from "$shared/http/tanstack"
 	import { optionService } from "$options/service"
 	import { categoryService } from "$categories/service"
 	import { Plus, Loader, Pencil, Trash2 } from "@lucide/svelte"
@@ -14,12 +14,12 @@
 	import DataTable from "$shared/components/ui/data-table.svelte"
 	import OptionDialog from "$options/components/option-dialog.svelte"
 
-	const query = createQuery(() => ({
+	const query = useQuery(() => ({
 		queryKey: ["admin", "options"],
 		queryFn: () => optionService.list(),
 	}))
 
-	const categoriesQuery = createQuery(() => ({
+	const categoriesQuery = useQuery(() => ({
 		queryKey: ["admin", "categories"],
 		queryFn: () => categoryService.list(),
 	}))

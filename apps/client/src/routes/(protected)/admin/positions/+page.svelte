@@ -2,7 +2,7 @@
 	import type { TableFeatures } from "@tanstack/svelte-table"
 	import type { AcademicWorkPosition } from "$work-positions/entity"
 
-	import { createQuery } from "@tanstack/svelte-query"
+	import { useQuery } from "$shared/http/tanstack"
 	import { positionService } from "$work-positions/service"
 	import { Plus, Loader, Pencil, Trash2 } from "@lucide/svelte"
 	import { renderSnippet, createColumnHelper } from "@tanstack/svelte-table"
@@ -11,7 +11,7 @@
 	import DataTable from "$shared/components/ui/data-table.svelte"
 	import PositionDialog from "$work-positions/components/position-dialog.svelte"
 
-	const query = createQuery(() => ({
+	const query = useQuery(() => ({
 		queryKey: ["admin", "positions"],
 		queryFn: () => positionService.list(),
 	}))
