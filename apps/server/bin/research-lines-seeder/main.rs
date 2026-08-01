@@ -624,11 +624,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
 	let mut updated = 0u64;
 	for (openalex_id, slug) in MAPPINGS {
 		let result = sqlx::query(
-			r#"
-			UPDATE subfields
-			SET research_line_id = (SELECT id FROM research_lines WHERE slug = $1)
-			WHERE openalex_id = $2
-			"#,
+			"UPDATE subfields
+			    SET research_line_id = (SELECT id FROM research_lines WHERE slug = $1)
+			    WHERE openalex_id = $2",
 		)
 		.bind(slug)
 		.bind(openalex_id)

@@ -36,13 +36,11 @@ impl AcademicCategoryOptionsRepository {
 		filter: AcademicCategoryOptionFilter,
 	) -> AppResult<Option<AcademicCategoryOption>> {
 		let base = if filter.category_name.is_some() {
-			"SELECT aco.id, aco.category_id, aco.option, aco.hours \
-             FROM academic_category_options aco \
-             JOIN academic_categories ac ON ac.id = aco.category_id \
-             WHERE 1=1"
+			"SELECT aco.id, aco.category_id, aco.option, aco.hours FROM academic_category_options aco
+			JOIN academic_categories ac ON ac.id = aco.category_id WHERE 1=1"
 		} else {
-			"SELECT aco.id, aco.category_id, aco.option, aco.hours \
-             FROM academic_category_options aco WHERE 1=1"
+			"SELECT aco.id, aco.category_id, aco.option, aco.hours
+			    FROM academic_category_options aco WHERE 1=1"
 		};
 
 		let mut query = QueryBuilder::<Postgres>::new(base);
@@ -83,7 +81,8 @@ impl AcademicCategoryOptionsRepository {
 
 	pub async fn save(&self, option: &AcademicCategoryOption) -> AppResult<()> {
 		sqlx::query(
-			"INSERT INTO academic_category_options (id, category_id, option, hours) VALUES ($1, $2, $3, $4)",
+			"INSERT INTO academic_category_options (id, category_id, option, hours)
+			    VALUES ($1, $2, $3, $4)",
 		)
 		.bind(option.id)
 		.bind(option.category_id)

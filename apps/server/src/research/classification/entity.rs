@@ -4,101 +4,119 @@ use bon::Builder;
 use serde::Serialize;
 use sqlx::FromRow;
 
-pub type ResearchDomainId = Id<ResearchDomain>;
+pub type DomainId = Id<Domain>;
 
 #[derive(Debug, Clone, Serialize, FromRow, Builder)]
 #[serde(rename_all = "camelCase")]
-pub struct ResearchDomain {
-	#[builder(default = ResearchDomainId::new())]
-	pub id: ResearchDomainId,
+pub struct Domain {
+	#[builder(default)]
+	pub id: DomainId,
 	pub openalex_id: String,
 	pub name: String,
 }
 
-impl Entity for ResearchDomain {
+impl Entity for Domain {
 	fn key_name() -> &'static str {
-		"research_domain"
+		"domain"
 	}
 }
 
-pub type ResearchFieldId = Id<ResearchField>;
+pub type FieldId = Id<Field>;
 
 #[derive(Debug, Clone, Serialize, FromRow, Builder)]
 #[serde(rename_all = "camelCase")]
-pub struct ResearchField {
-	#[builder(default = ResearchFieldId::new())]
-	pub id: ResearchFieldId,
+pub struct Field {
+	#[builder(default)]
+	pub id: FieldId,
 	pub openalex_id: String,
 	pub name: String,
-	pub domain_id: ResearchDomainId,
+	pub domain_id: DomainId,
 }
 
-impl Entity for ResearchField {
+impl Entity for Field {
 	fn key_name() -> &'static str {
-		"research_field"
+		"field"
 	}
 }
 
-pub type ResearchSubfieldId = Id<ResearchSubfield>;
+pub type ResearchLineId = Id<ResearchLine>;
 
 #[derive(Debug, Clone, Serialize, FromRow, Builder)]
 #[serde(rename_all = "camelCase")]
-pub struct ResearchSubfield {
-	#[builder(default = ResearchSubfieldId::new())]
-	pub id: ResearchSubfieldId,
-	pub openalex_id: String,
+pub struct ResearchLine {
+	#[builder(default)]
+	pub id: ResearchLineId,
 	pub name: String,
-	pub field_id: ResearchFieldId,
-	pub research_line_id: Option<uuid::Uuid>,
+	pub slug: String,
 }
 
-impl Entity for ResearchSubfield {
+impl Entity for ResearchLine {
 	fn key_name() -> &'static str {
-		"research_subfield"
+		"research_line"
 	}
 }
 
-pub type ResearchTopicId = Id<ResearchTopic>;
+pub type SubfieldId = Id<Subfield>;
 
 #[derive(Debug, Clone, Serialize, FromRow, Builder)]
 #[serde(rename_all = "camelCase")]
-pub struct ResearchTopic {
-	#[builder(default = ResearchTopicId::new())]
-	pub id: ResearchTopicId,
+pub struct Subfield {
+	#[builder(default)]
+	pub id: SubfieldId,
 	pub openalex_id: String,
 	pub name: String,
-	pub subfield_id: ResearchSubfieldId,
+	pub field_id: FieldId,
+	pub research_line_id: Option<ResearchLineId>,
 }
 
-impl Entity for ResearchTopic {
+impl Entity for Subfield {
 	fn key_name() -> &'static str {
-		"research_topic"
+		"subfield"
 	}
 }
 
-pub type ResearchKeywordId = Id<ResearchKeyword>;
+pub type TopicId = Id<Topic>;
 
 #[derive(Debug, Clone, Serialize, FromRow, Builder)]
 #[serde(rename_all = "camelCase")]
-pub struct ResearchKeyword {
-	#[builder(default = ResearchKeywordId::new())]
-	pub id: ResearchKeywordId,
+pub struct Topic {
+	#[builder(default)]
+	pub id: TopicId,
+	pub openalex_id: String,
+	pub name: String,
+	pub subfield_id: SubfieldId,
+}
+
+impl Entity for Topic {
+	fn key_name() -> &'static str {
+		"topic"
+	}
+}
+
+pub type KeywordId = Id<Keyword>;
+
+#[derive(Debug, Clone, Serialize, FromRow, Builder)]
+#[serde(rename_all = "camelCase")]
+pub struct Keyword {
+	#[builder(default)]
+	pub id: KeywordId,
 	pub openalex_id: String,
 	pub name: String,
 }
 
-impl Entity for ResearchKeyword {
+impl Entity for Keyword {
 	fn key_name() -> &'static str {
-		"research_keyword"
+		"keyword"
 	}
 }
 
 #[allow(dead_code)]
 pub struct ClassificationFilter {
-	pub domain_id: Option<ResearchDomainId>,
-	pub field_id: Option<ResearchFieldId>,
-	pub subfield_id: Option<ResearchSubfieldId>,
-	pub topic_id: Option<ResearchTopicId>,
+	pub domain_id: Option<DomainId>,
+	pub field_id: Option<FieldId>,
+	pub subfield_id: Option<SubfieldId>,
+	pub topic_id: Option<TopicId>,
 	pub openalex_id: Option<String>,
 	pub search: Option<String>,
+	pub limit: Option<i64>,
 }

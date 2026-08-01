@@ -95,7 +95,8 @@ impl WorksImportService {
 		&self,
 		oa_work: &OpenAlexWork,
 	) -> AppResult<WorkImportProcessStats> {
-		let source_id = self.ensure_source(oa_work.source()).await?;
+		let source_issns = oa_work.source_issns();
+		let source_id = self.ensure_source(oa_work.source(), source_issns).await?;
 
 		let (work, was_inserted) = match self.works.find_by_openalex_id(&oa_work.id).await? {
 			Some(mut work) => {
@@ -104,7 +105,7 @@ impl WorksImportService {
 				(work, false)
 			}
 			None => {
-				let work = oa_work.into_work(source_id);
+				let work = oa_work.to_work(source_id);
 				self.works.save(&work).await?;
 				(work, true)
 			}
@@ -206,17 +207,29 @@ impl WorksImportService {
 		})
 	}
 
-	async fn ensure_source(&self, source: Option<Source>) -> AppResult<Option<SourceId>> {
-		let Some(incoming) = source else {
+	async fn ensure_source(
+		&self,
+		source: Option<Source>,
+		issns: Option<Vec<String>>,
+	) -> AppResult<Option<SourceId>> {
+		let Some(mut incoming) = source else {
 			return Ok(None);
 		};
 
-		match self.sources.find_by_openalex_id(&incoming.openalex_id).await? {
+		incoming.issn = match issns {
+			Some(issns) => self.sources.resolve_issn(&issns).await?,
+			None => None,
+		};
+
+		match self
+			.sources
+			.find_by_openalex_id(&incoming.openalex_id)
+			.await?
+		{
 			Some(mut existing) => {
 				existing.name = incoming.name;
 				existing.ty = incoming.ty;
 				existing.issn = incoming.issn;
-				existing.journal_issn_id = incoming.journal_issn_id;
 				self.sources.save(&existing).await?;
 				Ok(Some(existing.id))
 			}
@@ -227,11 +240,7 @@ impl WorksImportService {
 		}
 	}
 
-	async fn ensure_keyword(
-		&self,
-		openalex_id: &str,
-		name: &str,
-	) -> AppResult<ResearchKeywordId> {
+	async fn ensure_keyword(&self, openalex_id: &str, name: &str) -> AppResult<KeywordId> {
 		match self
 			.classification
 			.find_keyword_by_openalex_id(openalex_id)
@@ -243,7 +252,7 @@ impl WorksImportService {
 				Ok(existing.id)
 			}
 			None => {
-				let keyword = ResearchKeyword::builder()
+				let keyword = Keyword::builder()
 					.openalex_id(openalex_id.to_string())
 					.name(name.to_string())
 					.build();

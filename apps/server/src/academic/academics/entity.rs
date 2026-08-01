@@ -1,11 +1,8 @@
-use bon::Builder;
-
-use crate::academic::{
-	AcademicCategoryId, AcademicCategoryOptionId, AcademicOption, AcademicPlanta,
-};
+use crate::academic::*;
 use crate::shared::{Entity, Id};
 use crate::university::{AcademicWorkPositionId, CareerId, DepartmentId};
 
+use bon::Builder;
 use chrono::{DateTime, NaiveDate, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, Type};
@@ -23,7 +20,7 @@ pub enum Sex {
 
 #[derive(Debug, Clone, Serialize, FromRow, Builder)]
 pub struct Academic {
-	#[builder(default = AcademicId::new())]
+	#[builder(default)]
 	pub id: AcademicId,
 	pub rut: String,
 	pub names: String,
@@ -42,6 +39,7 @@ pub struct Academic {
 	pub annual_discount_hours: f64,
 	pub nationality_code: String,
 	pub city: String,
+
 	#[builder(default = Utc::now())]
 	pub updated_at: DateTime<Utc>,
 }

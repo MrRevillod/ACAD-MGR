@@ -5,6 +5,7 @@ import type {
 	AuthorshipDTO,
 	WorkTopicDTO,
 	WorkKeywordDTO,
+	WorkOverridesDTO,
 } from "./dtos"
 
 import { JournalKindValue } from "./value-objects/journal-kind.value"
@@ -24,10 +25,23 @@ export class Work {
 		public isPublished: boolean,
 		public sourceId: string | null,
 		public journalKind: JournalKindValue,
-		public researchLineId?: string,
-		public researchLineName?: string,
-		public overriddenFields: string[] = [],
+		public overrides: WorkOverridesDTO = {},
+		public researchLineId: string | null = null,
+		public researchLineName: string | null = null,
 	) {}
+
+	get overriddenFields(): string[] {
+		const o = this.overrides
+		const fields: string[] = []
+		if (o.title != null) fields.push("title")
+		if (o.abstractText != null) fields.push("abstractText")
+		if (o.doi != null) fields.push("doi")
+		if (o.publicationYear != null) fields.push("publicationYear")
+		if (o.isAccepted != null) fields.push("isAccepted")
+		if (o.isPublished != null) fields.push("isPublished")
+		if (o.researchLineId != null) fields.push("researchLineId")
+		return fields
+	}
 
 	static fromDTO(dto: WorkDTO): Work {
 		return new Work(
@@ -44,9 +58,9 @@ export class Work {
 			dto.isPublished,
 			dto.sourceId,
 			JournalKindValue.from(dto.journalKind),
-			dto.researchLineId,
-			dto.researchLineName,
-			dto.overriddenFields ?? [],
+			dto.overrides ?? {},
+			dto.researchLineId ?? null,
+			dto.researchLineName ?? null,
 		)
 	}
 
@@ -77,9 +91,9 @@ export class WorkDetail extends Work {
 			work.isPublished,
 			work.sourceId,
 			work.journalKind,
+			work.overrides,
 			work.researchLineId,
 			work.researchLineName,
-			work.overriddenFields,
 		)
 	}
 
@@ -100,7 +114,7 @@ export class Source {
 		public readonly openalexId: string,
 		public readonly name: string,
 		public readonly ty: string,
-		public readonly issn: string[] | null,
+		public readonly issn: string | null,
 		public readonly kind: JournalKindValue,
 	) {}
 

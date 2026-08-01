@@ -1,10 +1,10 @@
 use crate::research::*;
 use crate::shared::AppResult;
+use crate::university::DepartmentId;
 
 use std::collections::BTreeMap;
 use std::sync::Arc;
 use sword::prelude::*;
-use uuid::Uuid;
 
 #[injectable]
 pub struct StatsService {
@@ -28,7 +28,7 @@ impl StatsService {
 
 	pub async fn get_department_detail(
 		&self,
-		id: Uuid,
+		id: DepartmentId,
 		query: DepartmentDetailQuery,
 	) -> AppResult<DepartmentDetailResponse> {
 		let (summary, publishers) = tokio::join!(

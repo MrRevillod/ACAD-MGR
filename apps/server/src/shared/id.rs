@@ -17,7 +17,7 @@ pub trait Entity {
 	fn key_name() -> &'static str;
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct Id<T: Entity> {
 	value: Uuid,
 	_marker: PhantomData<T>,
@@ -158,5 +158,14 @@ impl<T: Entity> Deref for Id<T> {
 
 	fn deref(&self) -> &Self::Target {
 		&self.value
+	}
+}
+
+impl<T> Default for Id<T>
+where
+	T: Entity,
+{
+	fn default() -> Self {
+		Self::new()
 	}
 }

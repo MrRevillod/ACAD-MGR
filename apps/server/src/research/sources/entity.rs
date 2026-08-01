@@ -2,20 +2,18 @@ use crate::shared::{Entity, Id};
 use bon::Builder;
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, Type};
-use uuid::Uuid;
 
 pub type SourceId = Id<Source>;
 
 #[derive(Debug, Clone, Serialize, FromRow, Builder, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct Source {
-	#[builder(default = SourceId::new())]
+	#[builder(default)]
 	pub id: SourceId,
 	pub openalex_id: String,
 	pub name: String,
 	pub ty: String,
-	pub issn: Option<Vec<String>>,
-	pub journal_issn_id: Option<Uuid>,
+	pub issn: Option<String>,
 }
 
 impl Source {

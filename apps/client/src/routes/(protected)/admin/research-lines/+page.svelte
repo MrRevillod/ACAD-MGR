@@ -1,18 +1,52 @@
 <script lang="ts">
-	import { createQuery, useQueryClient } from "@tanstack/svelte-query"
+	import { useQueryClient } from "@tanstack/svelte-query"
 	import { Loader, Trash2, GripVertical } from "@lucide/svelte"
 	import { toast } from "svelte-sonner"
 
 	import { classificationService } from "$research/classification/service"
+	import { useAllSubfieldsQuery, useResearchLinesQuery } from "$research/classification/queries"
 
-	const query = createQuery(() => ({
-		queryKey: ["admin", "research-lines"],
-		queryFn: () => classificationService.researchLineDetails(),
-	}))
+	const researchLinesQuery = useResearchLinesQuery()
+	const subfieldsQuery = useAllSubfieldsQuery()
 
 	const qc = useQueryClient()
 
 	let draggingId = $state<string | null>(null)
+
+	interface AdminLine {
+		id: string
+		name: string
+		slug: string
+		subfields: { subfieldOpenalexId: string; subfieldName: string }[]
+	}
+
+	const lines = $derived.by<AdminLine[]>(() => {
+		const subfields = subfieldsQuery.data ?? []
+		const researchLines = researchLinesQuery.data ?? []
+		const unassigned = researchLines.find((l) => l.slug === "sin-asignar")
+
+		const byId: Record<string, AdminLine> = {}
+		for (const line of researchLines) byId[line.id] = { ...line, subfields: [] }
+
+		for (const sf of subfields) {
+			const target =
+				byId[sf.researchLineId ?? ""] ?? (unassigned ? byId[unassigned.id] : undefined)
+			if (target)
+				target.subfields.push({ subfieldOpenalexId: sf.openalexId, subfieldName: sf.name })
+		}
+
+		return Object.values(byId).map((line) => ({
+			...line,
+			subfields: [...line.subfields].sort((a, b) =>
+				a.subfieldName.localeCompare(b.subfieldName),
+			),
+		}))
+	})
+
+	function invalidateAdmin() {
+		void qc.invalidateQueries({ queryKey: ["research-lines"] })
+		void qc.invalidateQueries({ queryKey: ["research-subfields"] })
+	}
 
 	function handleDragStart(e: DragEvent, subfieldOpenalexId: string) {
 		if (!e.dataTransfer) return
@@ -40,7 +74,7 @@
 		try {
 			await classificationService.updateMapping(subfieldId, targetLineId)
 			toast.success("Subfield movido correctamente")
-			void qc.invalidateQueries({ queryKey: ["admin", "research-lines"] })
+			invalidateAdmin()
 		} catch {
 			toast.error("Error al mover el subfield")
 		}
@@ -49,14 +83,14 @@
 	}
 
 	async function handleDelete(lineId: string, subfieldOpenalexId: string) {
-		const sinAsignar = query.data?.find((l) => l.slug === "sin-asignar")
+		const sinAsignar = researchLinesQuery.data?.find((l) => l.slug === "sin-asignar")
 		if (!sinAsignar) return
 		if (lineId === sinAsignar.id) return
 
 		try {
 			await classificationService.updateMapping(subfieldOpenalexId, sinAsignar.id)
 			toast.success("Subfield movido a Sin Asignar")
-			void qc.invalidateQueries({ queryKey: ["admin", "research-lines"] })
+			invalidateAdmin()
 		} catch {
 			toast.error("Error al eliminar el subfield")
 		}
@@ -71,11 +105,11 @@
 		</p>
 	</div>
 
-	{#if query.isPending}
+	{#if researchLinesQuery.isPending || subfieldsQuery.isPending}
 		<div class="flex min-h-0 flex-1 items-center justify-center">
 			<Loader class="size-6 animate-spin text-corp-gray" />
 		</div>
-	{:else if query.isError}
+	{:else if researchLinesQuery.isError || subfieldsQuery.isError}
 		<p class="min-h-0 flex-1 text-center text-sm text-red-500">
 			Error al cargar las líneas de investigación.
 		</p>
@@ -84,7 +118,7 @@
 			class="flex min-h-0 flex-1 gap-4 overflow-x-auto pb-4"
 			style="scrollbar-width: thin; scrollbar-color: oklch(0.87 0.01 258.34) transparent;"
 		>
-			{#each query.data ?? [] as line (line.id)}
+			{#each lines as line (line.id)}
 				<div
 					class="group/col flex w-72 shrink-0 flex-col rounded-xl border border-corp-gray/20 bg-white max-h-full"
 				>

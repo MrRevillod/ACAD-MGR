@@ -3,7 +3,6 @@ import type {
 	ResearchDomain,
 	ResearchField,
 	ResearchKeyword,
-	ResearchLineDetailDTO,
 	ResearchLineDTO,
 	ResearchSubfield,
 	ResearchTopic,
@@ -25,11 +24,14 @@ class ClassificationService {
 		})
 	}
 
-	public async subfields(fieldId?: string): Promise<ResearchSubfield[]> {
+	public async subfields(fieldId?: string, limit?: number): Promise<ResearchSubfield[]> {
 		return http.request<ResearchSubfield[]>({
 			method: "GET",
 			url: "/works-classification/subfields",
-			params: fieldId ? { field_id: fieldId } : undefined,
+			params: {
+				...(fieldId ? { field_id: fieldId } : {}),
+				...(limit ? { limit } : {}),
+			},
 		})
 	}
 
@@ -52,13 +54,6 @@ class ClassificationService {
 		return http.request<ResearchLineDTO[]>({
 			method: "GET",
 			url: "/works-classification/research-lines",
-		})
-	}
-
-	public async researchLineDetails(): Promise<ResearchLineDetailDTO[]> {
-		return http.request<ResearchLineDetailDTO[]>({
-			method: "GET",
-			url: "/works-classification/research-lines/detail",
 		})
 	}
 

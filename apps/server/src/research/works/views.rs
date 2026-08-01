@@ -1,5 +1,6 @@
 use crate::{academic::AcademicId, research::*};
 use serde::Serialize;
+use sqlx::{FromRow, Row, postgres::PgRow};
 use uuid::Uuid;
 
 #[derive(Debug, Serialize)]
@@ -7,7 +8,7 @@ use uuid::Uuid;
 pub struct WorkView {
 	#[serde(flatten)]
 	pub work: Work,
-	pub overridden_fields: Vec<String>,
+
 	pub journal_kind: Option<JournalKind>,
 	pub research_line_id: Option<Uuid>,
 	pub research_line_name: Option<String>,
@@ -19,10 +20,47 @@ pub struct WorkView {
 	pub authorships: Option<Vec<Authorship>>,
 
 	#[serde(skip_serializing_if = "Option::is_none")]
-	pub topics: Option<Vec<ResearchTopicView>>,
+	pub topics: Option<Vec<TopicView>>,
 
 	#[serde(skip_serializing_if = "Option::is_none")]
-	pub keywords: Option<Vec<ResearchKeywordView>>,
+	pub keywords: Option<Vec<KeywordView>>,
+}
+
+impl<'r> FromRow<'r, PgRow> for WorkView {
+	fn from_row(row: &'r PgRow) -> Result<Self, sqlx::Error> {
+		Ok(Self {
+			work: Work::from_row(row)?,
+			journal_kind: row.try_get("journal_kind")?,
+			research_line_id: row.try_get("research_line_id")?,
+			research_line_name: row.try_get("research_line_name")?,
+			source: None,
+			authorships: None,
+			topics: None,
+			keywords: None,
+		})
+	}
+}
+
+#[derive(Debug, Serialize, FromRow)]
+#[serde(rename_all = "camelCase")]
+pub struct TopicView {
+	pub topic_id: TopicId,
+	pub name: String,
+	pub score: f64,
+	pub subfield_id: SubfieldId,
+	pub subfield_name: String,
+	pub field_id: FieldId,
+	pub field_name: String,
+	pub domain_id: DomainId,
+	pub domain_name: String,
+}
+
+#[derive(Debug, Serialize, FromRow)]
+#[serde(rename_all = "camelCase")]
+pub struct KeywordView {
+	pub keyword_id: KeywordId,
+	pub name: String,
+	pub score: f64,
 }
 
 #[derive(Debug, Serialize)]

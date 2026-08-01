@@ -13,28 +13,25 @@ pub struct AcademicsRepository {
 impl AcademicsRepository {
 	pub async fn list(&self, filter: AcademicListFilter) -> AppResult<Vec<AcademicView>> {
 		let mut query = QueryBuilder::new(
-			r"
-            SELECT
-                a.id, a.names, a.paternal_surname, a.maternal_surname,
-                a.email, a.orcid, a.sex, a.birth_date, a.joined_at,
-                wp.name AS work_position,
-                d.name AS department,
-                c.name AS career,
-                a.jce,
-                ac.name AS category,
-                ac.planta,
-                aco.option,
-                aco.hours AS acad_category_hours, a.annual_discount_hours,
-                a.nationality_code AS nationality,
-                a.city
-            FROM academics a
-            LEFT JOIN academic_work_positions wp ON a.work_position_id = wp.id
-            JOIN departments d ON a.department_id = d.id
-            LEFT JOIN careers c ON a.career_id = c.id
-            JOIN academic_category_options aco ON a.acad_category_options_id = aco.id
-            JOIN academic_categories ac ON aco.category_id = ac.id
-            WHERE 1=1
-            ",
+			"SELECT a.id, a.names, a.paternal_surname, a.maternal_surname,
+			        a.email, a.orcid, a.sex, a.birth_date, a.joined_at,
+			        wp.name AS work_position,
+			        d.name AS department,
+			        c.name AS career,
+			        a.jce,
+			        ac.name AS category,
+			        ac.planta,
+			        aco.option,
+			        aco.hours AS acad_category_hours, a.annual_discount_hours,
+			        a.nationality_code AS nationality,
+			        a.city
+			    FROM academics a
+			    LEFT JOIN academic_work_positions wp ON a.work_position_id = wp.id
+			    JOIN departments d ON a.department_id = d.id
+			    LEFT JOIN careers c ON a.career_id = c.id
+			    JOIN academic_category_options aco ON a.acad_category_options_id = aco.id
+			    JOIN academic_categories ac ON aco.category_id = ac.id
+			    WHERE 1=1",
 		);
 
 		if let Some(q) = filter.search {
@@ -82,28 +79,25 @@ impl AcademicsRepository {
 
 	pub async fn find_view_by_id(&self, id: &AcademicId) -> AppResult<Option<AcademicView>> {
 		let item = sqlx::query_as::<_, AcademicView>(
-			r"
-            SELECT
-                a.id, a.names, a.paternal_surname, a.maternal_surname,
-                a.email, a.orcid, a.sex, a.birth_date, a.joined_at,
-                wp.name AS work_position,
-                d.name AS department,
-                c.name AS career,
-                a.jce,
-                ac.name AS category,
-                ac.planta,
-                aco.option,
-                aco.hours AS acad_category_hours, a.annual_discount_hours,
-                a.nationality_code AS nationality,
-                a.city
-            FROM academics a
-            LEFT JOIN academic_work_positions wp ON a.work_position_id = wp.id
-            JOIN departments d ON a.department_id = d.id
-            LEFT JOIN careers c ON a.career_id = c.id
-            JOIN academic_category_options aco ON a.acad_category_options_id = aco.id
-            JOIN academic_categories ac ON aco.category_id = ac.id
-            WHERE a.id = $1
-            ",
+			"SELECT a.id, a.names, a.paternal_surname, a.maternal_surname,
+			        a.email, a.orcid, a.sex, a.birth_date, a.joined_at,
+			        wp.name AS work_position,
+			        d.name AS department,
+			        c.name AS career,
+			        a.jce,
+			        ac.name AS category,
+			        ac.planta,
+			        aco.option,
+			        aco.hours AS acad_category_hours, a.annual_discount_hours,
+			        a.nationality_code AS nationality,
+			        a.city
+			    FROM academics a
+			    LEFT JOIN academic_work_positions wp ON a.work_position_id = wp.id
+			    JOIN departments d ON a.department_id = d.id
+			    LEFT JOIN careers c ON a.career_id = c.id
+			    JOIN academic_category_options aco ON a.acad_category_options_id = aco.id
+			    JOIN academic_categories ac ON aco.category_id = ac.id
+			    WHERE a.id = $1",
 		)
 		.bind(id)
 		.fetch_optional(self.database.pool())
@@ -150,37 +144,34 @@ impl AcademicsRepository {
 	}
 
 	pub async fn save(&self, academic: &Academic) -> AppResult<()> {
-		let query = r"
-        INSERT INTO academics (
-            id, rut, names, paternal_surname, maternal_surname, email, orcid, sex,
-            birth_date, joined_at, work_position_id,
-            department_id, career_id, jce, acad_category_options_id,
-            annual_discount_hours, nationality_code, city, updated_at
-        ) VALUES (
-            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-            $11, $12, $13, $14, $15, $16, $17, $18, $19
-        )
-        ON CONFLICT (id) DO UPDATE SET
-            names = EXCLUDED.names,
-            paternal_surname = EXCLUDED.paternal_surname,
-            maternal_surname = EXCLUDED.maternal_surname,
-            email = EXCLUDED.email,
-            orcid = EXCLUDED.orcid,
-            sex = EXCLUDED.sex,
-            birth_date = EXCLUDED.birth_date,
-            joined_at = EXCLUDED.joined_at,
-            work_position_id = EXCLUDED.work_position_id,
-            department_id = EXCLUDED.department_id,
-            career_id = EXCLUDED.career_id,
-            jce = EXCLUDED.jce,
-            acad_category_options_id = EXCLUDED.acad_category_options_id,
-            annual_discount_hours = EXCLUDED.annual_discount_hours,
-            nationality_code = EXCLUDED.nationality_code,
-            city = EXCLUDED.city,
-            updated_at = NOW()
-        ";
-
-		sqlx::query(query)
+		sqlx::query(
+			"INSERT INTO academics (
+			        id, rut, names, paternal_surname, maternal_surname, email, orcid, sex,
+			        birth_date, joined_at, work_position_id,
+			        department_id, career_id, jce, acad_category_options_id,
+			        annual_discount_hours, nationality_code, city, updated_at
+			    ) VALUES (
+			        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
+			        $11, $12, $13, $14, $15, $16, $17, $18, $19
+			    ) ON CONFLICT (id) DO UPDATE SET
+			        names                 = EXCLUDED.names,
+			        paternal_surname      = EXCLUDED.paternal_surname,
+			        maternal_surname      = EXCLUDED.maternal_surname,
+			        email                 = EXCLUDED.email,
+			        orcid                 = EXCLUDED.orcid,
+			        sex                   = EXCLUDED.sex,
+			        birth_date            = EXCLUDED.birth_date,
+			        joined_at             = EXCLUDED.joined_at,
+			        work_position_id      = EXCLUDED.work_position_id,
+			        department_id         = EXCLUDED.department_id,
+			        career_id             = EXCLUDED.career_id,
+			        jce                   = EXCLUDED.jce,
+			        acad_category_options_id = EXCLUDED.acad_category_options_id,
+			        annual_discount_hours = EXCLUDED.annual_discount_hours,
+			        nationality_code      = EXCLUDED.nationality_code,
+			        city                  = EXCLUDED.city,
+			        updated_at            = NOW()",
+		)
 			.bind(academic.id)
 			.bind(&academic.rut)
 			.bind(&academic.names)
@@ -207,18 +198,17 @@ impl AcademicsRepository {
 	}
 
 	pub async fn save_tx(&self, tx: &mut Tx<'_>, academic: &Academic) -> AppResult<()> {
-		let query = r"
-        INSERT INTO academics (
-            id, rut, names, paternal_surname, maternal_surname, email, orcid, sex,
-            birth_date, joined_at, work_position_id,
-            department_id, career_id, jce, acad_category_options_id,
-            annual_discount_hours, nationality_code, city, updated_at
-        ) VALUES (
-            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-            $11, $12, $13, $14, $15, $16, $17, $18, $19
-        )";
-
-		sqlx::query(query)
+		sqlx::query(
+			"INSERT INTO academics (
+			        id, rut, names, paternal_surname, maternal_surname, email, orcid, sex,
+			        birth_date, joined_at, work_position_id,
+			        department_id, career_id, jce, acad_category_options_id,
+			        annual_discount_hours, nationality_code, city, updated_at
+			    ) VALUES (
+			        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
+			        $11, $12, $13, $14, $15, $16, $17, $18, $19
+			    )",
+		)
 			.bind(academic.id)
 			.bind(&academic.rut)
 			.bind(&academic.names)

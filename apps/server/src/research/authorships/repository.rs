@@ -12,11 +12,11 @@ pub struct AuthorshipsRepository {
 impl AuthorshipsRepository {
 	pub async fn list(&self, work_id: &WorkId) -> AppResult<Vec<Authorship>> {
 		sqlx::query_as::<_, Authorship>(
-			r#"SELECT wa.*, a.id as academic_id
-            FROM work_authorships wa
-            LEFT JOIN academics a ON a.orcid = wa.orcid
-            WHERE wa.work_id = $1
-            ORDER BY CASE wa.position WHEN 'first' THEN 0 WHEN 'middle' THEN 1 WHEN 'last' THEN 2 END"#,
+			"SELECT wa.*, a.id AS academic_id FROM work_authorships wa
+				LEFT JOIN academics a ON a.orcid = wa.orcid
+			WHERE wa.work_id = $1
+			ORDER BY CASE wa.position WHEN 'first' THEN 0 WHEN 'middle' THEN 1 WHEN 'last' THEN 2
+			END",
 		)
 		.bind(work_id)
 		.fetch_all(self.database.pool())
@@ -27,10 +27,8 @@ impl AuthorshipsRepository {
 	pub async fn save(&self, authorship: &Authorship) -> AppResult<()> {
 		sqlx::query(
 			"INSERT INTO work_authorships (
-            	work_id, orcid, name, is_external,
-               	is_corresponding, affiliations, position
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (work_id, orcid) DO NOTHING
-        ",
+				work_id, orcid, name, is_external, is_corresponding, affiliations, position
+			) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (work_id, orcid) DO NOTHING",
 		)
 		.bind(authorship.work_id)
 		.bind(&authorship.orcid)

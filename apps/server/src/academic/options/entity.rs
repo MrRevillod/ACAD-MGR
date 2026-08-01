@@ -20,7 +20,7 @@ pub type AcademicCategoryOptionId = Id<AcademicCategoryOption>;
 #[derive(Debug, Clone, Serialize, FromRow, Builder)]
 #[serde(rename_all = "camelCase")]
 pub struct AcademicCategoryOption {
-	#[builder(default = AcademicCategoryOptionId::new())]
+	#[builder(default)]
 	pub id: AcademicCategoryOptionId,
 	pub category_id: AcademicCategoryId,
 	pub hours: Option<f64>,

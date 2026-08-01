@@ -1,4 +1,4 @@
-use crate::research::classification::*;
+use crate::research::classification::{Field as ResearchField, *};
 use std::sync::Arc;
 use sword::prelude::*;
 use sword::web::*;
@@ -10,7 +10,7 @@ pub struct WorksClassificationController {
 
 impl WorksClassificationController {
 	#[get("/domains")]
-	pub async fn get_domains(&self, req: Request) -> WebResult<Vec<ResearchDomain>> {
+	pub async fn get_domains(&self, req: Request) -> WebResult<Vec<Domain>> {
 		let query = req.query_validator::<WorkClassificationQueryDto>()?;
 		let filter = ClassificationFilter::from(query.unwrap_or_default());
 
@@ -26,7 +26,7 @@ impl WorksClassificationController {
 	}
 
 	#[get("/subfields")]
-	pub async fn get_subfields(&self, req: Request) -> WebResult<Vec<ResearchSubfield>> {
+	pub async fn get_subfields(&self, req: Request) -> WebResult<Vec<Subfield>> {
 		let query = req.query_validator::<WorkClassificationQueryDto>()?;
 		let filter = ClassificationFilter::from(query.unwrap_or_default());
 
@@ -34,7 +34,7 @@ impl WorksClassificationController {
 	}
 
 	#[get("/topics")]
-	pub async fn get_topics(&self, req: Request) -> WebResult<Vec<ResearchTopic>> {
+	pub async fn get_topics(&self, req: Request) -> WebResult<Vec<Topic>> {
 		let query = req.query_validator::<WorkClassificationQueryDto>()?;
 		let filter = ClassificationFilter::from(query.unwrap_or_default());
 
@@ -42,7 +42,7 @@ impl WorksClassificationController {
 	}
 
 	#[get("/keywords")]
-	pub async fn get_keywords(&self, req: Request) -> WebResult<Vec<ResearchKeyword>> {
+	pub async fn get_keywords(&self, req: Request) -> WebResult<Vec<Keyword>> {
 		let query = req.query_validator::<WorkClassificationQueryDto>()?;
 		let filter = ClassificationFilter::from(query.unwrap_or_default());
 
@@ -50,18 +50,8 @@ impl WorksClassificationController {
 	}
 
 	#[get("/research-lines")]
-	pub async fn get_research_lines(&self) -> WebResult<Vec<ResearchLineView>> {
+	pub async fn get_research_lines(&self) -> WebResult<Vec<ResearchLine>> {
 		Ok(self.work_classifications.list_research_lines().await?)
-	}
-
-	#[get("/research-lines/detail")]
-	pub async fn get_research_lines_detail(
-		&self,
-	) -> WebResult<Vec<ResearchLineDetail>> {
-		Ok(self
-			.work_classifications
-			.list_research_lines_with_subfields()
-			.await?)
 	}
 
 	#[put("/research-line-mappings")]

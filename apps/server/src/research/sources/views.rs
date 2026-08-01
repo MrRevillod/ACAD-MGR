@@ -10,6 +10,6 @@ pub struct SourceView {
 	pub openalex_id: String,
 	pub name: String,
 	pub ty: String,
-	pub issn: Option<Vec<String>>,
+	pub issn: Option<String>,
 	pub kind: Option<JournalKind>,
 }

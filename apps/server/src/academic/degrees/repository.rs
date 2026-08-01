@@ -14,7 +14,7 @@ impl DegreesRepository {
 	pub async fn list(&self, academic_id: &AcademicId) -> AppResult<Vec<Degree>> {
 		let items = sqlx::query_as::<_, Degree>(
 			"SELECT id, academic_id, name, university, obtained_at, kind, country_code
-                     FROM degrees WHERE academic_id = $1 ORDER BY obtained_at DESC",
+			    FROM degrees WHERE academic_id = $1 ORDER BY obtained_at DESC",
 		)
 		.bind(academic_id)
 		.fetch_all(self.database.pool())
@@ -35,13 +35,13 @@ impl DegreesRepository {
 	pub async fn save(&self, degree: &Degree) -> AppResult<()> {
 		sqlx::query(
 			"INSERT INTO degrees (id, academic_id, name, university, obtained_at, kind, country_code)
-             VALUES ($1, $2, $3, $4, $5, $6, $7)
-             ON CONFLICT (id) DO UPDATE SET
-             	name = EXCLUDED.name,
-             	university = EXCLUDED.university,
-             	obtained_at = EXCLUDED.obtained_at,
-             	kind = EXCLUDED.kind,
-             	country_code = EXCLUDED.country_code",
+			    VALUES ($1, $2, $3, $4, $5, $6, $7)
+			    ON CONFLICT (id) DO UPDATE SET
+			        name        = EXCLUDED.name,
+			        university  = EXCLUDED.university,
+			        obtained_at = EXCLUDED.obtained_at,
+			        kind        = EXCLUDED.kind,
+			        country_code = EXCLUDED.country_code",
 		)
 		.bind(degree.id)
 		.bind(degree.academic_id)
@@ -59,13 +59,13 @@ impl DegreesRepository {
 	pub async fn save_tx(&self, tx: &mut Tx<'_>, degree: &Degree) -> AppResult<()> {
 		sqlx::query(
 			"INSERT INTO degrees (id, academic_id, name, university, obtained_at, kind, country_code)
-             VALUES ($1, $2, $3, $4, $5, $6, $7)
-             ON CONFLICT (id) DO UPDATE SET
-             	name = EXCLUDED.name,
-             	university = EXCLUDED.university,
-             	obtained_at = EXCLUDED.obtained_at,
-             	kind = EXCLUDED.kind,
-             	country_code = EXCLUDED.country_code",
+			    VALUES ($1, $2, $3, $4, $5, $6, $7)
+			    ON CONFLICT (id) DO UPDATE SET
+			        name        = EXCLUDED.name,
+			        university  = EXCLUDED.university,
+			        obtained_at = EXCLUDED.obtained_at,
+			        kind        = EXCLUDED.kind,
+			        country_code = EXCLUDED.country_code",
 		)
 		.bind(degree.id)
 		.bind(degree.academic_id)

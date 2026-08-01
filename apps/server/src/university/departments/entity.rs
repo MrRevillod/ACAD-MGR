@@ -9,7 +9,7 @@ pub type DepartmentId = Id<Department>;
 #[derive(Debug, Clone, Serialize, FromRow, Builder)]
 #[serde(rename_all = "camelCase")]
 pub struct Department {
-	#[builder(default = DepartmentId::new())]
+	#[builder(default)]
 	pub id: DepartmentId,
 	pub name: String,
 	pub faculty_id: FacultyId,

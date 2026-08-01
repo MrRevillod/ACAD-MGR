@@ -1,12 +1,11 @@
 <script lang="ts">
-	import { useQuery } from "$shared/http/tanstack"
 	import { RotateCcw, Search, BookOpen, Funnel, RefreshCw } from "@lucide/svelte"
 
 	import { authStore } from "$auth/store.svelte"
 	import { useCareersQuery } from "$careers/queries"
 	import { useSyncAllMutation } from "$works/queries"
 	import { useDepartmentsQuery } from "$departments/queries"
-	import { classificationService } from "$research/classification/service"
+	import { useResearchLinesQuery } from "$research/classification/queries"
 
 	import Button from "$shared/components/ui/button.svelte"
 	import Dialog from "$shared/components/ui/dialog.svelte"
@@ -39,11 +38,7 @@
 	const departmentsQuery = useDepartmentsQuery()
 	const careersQuery = useCareersQuery(() => departmentId)
 
-	const researchLinesQuery = useQuery(() => ({
-		queryKey: ["research-lines"],
-		queryFn: () => classificationService.researchLines(),
-		staleTime: 300_000,
-	}))
+	const researchLinesQuery = useResearchLinesQuery()
 
 	const departmentItems = $derived([
 		{ value: "", label: "Todos los departamentos" },

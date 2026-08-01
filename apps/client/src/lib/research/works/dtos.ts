@@ -1,6 +1,16 @@
 import type { JournalKind } from "./value-objects/journal-kind.value"
 import type { AuthorshipPosition } from "./value-objects/position.value"
 
+export interface WorkOverridesDTO {
+	title?: string | null
+	abstractText?: string | null
+	doi?: string | null
+	publicationYear?: number | null
+	isAccepted?: boolean | null
+	isPublished?: boolean | null
+	researchLineId?: string | null
+}
+
 export interface WorkDTO {
 	id: string
 	openalexId: string
@@ -15,9 +25,9 @@ export interface WorkDTO {
 	isPublished: boolean
 	sourceId: string | null
 	journalKind: string | null
-	researchLineId?: string
-	researchLineName?: string
-	overriddenFields?: string[]
+	researchLineId?: string | null
+	researchLineName?: string | null
+	overrides?: WorkOverridesDTO
 	source?: SourceDTO | null
 	authorships?: AuthorshipDTO[]
 	topics?: WorkTopicDTO[]
@@ -56,7 +66,7 @@ export interface SourceDTO {
 	openalexId: string
 	name: string
 	ty: string
-	issn: string[] | null
+	issn: string | null
 	kind: JournalKind | null
 }
 

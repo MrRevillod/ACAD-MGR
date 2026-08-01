@@ -7,7 +7,7 @@ pub type FacultyId = Id<Faculty>;
 
 #[derive(Debug, Clone, Serialize, FromRow, Builder)]
 pub struct Faculty {
-	#[builder(default = FacultyId::new())]
+	#[builder(default)]
 	pub id: FacultyId,
 	pub name: String,
 }

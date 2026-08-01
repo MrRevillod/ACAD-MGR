@@ -13,9 +13,10 @@
 	interface Props {
 		works: Work[]
 		onRowClick?: (work: Work) => void
+		pageSize?: number
 	}
 
-	let { works, onRowClick }: Props = $props()
+	let { works, onRowClick, pageSize }: Props = $props()
 
 	const helper = createColumnHelper<TableFeatures, Work>()
 
@@ -112,4 +113,4 @@
 	</div>
 {/snippet}
 
-<DataTable data={works} {columns} {onRowClick} pageSize={10} />
+<DataTable data={works} {columns} {onRowClick} pageSize={pageSize ?? 10} />

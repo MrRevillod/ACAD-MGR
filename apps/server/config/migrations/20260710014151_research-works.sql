@@ -38,8 +38,7 @@ CREATE TABLE sources (
 	openalex_id TEXT UNIQUE NOT NULL,
 	name TEXT NOT NULL,
 	ty TEXT NOT NULL,
-	issn TEXT[],
-	journal_issn_id UUID REFERENCES journal_issn(id) ON DELETE SET NULL
+	issn TEXT
 );
 
 CREATE INDEX idx_sources_openalex_id ON sources(openalex_id);

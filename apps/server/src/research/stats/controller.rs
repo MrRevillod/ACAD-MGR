@@ -1,10 +1,9 @@
 use crate::research::*;
+use crate::university::DepartmentId;
 
 use std::sync::Arc;
 use sword::prelude::*;
 use sword::web::*;
-
-use uuid::Uuid;
 
 #[controller(kind = ControllerKind::Web, path = "/stats")]
 pub struct StatsController {
@@ -24,7 +23,7 @@ impl StatsController {
 
 	#[get("/department/{id}")]
 	pub async fn get_department_detail(&self, req: Request) -> WebResult<DepartmentDetailResponse> {
-		let id = req.param::<Uuid>("id")?;
+		let id = req.param::<DepartmentId>("id")?;
 		let query = req.query_validator::<DepartmentDetailQuery>()?;
 
 		Ok(self

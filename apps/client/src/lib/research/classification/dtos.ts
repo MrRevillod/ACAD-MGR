@@ -16,6 +16,7 @@ export interface ResearchSubfield {
 	openalexId: string
 	name: string
 	fieldId: string
+	researchLineId?: string | null
 }
 
 export interface ResearchTopic {
@@ -35,16 +36,4 @@ export interface ResearchLineDTO {
 	id: string
 	name: string
 	slug: string
-}
-
-export interface SubfieldMappingDTO {
-	subfieldOpenalexId: string
-	subfieldName: string
-}
-
-export interface ResearchLineDetailDTO {
-	id: string
-	name: string
-	slug: string
-	subfields: SubfieldMappingDTO[]
 }

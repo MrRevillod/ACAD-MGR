@@ -20,7 +20,7 @@ pub type DegreeId = Id<Degree>;
 #[derive(Debug, Clone, Serialize, FromRow, Builder)]
 #[serde(rename_all = "camelCase")]
 pub struct Degree {
-	#[builder(default = DegreeId::new())]
+	#[builder(default)]
 	pub id: DegreeId,
 	pub academic_id: AcademicId,
 	pub name: String,

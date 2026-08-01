@@ -12,7 +12,7 @@ pub type SessionId = Id<Session>;
 
 #[derive(Debug, Serialize, Deserialize, FromRow, Builder)]
 pub struct Session {
-	#[builder(default = SessionId::new())]
+	#[builder(default)]
 	pub id: SessionId,
 	pub user_id: UserId,
 	pub refresh_token_hash: String,

@@ -99,7 +99,7 @@
 			</p>
 		</div>
 	{:else}
-		<WorksTable works={worksQuery.data} onRowClick={openWork} />
+		<WorksTable works={worksQuery.data} onRowClick={openWork} pageSize={7} />
 	{/if}
 </section>
 

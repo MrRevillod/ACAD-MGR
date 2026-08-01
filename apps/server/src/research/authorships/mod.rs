@@ -2,7 +2,6 @@ mod repository;
 pub use repository::AuthorshipsRepository;
 
 use crate::research::WorkId;
-
 use bon::Builder;
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, Type};

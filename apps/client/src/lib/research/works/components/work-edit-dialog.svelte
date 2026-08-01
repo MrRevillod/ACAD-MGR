@@ -2,7 +2,6 @@
 	import { RotateCcw } from "@lucide/svelte"
 	import { createForm, Field, Form, reset } from "@formisch/svelte"
 	import * as v from "valibot"
-	import { useQuery } from "$shared/http/tanstack"
 
 	import type { WorkDetail } from "$works/entity"
 
@@ -12,7 +11,7 @@
 	import TextInput from "$shared/components/ui/form/text-input.svelte"
 	import FormFooter from "$shared/components/ui/form/footer.svelte"
 
-	import { classificationService } from "$research/classification/service"
+	import { useResearchLinesQuery } from "$research/classification/queries"
 	import { useClearOverridesMutation, useUpdateOverridesMutation } from "$works/queries"
 
 	const currentYear = new Date().getFullYear()
@@ -43,16 +42,11 @@
 
 	const form = createForm({ schema: editSchema })
 
-	const researchLinesQuery = useQuery(() => ({
-		queryKey: ["research-lines"],
-		queryFn: () => classificationService.researchLines(),
-		staleTime: 300_000,
-	}))
+	const researchLinesQuery = useResearchLinesQuery()
 
-	const researchLineItems = $derived([
-		{ value: "", label: "Sin línea / automática" },
-		...(researchLinesQuery.data?.map((rl) => ({ value: rl.id, label: rl.name })) ?? []),
-	])
+	const researchLineItems = $derived(
+		researchLinesQuery.data?.map((rl) => ({ value: rl.id, label: rl.name })) ?? [],
+	)
 
 	$effect(() => {
 		if (open)
@@ -85,7 +79,7 @@
 		const nextLine = output.researchLineId || null
 		const prevLine = work.researchLineId ?? null
 		if (nextLine !== prevLine) {
-			// empty select = clear override (null) so auto-derived line returns
+			// changing the select writes an override for the research line
 			data.researchLineId = nextLine
 		}
 

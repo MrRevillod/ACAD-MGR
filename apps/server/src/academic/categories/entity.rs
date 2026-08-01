@@ -1,8 +1,7 @@
+use crate::shared::{Entity, Id};
 use bon::Builder;
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, Type};
-
-use crate::shared::{Entity, Id};
 
 #[derive(Debug, Clone, Type, Serialize, Deserialize, PartialEq, Eq)]
 #[sqlx(type_name = "academic_planta", rename_all = "lowercase")]
@@ -16,7 +15,7 @@ pub type AcademicCategoryId = Id<AcademicCategory>;
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow, Builder)]
 pub struct AcademicCategory {
-	#[builder(default = AcademicCategoryId::new())]
+	#[builder(default)]
 	pub id: AcademicCategoryId,
 	pub name: String,
 	pub planta: AcademicPlanta,

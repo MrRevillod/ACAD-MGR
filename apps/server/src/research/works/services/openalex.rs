@@ -34,6 +34,19 @@ const SELECT_FIELDS: &[&str] = &[
 
 const API_DELAY: Duration = Duration::from_millis(50);
 
+fn repair_mojibake(s: &str) -> String {
+	if s.chars().any(|c| c > '\u{00FF}') {
+		return s.to_string();
+	}
+
+	let bytes: Vec<u8> = s.chars().map(|c| c as u8).collect();
+
+	match String::from_utf8(bytes) {
+		Ok(repaired) if repaired != s => repaired,
+		_ => s.to_string(),
+	}
+}
+
 #[derive(Debug, Clone, Deserialize)]
 #[config(key = "openalex")]
 pub struct OpenAlexConfig {
@@ -112,7 +125,8 @@ pub trait OpenAlexWorkExt {
 	fn language(&self) -> String;
 	fn is_accepted_and_published(&self) -> (bool, bool);
 	fn source(&self) -> Option<Source>;
-	fn into_work(&self, source_id: Option<SourceId>) -> Work;
+	fn source_issns(&self) -> Option<Vec<String>>;
+	fn to_work(&self, source_id: Option<SourceId>) -> Work;
 	fn apply_to_work(&self, work: &mut Work, source_id: Option<SourceId>);
 	fn authorships(&self) -> Vec<OaAuthorshipData>;
 	fn topic_refs(&self) -> Vec<OaTopicRef>;
@@ -165,6 +179,22 @@ impl OpenAlexWorkExt for OaWork {
 		let name = source.display_name.clone().unwrap_or_default();
 		let openalex_id = source.id.clone().unwrap_or_default();
 		let ty = source.r#type.clone().unwrap_or("unknown".to_string());
+
+		Some(
+			Source::builder()
+				.openalex_id(openalex_id)
+				.name(name)
+				.ty(ty)
+				.build(),
+		)
+	}
+
+	fn source_issns(&self) -> Option<Vec<String>> {
+		let source = self
+			.primary_location
+			.as_ref()
+			.and_then(|l| l.source.as_ref())?;
+
 		let issn_l = source.issn_l.as_deref().and_then(Source::normalize_issn);
 
 		let mut issn: Option<Vec<String>> = source.issn.as_ref().and_then(|vec| {
@@ -188,18 +218,10 @@ impl OpenAlexWorkExt for OaWork {
 			}
 		}
 
-		Some(
-			Source::builder()
-				.openalex_id(openalex_id)
-				.name(name)
-				.ty(ty)
-				.maybe_issn(issn)
-				.maybe_journal_issn_id(None)
-				.build(),
-		)
+		issn
 	}
 
-	fn into_work(&self, source_id: Option<SourceId>) -> Work {
+	fn to_work(&self, source_id: Option<SourceId>) -> Work {
 		let (is_accepted, is_published) = self.is_accepted_and_published();
 
 		Work::builder()
@@ -255,12 +277,14 @@ impl OpenAlexWorkExt for OaWork {
 					_ => AuthorshipPosition::Middle,
 				};
 
-				let affiliations = auth
+				let mut seen = std::collections::HashSet::new();
+				let affiliations: Vec<String> = auth
 					.raw_affiliation_strings
 					.clone()
 					.unwrap_or_default()
 					.into_iter()
-					.map(|s| decode_html_entities(&s).to_string())
+					.map(|s| repair_mojibake(&decode_html_entities(&s)))
+					.filter(|s| seen.insert(s.clone()))
 					.collect();
 
 				Some(OaAuthorshipData {

@@ -15,17 +15,16 @@ impl SessionRepository {
 	pub async fn save(&self, session: &Session) -> AppResult<()> {
 		sqlx::query(
 			"INSERT INTO sessions (
-                id, user_id, refresh_token_hash, created_at,
-                expires_at, refresh_expires_at, revoked_at
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7)
-            ON CONFLICT (id)
-            DO UPDATE SET
-                user_id = EXCLUDED.user_id,
-                refresh_token_hash = EXCLUDED.refresh_token_hash,
-                created_at = EXCLUDED.created_at,
-                expires_at = EXCLUDED.expires_at,
-                refresh_expires_at = EXCLUDED.refresh_expires_at,
-                revoked_at = EXCLUDED.revoked_at",
+		        id, user_id, refresh_token_hash, created_at,
+		        expires_at, refresh_expires_at, revoked_at
+		    ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+		    ON CONFLICT (id) DO UPDATE SET
+		        user_id            = EXCLUDED.user_id,
+		        refresh_token_hash = EXCLUDED.refresh_token_hash,
+		        created_at         = EXCLUDED.created_at,
+		        expires_at         = EXCLUDED.expires_at,
+		        refresh_expires_at = EXCLUDED.refresh_expires_at,
+		        revoked_at         = EXCLUDED.revoked_at",
 		)
 		.bind(session.id)
 		.bind(session.user_id)
@@ -42,8 +41,7 @@ impl SessionRepository {
 
 	pub async fn is_active(&self, id: &SessionId) -> AppResult<bool> {
 		let res = sqlx::query_as::<_, Session>(
-			"SELECT * FROM sessions
-             WHERE id = $1 AND revoked_at IS NULL AND expires_at > NOW()",
+			"SELECT * FROM sessions WHERE id = $1 AND revoked_at IS NULL AND expires_at > NOW()",
 		)
 		.bind(id)
 		.fetch_optional(self.database.pool())
@@ -54,8 +52,7 @@ impl SessionRepository {
 
 	pub async fn find_active_by_id(&self, id: &SessionId) -> AppResult<Option<Session>> {
 		let res = sqlx::query_as::<_, Session>(
-			"SELECT * FROM sessions
-             WHERE id = $1 AND revoked_at IS NULL AND expires_at > NOW()",
+			"SELECT * FROM sessions WHERE id = $1 AND revoked_at IS NULL AND expires_at > NOW()",
 		)
 		.bind(id)
 		.fetch_optional(self.database.pool())
@@ -66,8 +63,7 @@ impl SessionRepository {
 
 	pub async fn find_active_by_refresh_id(&self, id: &SessionId) -> AppResult<Option<Session>> {
 		let res = sqlx::query_as::<_, Session>(
-			"SELECT * FROM sessions
-             WHERE id = $1 AND revoked_at IS NULL AND refresh_expires_at > NOW()",
+			"SELECT * FROM sessions WHERE id = $1 AND revoked_at IS NULL AND refresh_expires_at > NOW()",
 		)
 		.bind(id)
 		.fetch_optional(self.database.pool())
@@ -75,5 +71,4 @@ impl SessionRepository {
 
 		Ok(res)
 	}
-
 }
