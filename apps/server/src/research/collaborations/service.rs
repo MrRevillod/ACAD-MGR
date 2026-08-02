@@ -1,8 +1,8 @@
 use crate::{
 	academic::AcademicId,
 	research::{
-		AcademicKeywordRow, AcademicLineRow, AcademicTopicRow, CollaborationsQuery,
-		CollaborationEdge, CollaborationGraph, CollaborationNode, CollaborationRecommendation,
+		AcademicKeywordRow, AcademicLineRow, AcademicTopicRow, CollaborationEdge,
+		CollaborationGraph, CollaborationNode, CollaborationRecommendation, CollaborationsQuery,
 		CollaborationsRepository, KeywordId, MatchWorkRef, RecommendationCandidateRow,
 		RecommendationMatch, RecommendationMatchType, ResearchLineId, TopicId, WorkId, WorkRef,
 	},
@@ -74,14 +74,8 @@ impl CollaborationsService {
 			})
 			.collect();
 
-		let recommendations = self.build_recommendations(
-			&academic_id,
-			&edges,
-			candidates,
-			topics,
-			keywords,
-			lines,
-		);
+		let recommendations =
+			self.build_recommendations(&academic_id, &edges, candidates, topics, keywords, lines);
 
 		Ok(CollaborationGraph {
 			academic_id,
@@ -173,7 +167,10 @@ impl CollaborationsService {
 			if let (Some(focus_topics), Some(cand_topics)) =
 				(focus_topics, topics_by_academic.get(&candidate.id))
 			{
-				for topic_id in cand_topics.keys().filter(|id| focus_topics.contains_key(id)) {
+				for topic_id in cand_topics
+					.keys()
+					.filter(|id| focus_topics.contains_key(id))
+				{
 					matches.push(RecommendationMatch {
 						r#type: RecommendationMatchType::Topic,
 						id: **topic_id,
@@ -186,7 +183,9 @@ impl CollaborationsService {
 			if let (Some(focus_keywords), Some(cand_keywords)) =
 				(focus_keywords, keywords_by_academic.get(&candidate.id))
 			{
-				for keyword_id in cand_keywords.keys().filter(|id| focus_keywords.contains_key(id))
+				for keyword_id in cand_keywords
+					.keys()
+					.filter(|id| focus_keywords.contains_key(id))
 				{
 					matches.push(RecommendationMatch {
 						r#type: RecommendationMatchType::Keyword,
