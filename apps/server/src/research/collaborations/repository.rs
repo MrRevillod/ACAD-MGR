@@ -1,6 +1,9 @@
 use crate::{
 	academic::AcademicId,
-	research::{CollaborationEdgeRow, CollaborationNodeRow, WorkId, WorkRef},
+	research::{
+		AcademicKeywordRow, AcademicLineRow, AcademicTopicRow, CollaborationEdgeRow,
+		CollaborationNodeRow, RecommendationCandidateRow, WorkId, WorkRef,
+	},
 	shared::{AppResult, Database},
 };
 use std::sync::Arc;
@@ -17,28 +20,21 @@ impl CollaborationsRepository {
 		academic_id: &AcademicId,
 	) -> AppResult<Vec<CollaborationNodeRow>> {
 		sqlx::query_as::<_, CollaborationNodeRow>(
-			"WITH focus AS (
-				SELECT id, orcid FROM academics WHERE id = $1
-			),
-			coauthors AS (
+			"WITH coauthors AS (
 				SELECT DISTINCT wa2.orcid
 				FROM work_authorships wa1
 				JOIN work_authorships wa2 ON wa2.work_id = wa1.work_id
-				JOIN focus f ON f.orcid = wa1.orcid
+				JOIN academics f ON f.id = $1 AND f.orcid = wa1.orcid
 				WHERE NOT wa1.is_external AND NOT wa2.is_external AND wa2.orcid <> f.orcid
-			),
-			ego AS (
-				SELECT orcid FROM focus
-				UNION
-				SELECT orcid FROM coauthors
 			)
 			SELECT a.id, a.names, a.paternal_surname, a.maternal_surname,
 				d.name AS department,
 				COUNT(DISTINCT wa.work_id) AS total_works
 			FROM academics a
-			JOIN ego ON ego.orcid = a.orcid
 			LEFT JOIN work_authorships wa ON wa.orcid = a.orcid AND NOT wa.is_external
 			LEFT JOIN departments d ON d.id = a.department_id
+			WHERE a.id = $1
+				OR a.orcid IN (SELECT orcid FROM coauthors)
 			GROUP BY a.id, a.names, a.paternal_surname, a.maternal_surname, d.name",
 		)
 		.bind(academic_id)
@@ -52,18 +48,15 @@ impl CollaborationsRepository {
 		academic_id: &AcademicId,
 	) -> AppResult<Vec<CollaborationEdgeRow>> {
 		sqlx::query_as::<_, CollaborationEdgeRow>(
-			"WITH focus AS (
-				SELECT id, orcid FROM academics WHERE id = $1
-			),
-			coauthors AS (
+			"WITH coauthors AS (
 				SELECT DISTINCT wa2.orcid
 				FROM work_authorships wa1
 				JOIN work_authorships wa2 ON wa2.work_id = wa1.work_id
-				JOIN focus f ON f.orcid = wa1.orcid
+				JOIN academics f ON f.id = $1 AND f.orcid = wa1.orcid
 				WHERE NOT wa1.is_external AND NOT wa2.is_external AND wa2.orcid <> f.orcid
 			),
 			ego AS (
-				SELECT orcid FROM focus
+				SELECT orcid FROM academics WHERE id = $1
 				UNION
 				SELECT orcid FROM coauthors
 			)
@@ -94,6 +87,104 @@ impl CollaborationsRepository {
 			ORDER BY COALESCE((w.overrides).publication_year, w.publication_year) DESC",
 		)
 		.bind(work_ids)
+		.fetch_all(self.database.pool())
+		.await
+		.map_err(Into::into)
+	}
+
+	pub async fn find_recommendation_candidates(
+		&self,
+		academic_id: &AcademicId,
+	) -> AppResult<Vec<RecommendationCandidateRow>> {
+		sqlx::query_as::<_, RecommendationCandidateRow>(
+			"SELECT a.id, a.names, a.paternal_surname, a.maternal_surname,
+				d.name AS department,
+				COUNT(DISTINCT wa.work_id) AS total_works
+			FROM academics a
+			JOIN departments d ON d.id = a.department_id
+			LEFT JOIN work_authorships wa ON wa.orcid = a.orcid AND NOT wa.is_external
+			WHERE a.id <> $1
+			GROUP BY a.id, a.names, a.paternal_surname, a.maternal_surname, d.name",
+		)
+		.bind(academic_id)
+		.fetch_all(self.database.pool())
+		.await
+		.map_err(Into::into)
+	}
+
+	pub async fn find_academic_topics(
+		&self,
+		topic_threshold: f64,
+	) -> AppResult<Vec<AcademicTopicRow>> {
+		sqlx::query_as::<_, AcademicTopicRow>(
+			"SELECT a.id AS academic_id, t.id AS topic_id, t.name AS topic_name,
+				wts.work_id, w.title AS work_title,
+				COALESCE((w.overrides).publication_year, w.publication_year) AS publication_year,
+				wts.score
+			FROM work_topic_scores wts
+			JOIN work_authorships wa ON wa.work_id = wts.work_id AND NOT wa.is_external
+			JOIN academics a ON a.orcid = wa.orcid
+			JOIN topics t ON t.id = wts.topic_id
+			JOIN works w ON w.id = wts.work_id
+			JOIN subfields sf ON sf.id = t.subfield_id
+			JOIN research_lines rl ON rl.id = sf.research_line_id AND rl.slug <> 'sin-asignar'
+			WHERE wts.score >= $1",
+		)
+		.bind(topic_threshold)
+		.fetch_all(self.database.pool())
+		.await
+		.map_err(Into::into)
+	}
+
+	pub async fn find_academic_keywords(
+		&self,
+		keyword_threshold: f64,
+	) -> AppResult<Vec<AcademicKeywordRow>> {
+		sqlx::query_as::<_, AcademicKeywordRow>(
+			"SELECT a.id AS academic_id, k.id AS keyword_id, k.name AS keyword_name,
+				wks.work_id, w.title AS work_title,
+				COALESCE((w.overrides).publication_year, w.publication_year) AS publication_year,
+				wks.score
+			FROM work_keyword_scores wks
+			JOIN work_authorships wa ON wa.work_id = wks.work_id AND NOT wa.is_external
+			JOIN academics a ON a.orcid = wa.orcid
+			JOIN keywords k ON k.id = wks.keyword_id
+			JOIN works w ON w.id = wks.work_id
+			WHERE wks.score >= $1",
+		)
+		.bind(keyword_threshold)
+		.fetch_all(self.database.pool())
+		.await
+		.map_err(Into::into)
+	}
+
+	pub async fn find_academic_lines(
+		&self,
+		topic_threshold: f64,
+	) -> AppResult<Vec<AcademicLineRow>> {
+		sqlx::query_as::<_, AcademicLineRow>(
+			"WITH topic_lines AS (
+				SELECT DISTINCT a.id AS academic_id, rl.id AS research_line_id
+				FROM work_topic_scores wts
+				JOIN work_authorships wa ON wa.work_id = wts.work_id AND NOT wa.is_external
+				JOIN academics a ON a.orcid = wa.orcid
+				JOIN topics t ON t.id = wts.topic_id
+				JOIN subfields sf ON sf.id = t.subfield_id
+				JOIN research_lines rl ON rl.id = sf.research_line_id AND rl.slug <> 'sin-asignar'
+				WHERE wts.score >= $1
+			),
+			override_lines AS (
+				SELECT DISTINCT a.id AS academic_id, rl.id AS research_line_id
+				FROM works w
+				JOIN work_authorships wa ON wa.work_id = w.id AND NOT wa.is_external
+				JOIN academics a ON a.orcid = wa.orcid
+				JOIN research_lines rl ON rl.id = (w.overrides).research_line_id AND rl.slug <> 'sin-asignar'
+			)
+			SELECT * FROM topic_lines
+			UNION
+			SELECT * FROM override_lines",
+		)
+		.bind(topic_threshold)
 		.fetch_all(self.database.pool())
 		.await
 		.map_err(Into::into)

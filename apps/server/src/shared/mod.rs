@@ -13,6 +13,9 @@ mod value_objects {
 
 	mod country;
 	pub use country::Country;
+
+	mod orcid;
+	pub use orcid::Orcid;
 }
 
 use database::DatabaseConfig;
@@ -28,6 +31,7 @@ pub use logger::LoggerLayer;
 pub use mailer::*;
 pub use value_objects::CLf64;
 pub use value_objects::Country;
+pub use value_objects::Orcid;
 
 use crate::shared::seeder::DatabaseSeeder;
 use crate::shared::seeder::SeederData;

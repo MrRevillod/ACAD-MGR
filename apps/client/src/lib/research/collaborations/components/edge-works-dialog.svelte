@@ -6,17 +6,25 @@
 	import Dialog from "$shared/components/ui/dialog.svelte"
 	import HtmlRenderer from "$shared/components/ui/html-renderer.svelte"
 	import WorkDetailDialog from "$works/components/work-detail-dialog.svelte"
+	import { authStore } from "$lib/auth/store.svelte"
 
 	interface Props {
 		open: boolean
 		works: CollaborationWorkRefDTO[] | null
 		coauthor: string | null
+		coauthorId: string | null
 	}
 
-	let { open = $bindable(false), works, coauthor }: Props = $props()
+	let { open = $bindable(false), works, coauthor, coauthorId }: Props = $props()
 
 	let workDetailOpen = $state(false)
 	let selectedWorkId = $state<string | null>(null)
+
+	const profileHref = $derived(
+		coauthorId
+			? `${authStore.isAuthenticated ? "/academics" : "/public/academics"}/${coauthorId}`
+			: "#",
+	)
 
 	function openWork(id: string) {
 		selectedWorkId = id
@@ -62,6 +70,14 @@
 				</li>
 			{/each}
 		</ul>
+	{/if}
+
+	{#if coauthor && coauthorId}
+		<div class="mt-2 flex items-center justify-end border-t border-corp-gray/10 pt-3">
+			<a href={profileHref} class="text-xs font-semibold text-corp-blue hover:underline">
+				Ir al perfil académico de {coauthor} →
+			</a>
+		</div>
 	{/if}
 </Dialog>
 

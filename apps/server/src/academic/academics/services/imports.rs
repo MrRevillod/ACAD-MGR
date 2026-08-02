@@ -1,5 +1,5 @@
 use crate::academic::*;
-use crate::shared::{AppError, AppResult, TransactionManager, Tx};
+use crate::shared::{AppError, AppResult, Orcid, TransactionManager, Tx};
 use crate::university::*;
 
 use chrono::NaiveDate;
@@ -161,11 +161,7 @@ impl ImportsService {
 			return Err(UniversityError::CountryNotFound(nationality_code))?;
 		};
 
-		let orcid = input
-			.orcid
-			.as_deref()
-			.filter(|o| !o.trim().is_empty() && *o != "-" || *o != "NO TIENE")
-			.map(ToString::to_string);
+		let orcid = input.orcid.as_deref().and_then(Orcid::normalize);
 
 		let academic = Academic::builder()
 			.rut(input.rut.clone())

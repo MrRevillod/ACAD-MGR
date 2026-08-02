@@ -1,25 +1,16 @@
 <script lang="ts">
 	import type { Academic } from "$academics/entity"
-	import { ChevronLeft, Pencil, BookOpen, ExternalLink } from "@lucide/svelte"
+	import { ChevronLeft, Pencil, ExternalLink } from "@lucide/svelte"
 	import { FullName } from "$shared/value-objects/full-name.value"
 
 	interface Props {
 		academic: Academic
 		readonly?: boolean
-		activeTab?: "publications" | "academic-info"
-		onToggleTab?: () => void
 		onEdit?: () => void
 		onRequestEdit?: () => void
 	}
 
-	let {
-		academic,
-		readonly = false,
-		activeTab = $bindable("academic-info"),
-		onToggleTab,
-		onEdit,
-		onRequestEdit,
-	}: Props = $props()
+	let { academic, readonly = false, onEdit, onRequestEdit }: Props = $props()
 
 	const nameObj = $derived(
 		FullName.of(academic.names, academic.paternalSurname, academic.maternalSurname),
@@ -101,19 +92,7 @@
 		</div>
 	</div>
 
-	{#if !readonly}
-		<div class="border-t border-white/10 px-6 py-4">
-			<button
-				class="group flex w-full items-center justify-center gap-2 rounded-lg bg-white/10 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-white/15 active:scale-[0.97]"
-				onclick={onToggleTab}
-			>
-				<BookOpen class="size-4" />
-				{activeTab === "academic-info"
-					? "Mostrar Publicaciones"
-					: "Mostrar Información Académica"}
-			</button>
-		</div>
-	{:else if onRequestEdit}
+	{#if onRequestEdit}
 		<div class="border-t border-white/10 px-6 py-4">
 			<button
 				class="flex w-full items-center justify-center gap-2 rounded-lg bg-white/10 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-white/15 active:scale-[0.97]"

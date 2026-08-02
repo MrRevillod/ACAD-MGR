@@ -5,12 +5,14 @@
 	import { useQuery } from "$shared/http/tanstack"
 	import { useSearchParams } from "runed/kit"
 	import { academicService } from "$academics/service"
-	import { Loader, CircleAlert, Construction } from "@lucide/svelte"
+	import { Loader, CircleAlert, Construction, Network, Info } from "@lucide/svelte"
 
 	import Dialog from "$shared/components/ui/dialog.svelte"
 	import Button from "$shared/components/ui/button.svelte"
 	import WorksSection from "$works/components/works-section.svelte"
 	import AcademicSidebar from "$academics/components/academic-sidebar.svelte"
+	import CollaborationGraph from "$collaborations/components/collaboration-graph.svelte"
+	import CollaborationGraphHelpDialog from "$collaborations/components/collaboration-graph-help-dialog.svelte"
 
 	const id = $derived(page.params.id ?? "")
 
@@ -21,6 +23,16 @@
 
 	const yearParams = useSearchParams(yearParamsSchema, { debounce: 300, pushHistory: false })
 
+	const tabParamsSchema = v.object({
+		tab: v.optional(
+			v.fallback(v.picklist(["publications", "collaborations"]), "publications"),
+			"publications",
+		),
+	})
+
+	const tabParams = useSearchParams(tabParamsSchema, { pushHistory: true })
+	const activeTab = $derived(tabParams.tab)
+
 	const academicQuery = useQuery(() => ({
 		queryKey: ["public-academic", id],
 		queryFn: () => academicService.getPublic(id),
@@ -30,6 +42,7 @@
 	const academic = $derived(academicQuery.data)
 
 	let requestEditDialogOpen = $state(false)
+	let showGraphHelp = $state(false)
 	/* -- disabled temporarily --
 	let isRequesting = $state(false)
 	let requestSent = $state(false)
@@ -67,13 +80,65 @@
 					readonly
 					onRequestEdit={() => (requestEditDialogOpen = true)}
 				/>
-				<div class="min-h-0">
-					<WorksSection
-						{academic}
-						readonly
-						bind:yearFrom={yearParams.yearFrom}
-						bind:yearTo={yearParams.yearTo}
-					/>
+				<div class="flex h-[calc(100dvh-10rem)] flex-col">
+					<div class="mb-4 flex shrink-0 rounded-lg bg-corp-gray/10 p-1">
+						<button
+							type="button"
+							class="flex-1 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors {activeTab ===
+							'publications'
+								? 'bg-white text-corp-blue shadow-sm'
+								: 'text-corp-gray hover:text-[#1a1a1a]'}"
+							onclick={() => (tabParams.tab = "publications")}
+						>
+							Publicaciones
+						</button>
+						<button
+							type="button"
+							class="flex-1 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors {activeTab ===
+							'collaborations'
+								? 'bg-white text-corp-blue shadow-sm'
+								: 'text-corp-gray hover:text-[#1a1a1a]'}"
+							onclick={() => (tabParams.tab = "collaborations")}
+						>
+							Colaboraciones
+						</button>
+					</div>
+					<div class="min-h-0 flex-1 space-y-6 overflow-y-auto">
+						{#if activeTab === "collaborations"}
+							<section
+								class="flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-corp-gray/20 bg-white"
+							>
+								<div
+									class="flex shrink-0 items-center justify-between gap-2 border-b border-corp-gray/10 px-6 py-4"
+								>
+									<div
+										class="flex items-center gap-2 text-xs font-semibold tracking-widest uppercase text-corp-blue"
+									>
+										<Network class="size-4 text-corp-blue" />
+										Red de colaboración
+									</div>
+									<button
+										type="button"
+										title="Ayuda: cómo leer esta red"
+										class="flex size-7 items-center justify-center rounded-full text-corp-gray transition-colors hover:bg-corp-gray/10 hover:text-[#1A1A1A]"
+										onclick={() => (showGraphHelp = true)}
+									>
+										<Info class="size-4" />
+									</button>
+								</div>
+								<div class="min-h-0 flex-1">
+									<CollaborationGraph {academic} />
+								</div>
+							</section>
+						{:else}
+							<WorksSection
+								{academic}
+								readonly
+								bind:yearFrom={yearParams.yearFrom}
+								bind:yearTo={yearParams.yearTo}
+							/>
+						{/if}
+					</div>
 				</div>
 			</div>
 		</div>
@@ -97,4 +162,6 @@
 			</Button>
 		</div>
 	</Dialog>
+
+	<CollaborationGraphHelpDialog bind:open={showGraphHelp} />
 </div>

@@ -1,12 +1,24 @@
 import { createQuery } from "@tanstack/svelte-query"
 
-import { collaborationsService } from "./service"
+import { collaborationsService, type CollaborationThresholds } from "./service"
 
-export function useCollaborationGraphQuery(getAcademicId: () => string) {
-	return createQuery(() => ({
-		queryKey: ["collaborations", getAcademicId()],
-		queryFn: () => collaborationsService.get(getAcademicId()),
-		enabled: Boolean(getAcademicId()),
-		staleTime: 60_000,
-	}))
+export function useCollaborationGraphQuery(
+	getAcademicId: () => string,
+	getThresholds: () => CollaborationThresholds,
+) {
+	return createQuery(() => {
+		const academicId = getAcademicId()
+		const thresholds = getThresholds()
+		return {
+			queryKey: [
+				"collaborations",
+				academicId,
+				thresholds.topicThreshold,
+				thresholds.keywordThreshold,
+			],
+			queryFn: () => collaborationsService.get(academicId, thresholds),
+			enabled: Boolean(academicId),
+			staleTime: 30_000,
+		}
+	})
 }

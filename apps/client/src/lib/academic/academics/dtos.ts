@@ -65,7 +65,7 @@ export type AcademicSortField = (typeof ACADEMIC_SORT_FIELD)[number]
 
 // Shared schemas ------------------------------------------------
 
-const ORCID_REGEX = /^(https?:\/\/orcid\.org\/)?\d{4}-\d{4}-\d{4}-\d{3}[\dX]$/
+const ORCID_REGEX = /^https:\/\/orcid\.org\/\d{4}-\d{4}-\d{4}-\d{3}[\dX]$/
 const RUT_REGEX = /^\d{7,8}-[\dkK]$/
 
 const normalizeDecimal = (v: unknown) => (typeof v === "string" ? v.replace(",", ".") : v)
@@ -112,7 +112,10 @@ export const createAcademicDTOSchema = v.object({
 		v.nullable(
 			v.pipe(
 				v.string(),
-				v.regex(ORCID_REGEX, "El ORCID ID debe tener el formato XXXX-XXXX-XXXX-XXXX"),
+				v.regex(
+					ORCID_REGEX,
+					"El ORCID debe ser una URL válida (https://orcid.org/XXXX-XXXX-XXXX-XXXX)",
+				),
 			),
 		),
 	),
@@ -174,7 +177,10 @@ export const updateAcademicDTOSchema = v.object({
 		v.nullable(
 			v.pipe(
 				v.string(),
-				v.regex(ORCID_REGEX, "El ORCID ID debe tener el formato XXXX-XXXX-XXXX-XXXX"),
+				v.regex(
+					ORCID_REGEX,
+					"El ORCID debe ser una URL válida (https://orcid.org/XXXX-XXXX-XXXX-XXXX)",
+				),
 			),
 		),
 	),
@@ -205,7 +211,10 @@ export const selfUpdateAcademicDTOSchema = v.object({
 		v.nullable(
 			v.pipe(
 				v.string(),
-				v.regex(ORCID_REGEX, "El ORCID ID debe tener el formato XXXX-XXXX-XXXX-XXXX"),
+				v.regex(
+					ORCID_REGEX,
+					"El ORCID debe ser una URL válida (https://orcid.org/XXXX-XXXX-XXXX-XXXX)",
+				),
 			),
 		),
 	),

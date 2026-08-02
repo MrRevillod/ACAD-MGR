@@ -32,7 +32,7 @@ pub struct UpdateAcademicDto {
 
 	#[validate(regex(
 		path = *ORCID_ID_REGEX,
-		message = "El ORCID ID debe tener el formato XXXX-XXXX-XXXX-XXXX"
+		message = "El ORCID debe ser una URL válida (https://orcid.org/XXXX-XXXX-XXXX-XXXX)"
 	))]
 	pub orcid: Option<String>,
 	pub sex: Option<Sex>,
