@@ -20,6 +20,8 @@ WORKDIR /app
 ARG RUST_VERSION=1.97
 FROM base AS dev
 
+RUN rustup component add rustfmt clippy
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
 	netcat-openbsd \
 	xz-utils \
