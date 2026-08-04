@@ -4,8 +4,8 @@ use crate::{
 		AcademicKeywordRow, AcademicLineRow, AcademicTopicRow, CollaborationEdge,
 		CollaborationGraph, CollaborationNode, CollaborationRecommendation, CollaborationsQuery,
 		CollaborationsRepository, KeywordId, MatchWorkRef, RecommendationCandidateRow,
-		RecommendationSharedItem, RecommendationWork, RecommendationWorkSide,
-		RecommendationMatchType, ResearchLineId, TopicId, WorkId, WorkRef,
+		RecommendationMatchType, RecommendationSharedItem, RecommendationWork,
+		RecommendationWorkSide, ResearchLineId, TopicId, WorkId, WorkRef,
 	},
 	shared::AppResult,
 };
@@ -189,25 +189,27 @@ impl CollaborationsService {
 					let name = topic_names[&(candidate.id, *topic_id)].clone();
 					for w in &focus_topics[topic_id] {
 						focus_meta.entry(w.work_id).or_insert_with(|| w.clone());
-						focus_shared.entry(w.work_id).or_default().push(
-							RecommendationSharedItem {
+						focus_shared
+							.entry(w.work_id)
+							.or_default()
+							.push(RecommendationSharedItem {
 								r#type: RecommendationMatchType::Topic,
 								id: **topic_id,
 								name: name.clone(),
 								score: w.score,
-							},
-						);
+							});
 					}
 					for w in &cand_topics[topic_id] {
 						cand_meta.entry(w.work_id).or_insert_with(|| w.clone());
-						cand_shared.entry(w.work_id).or_default().push(
-							RecommendationSharedItem {
+						cand_shared
+							.entry(w.work_id)
+							.or_default()
+							.push(RecommendationSharedItem {
 								r#type: RecommendationMatchType::Topic,
 								id: **topic_id,
 								name: name.clone(),
 								score: w.score,
-							},
-						);
+							});
 					}
 				}
 			}
@@ -221,25 +223,27 @@ impl CollaborationsService {
 					let name = keyword_names[&(candidate.id, *keyword_id)].clone();
 					for w in &focus_keywords[keyword_id] {
 						focus_meta.entry(w.work_id).or_insert_with(|| w.clone());
-						focus_shared.entry(w.work_id).or_default().push(
-							RecommendationSharedItem {
+						focus_shared
+							.entry(w.work_id)
+							.or_default()
+							.push(RecommendationSharedItem {
 								r#type: RecommendationMatchType::Keyword,
 								id: **keyword_id,
 								name: name.clone(),
 								score: w.score,
-							},
-						);
+							});
 					}
 					for w in &cand_keywords[keyword_id] {
 						cand_meta.entry(w.work_id).or_insert_with(|| w.clone());
-						cand_shared.entry(w.work_id).or_default().push(
-							RecommendationSharedItem {
+						cand_shared
+							.entry(w.work_id)
+							.or_default()
+							.push(RecommendationSharedItem {
 								r#type: RecommendationMatchType::Keyword,
 								id: **keyword_id,
 								name: name.clone(),
 								score: w.score,
-							},
-						);
+							});
 					}
 				}
 			}
