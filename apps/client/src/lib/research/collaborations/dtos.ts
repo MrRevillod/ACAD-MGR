@@ -34,20 +34,21 @@ export interface CollaborationRecommendationDTO {
 	department: string
 	totalWorks: number
 	weight: number
-	matches: RecommendationMatchDTO[]
+	works: RecommendationWorkDTO[]
+	focusWorks: RecommendationWorkDTO[]
 }
 
-export interface RecommendationMatchDTO {
-	type: "topic" | "keyword"
-	id: string
-	name: string
-	focusWorks: MatchWorkRefDTO[]
-	candidateWorks: MatchWorkRefDTO[]
-}
-
-export interface MatchWorkRefDTO {
+export interface RecommendationWorkDTO {
 	workId: string
 	title: string
 	publicationYear: number | null
+	side: "focus" | "candidate"
+	shared: RecommendationSharedItemDTO[]
+}
+
+export interface RecommendationSharedItemDTO {
+	type: "topic" | "keyword"
+	id: string
+	name: string
 	score: number
 }

@@ -3,8 +3,8 @@ import type { CollaborationGraphDTO } from "./dtos"
 import { http } from "$shared/http/client"
 
 export interface CollaborationThresholds {
-	topicThreshold?: number
-	keywordThreshold?: number
+	scoreThreshold?: number
+	minCoincidences?: number
 }
 
 class CollaborationsService {
@@ -16,11 +16,11 @@ class CollaborationsService {
 			method: "GET",
 			url: `/collaborations/${academicId}`,
 			params: {
-				...(thresholds.topicThreshold != null && {
-					topic_threshold: thresholds.topicThreshold,
+				...(thresholds.scoreThreshold != null && {
+					score_threshold: thresholds.scoreThreshold,
 				}),
-				...(thresholds.keywordThreshold != null && {
-					keyword_threshold: thresholds.keywordThreshold,
+				...(thresholds.minCoincidences != null && {
+					min_coincidences: thresholds.minCoincidences,
 				}),
 			},
 		})

@@ -13,8 +13,8 @@ export function useCollaborationGraphQuery(
 			queryKey: [
 				"collaborations",
 				academicId,
-				thresholds.topicThreshold,
-				thresholds.keywordThreshold,
+				thresholds.scoreThreshold,
+				thresholds.minCoincidences,
 			],
 			queryFn: () => collaborationsService.get(academicId, thresholds),
 			enabled: Boolean(academicId),

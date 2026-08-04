@@ -32,28 +32,32 @@
 
 	let { academic }: Props = $props()
 
-	let topicThreshold = $state(60)
-	let keywordThreshold = $state(60)
+	let scoreThreshold = $state(60)
+	let minCoincidences = $state(2)
 	let controlsOpen = $state(true)
 
-	let appliedTopicThreshold = $state(0.6)
-	let appliedKeywordThreshold = $state(0.6)
+	let appliedScoreThreshold = $state(0.6)
+	let appliedMinCoincidences = $state(2)
 
-	const applyTopicThreshold = useDebounce((value: number) => {
-		appliedTopicThreshold = value / 100
+	const applyScoreThreshold = useDebounce((value: number) => {
+		appliedScoreThreshold = value / 100
 	}, 300)
-	const applyKeywordThreshold = useDebounce((value: number) => {
-		appliedKeywordThreshold = value / 100
+	const applyMinCoincidences = useDebounce((value: number) => {
+		appliedMinCoincidences = value
 	}, 300)
 
 	const query = useCollaborationGraphQuery(
 		() => academic.id,
 		() => ({
-			topicThreshold: appliedTopicThreshold,
-			keywordThreshold: appliedKeywordThreshold,
+			scoreThreshold: appliedScoreThreshold,
+			minCoincidences: appliedMinCoincidences,
 		}),
 	)
 	const graph = $derived(query.data)
+
+	const isEmptyGraph = $derived(
+		!graph || (graph.nodes.length <= 1 && graph.recommendations.length === 0),
+	)
 
 	const focusName = $derived(
 		FullName.of(academic.names, academic.paternalSurname, academic.maternalSurname).format(),
@@ -290,16 +294,6 @@
 			<CircleAlert class="size-6 text-red-500" />
 			<p class="mt-2 text-sm text-corp-gray">Error al cargar la red de colaboración.</p>
 		</div>
-	{:else if !graph || (graph.nodes.length <= 1 && graph.recommendations.length === 0)}
-		<div class="flex min-h-0 flex-1 flex-col items-center justify-center text-center">
-			<div class="mb-3 flex size-12 items-center justify-center rounded-full bg-corp-blue/5">
-				<Network class="size-5 text-corp-blue/60" />
-			</div>
-			<p class="text-sm text-[#1A1A1A]">No hay colaboraciones internas registradas.</p>
-			<p class="mt-1 max-w-sm text-xs text-corp-gray">
-				Este académico no comparte publicaciones con otros académicos de la facultad.
-			</p>
-		</div>
 	{:else}
 		<div class="relative min-h-0 flex-1 overflow-hidden px-6 pb-6">
 			<div class="absolute right-6 top-4 z-20">
@@ -442,45 +436,45 @@
 						<div class="space-y-3">
 							<div class="flex items-center justify-between gap-3">
 								<label
-									for="graph-topic-threshold"
+									for="graph-score-threshold"
 									class="text-xs font-medium uppercase tracking-wide text-corp-gray"
-									>Tópicos ≥</label
+									>Porcentaje de coincidencia</label
 								>
 								<div class="flex items-center gap-2">
 									<input
-										id="graph-topic-threshold"
+										id="graph-score-threshold"
 										type="range"
 										min="10"
 										max="100"
 										step="10"
-										bind:value={topicThreshold}
-										onchange={() => applyTopicThreshold(topicThreshold)}
+										bind:value={scoreThreshold}
+										onchange={() => applyScoreThreshold(scoreThreshold)}
 										class="w-20 accent-corp-blue"
 									/>
 									<span class="w-7 text-xs text-corp-gray tabular-nums"
-										>{topicThreshold}%</span
+										>{scoreThreshold}%</span
 									>
 								</div>
 							</div>
 							<div class="flex items-center justify-between gap-3">
 								<label
-									for="graph-keyword-threshold"
+									for="graph-min-coincidences"
 									class="text-xs font-medium uppercase tracking-wide text-corp-gray"
-									>Keywords ≥</label
+									>Coincidencias por publicación</label
 								>
 								<div class="flex items-center gap-2">
 									<input
-										id="graph-keyword-threshold"
+										id="graph-min-coincidences"
 										type="range"
-										min="10"
-										max="100"
-										step="10"
-										bind:value={keywordThreshold}
-										onchange={() => applyKeywordThreshold(keywordThreshold)}
+										min="1"
+										max="10"
+										step="1"
+										bind:value={minCoincidences}
+										onchange={() => applyMinCoincidences(minCoincidences)}
 										class="w-20 accent-corp-blue"
 									/>
 									<span class="w-7 text-xs text-corp-gray tabular-nums"
-										>{keywordThreshold}%</span
+										>{minCoincidences}</span
 									>
 								</div>
 							</div>
@@ -498,186 +492,209 @@
 				{/if}
 			</div>
 
-			<Chart
-				transform={{
-					mode: "canvas",
-					scaleExtent: [0.5, 4],
-					initialScale: 1,
-					scrollMode: "scale",
-				}}
-				bind:context={chartContext}
-			>
-				{#snippet children({ context })}
-					<Layer>
-						<ForceSimulation
-							forces={{
-								link: forceLink<GraphNode, GraphLink>(graphLinks)
-									.id((d) => d.id)
-									.distance(linkDistance)
-									.strength(0.35),
-								charge: forceManyBody<GraphNode>().strength(-220).distanceMax(500),
-								collide: forceCollide<GraphNode>().radius((d) => nodeRadius(d) + 6),
-								center: forceCenter(context.width / 2, context.height / 2),
-							}}
-							data={{ nodes: graphNodes, links: graphLinks }}
-							static
-							cloneNodes
-						>
-							{#snippet children({ nodes, linkPositions })}
-								{#each graphLinks as link, i (i)}
-									{#if link.kind === "recommendation" && showSuggestions}
-										<Link
-											data={link}
-											{...linkPositions[i]}
-											type="straight"
-											stroke="transparent"
-											stroke-width={14}
-											fill="none"
-											pointer-events="stroke"
-											class="cursor-pointer"
-											onclick={() => openEdge(link)}
-										/>
-										<Link
-											data={link}
-											{...linkPositions[i]}
-											type="straight"
-											stroke-width={edgeWidth(link)}
-											opacity={edgeOpacity(link)}
-											class={edgeClass(link)}
-											stroke-linecap="round"
-											pointer-events="none"
-										/>
-										{#if showWeights}
-											{@const mid = linkMidpoint(link)}
-											<text
-												x={mid.x}
-												y={mid.y}
-												text-anchor="middle"
-												class="fill-green-600 text-[10px] font-semibold"
-												stroke="white"
-												stroke-width="3"
-												paint-order="stroke"
-											>
-												{link.weight}
-											</text>
-										{/if}
-									{/if}
-								{/each}
-
-								{#each graphLinks as link, i (i)}
-									{#if link.kind === "coauthor" && showCollaborations}
-										<Link
-											data={link}
-											{...linkPositions[i]}
-											type="straight"
-											stroke="transparent"
-											stroke-width={14}
-											fill="none"
-											pointer-events="stroke"
-											class="cursor-pointer"
-											onclick={() => openEdge(link)}
-										/>
-										<Link
-											data={link}
-											{...linkPositions[i]}
-											type="straight"
-											stroke-width={edgeWidth(link)}
-											opacity={edgeOpacity(link)}
-											class={edgeClass(link)}
-											stroke-linecap="round"
-											pointer-events="none"
-										/>
-										{#if showWeights}
-											{@const mid = linkMidpoint(link)}
-											<text
-												x={mid.x}
-												y={mid.y}
-												text-anchor="middle"
-												class="fill-corp-blue text-[10px] font-semibold"
-												stroke="white"
-												stroke-width="3"
-												paint-order="stroke"
-											>
-												{link.weight}
-											</text>
-										{/if}
-									{/if}
-								{/each}
-
-								{#each nodes as node (node.id)}
-									{#if (node.kind === "coauthor" && showCollaborations) || (node.kind === "recommendation" && showSuggestions) || node.kind === "focus"}
-										<Circle
-											cx={node.x}
-											cy={node.y}
-											r={nodeRadius(node)}
-											fill={nodeFill(node)}
-											stroke={nodeStroke(node)}
-											stroke-width={node.kind === "recommendation" ? 2 : 2}
-											opacity={nodeOpacity(node)}
-											class="cursor-pointer"
-											onclick={() => openNode(node)}
-											onpointermove={(e) => {
-												hoveredId = node.id
-												context.tooltip.show(e, node)
-											}}
-											onpointerleave={() => {
-												hoveredId = null
-												context.tooltip.hide()
-											}}
-										/>
-										<text
-											x={node.x ?? 0}
-											y={(node.y ?? 0) + nodeRadius(node) + 14}
-											text-anchor="middle"
-											class="fill-corp-gray text-[11px] font-medium"
-											opacity={nodeOpacity(node)}
-										>
-											{shortLabel(node.displayName)}
-										</text>
-									{/if}
-								{/each}
-							{/snippet}
-						</ForceSimulation>
-					</Layer>
-
-					<Tooltip.Root variant="none">
-						{#if context.tooltip.data}
-							<div
-								class="pointer-events-none rounded-lg border border-corp-gray/20 bg-white px-3 py-2 shadow-lg"
+			{#if isEmptyGraph}
+				<div class="flex h-full flex-col items-center justify-center text-center">
+					<div
+						class="mb-3 flex size-12 items-center justify-center rounded-full bg-corp-blue/5"
+					>
+						<Network class="size-5 text-corp-blue/60" />
+					</div>
+					<p class="text-sm text-[#1A1A1A]">
+						No hay colaboraciones internas registradas.
+					</p>
+					<p class="mt-1 max-w-sm text-xs text-corp-gray">
+						Este académico no comparte publicaciones con otros académicos de la
+						facultad.
+					</p>
+				</div>
+			{:else}
+				<Chart
+					transform={{
+						mode: "canvas",
+						scaleExtent: [0.5, 4],
+						initialScale: 1,
+						scrollMode: "scale",
+					}}
+					bind:context={chartContext}
+				>
+					{#snippet children({ context })}
+						<Layer>
+							<ForceSimulation
+								forces={{
+									link: forceLink<GraphNode, GraphLink>(graphLinks)
+										.id((d) => d.id)
+										.distance(linkDistance)
+										.strength(0.35),
+									charge: forceManyBody<GraphNode>()
+										.strength(-220)
+										.distanceMax(500),
+									collide: forceCollide<GraphNode>().radius(
+										(d) => nodeRadius(d) + 6,
+									),
+									center: forceCenter(context.width / 2, context.height / 2),
+								}}
+								data={{ nodes: graphNodes, links: graphLinks }}
+								static
+								cloneNodes
 							>
-								{#if tooltipBadge(context.tooltip.data)}
-									<span
-										class={`mb-1 inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
-											context.tooltip.data.kind === "recommendation"
-												? "bg-green-600/10 text-green-600"
-												: "bg-corp-blue/10 text-corp-blue"
-										}`}
-									>
-										{tooltipBadge(context.tooltip.data)}
-									</span>
-								{/if}
-								<p class="text-[13px] font-semibold text-[#1A1A1A]">
-									{context.tooltip.data.displayName}
-								</p>
-								<p class="mt-0.5 text-xs text-corp-gray">
-									{context.tooltip.data.department}
-								</p>
-								<p class="mt-0.5 text-xs text-corp-gray">
-									{context.tooltip.data.totalWorks} publicaciones
-								</p>
-								{#if context.tooltip.data.kind === "recommendation"}
-									<p class="mt-0.5 text-xs font-medium text-green-600">
-										{context.tooltip.data.weight} coincidencias
+								{#snippet children({ nodes, linkPositions })}
+									{#each graphLinks as link, i (i)}
+										{#if link.kind === "recommendation" && showSuggestions}
+											<Link
+												data={link}
+												{...linkPositions[i]}
+												type="straight"
+												stroke="transparent"
+												stroke-width={14}
+												fill="none"
+												pointer-events="stroke"
+												class="cursor-pointer"
+												onclick={() => openEdge(link)}
+											/>
+											<Link
+												data={link}
+												{...linkPositions[i]}
+												type="straight"
+												stroke-width={edgeWidth(link)}
+												opacity={edgeOpacity(link)}
+												class={edgeClass(link)}
+												stroke-linecap="round"
+												pointer-events="none"
+											/>
+											{#if showWeights}
+												{@const mid = linkMidpoint(link)}
+												<text
+													x={mid.x}
+													y={mid.y}
+													text-anchor="middle"
+													class="fill-green-600 text-[10px] font-semibold"
+													stroke="white"
+													stroke-width="3"
+													paint-order="stroke"
+												>
+													{link.weight}
+												</text>
+											{/if}
+										{/if}
+									{/each}
+
+									{#each graphLinks as link, i (i)}
+										{#if link.kind === "coauthor" && showCollaborations}
+											<Link
+												data={link}
+												{...linkPositions[i]}
+												type="straight"
+												stroke="transparent"
+												stroke-width={14}
+												fill="none"
+												pointer-events="stroke"
+												class="cursor-pointer"
+												onclick={() => openEdge(link)}
+											/>
+											<Link
+												data={link}
+												{...linkPositions[i]}
+												type="straight"
+												stroke-width={edgeWidth(link)}
+												opacity={edgeOpacity(link)}
+												class={edgeClass(link)}
+												stroke-linecap="round"
+												pointer-events="none"
+											/>
+											{#if showWeights}
+												{@const mid = linkMidpoint(link)}
+												<text
+													x={mid.x}
+													y={mid.y}
+													text-anchor="middle"
+													class="fill-corp-blue text-[10px] font-semibold"
+													stroke="white"
+													stroke-width="3"
+													paint-order="stroke"
+												>
+													{link.weight}
+												</text>
+											{/if}
+										{/if}
+									{/each}
+
+									{#each nodes as node (node.id)}
+										{#if (node.kind === "coauthor" && showCollaborations) || (node.kind === "recommendation" && showSuggestions) || node.kind === "focus"}
+											<Circle
+												cx={node.x}
+												cy={node.y}
+												r={nodeRadius(node)}
+												fill={nodeFill(node)}
+												stroke={nodeStroke(node)}
+												stroke-width={node.kind === "recommendation"
+													? 2
+													: 2}
+												opacity={nodeOpacity(node)}
+												class="cursor-pointer"
+												onclick={() => openNode(node)}
+												onpointermove={(e) => {
+													hoveredId = node.id
+													context.tooltip.show(e, node)
+												}}
+												onpointerleave={() => {
+													hoveredId = null
+													context.tooltip.hide()
+												}}
+											/>
+											<text
+												x={node.x ?? 0}
+												y={(node.y ?? 0) + nodeRadius(node) + 14}
+												text-anchor="middle"
+												class="fill-corp-gray text-[11px] font-medium"
+												opacity={nodeOpacity(node)}
+											>
+												{shortLabel(node.displayName)}
+											</text>
+										{/if}
+									{/each}
+								{/snippet}
+							</ForceSimulation>
+						</Layer>
+
+						<Tooltip.Root variant="none">
+							{#if context.tooltip.data}
+								<div
+									class="pointer-events-none rounded-lg border border-corp-gray/20 bg-white px-3 py-2 shadow-lg"
+								>
+									{#if tooltipBadge(context.tooltip.data)}
+										<span
+											class={`mb-1 inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
+												context.tooltip.data.kind === "recommendation"
+													? "bg-green-600/10 text-green-600"
+													: "bg-corp-blue/10 text-corp-blue"
+											}`}
+										>
+											{tooltipBadge(context.tooltip.data)}
+										</span>
+									{/if}
+									<p class="text-[13px] font-semibold text-[#1A1A1A]">
+										{context.tooltip.data.displayName}
 									</p>
-								{/if}
-							</div>
-						{/if}
-					</Tooltip.Root>
-				{/snippet}
-			</Chart>
+									<p class="mt-0.5 text-xs text-corp-gray">
+										{context.tooltip.data.department}
+									</p>
+									<p class="mt-0.5 text-xs text-corp-gray">
+										{context.tooltip.data.totalWorks} publicaciones
+									</p>
+									{#if context.tooltip.data.kind === "recommendation"}
+										<p class="mt-0.5 text-xs font-medium text-green-600">
+											{context.tooltip.data.weight} coincidencias
+										</p>
+									{/if}
+								</div>
+							{/if}
+						</Tooltip.Root>
+					{/snippet}
+				</Chart>
+			{/if}
 		</div>
 
-		{#if showCollaborations || showSuggestions}
+		{#if !isEmptyGraph && (showCollaborations || showSuggestions)}
 			<div class="shrink-0">
 				<div
 					class="flex items-center justify-center gap-6 px-6 pb-4 text-xs text-corp-gray"
@@ -711,4 +728,5 @@
 	bind:open={recommendationDialogOpen}
 	recommendation={selectedRecommendation}
 	{focusName}
+	focusDepartment={academic.department}
 />

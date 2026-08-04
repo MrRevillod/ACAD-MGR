@@ -114,7 +114,7 @@ impl CollaborationsRepository {
 
 	pub async fn find_academic_topics(
 		&self,
-		topic_threshold: f64,
+		score_threshold: f64,
 	) -> AppResult<Vec<AcademicTopicRow>> {
 		sqlx::query_as::<_, AcademicTopicRow>(
 			"SELECT a.id AS academic_id, t.id AS topic_id, t.name AS topic_name,
@@ -130,7 +130,7 @@ impl CollaborationsRepository {
 			JOIN research_lines rl ON rl.id = sf.research_line_id AND rl.slug <> 'sin-asignar'
 			WHERE wts.score >= $1",
 		)
-		.bind(topic_threshold)
+		.bind(score_threshold)
 		.fetch_all(self.database.pool())
 		.await
 		.map_err(Into::into)
@@ -138,7 +138,7 @@ impl CollaborationsRepository {
 
 	pub async fn find_academic_keywords(
 		&self,
-		keyword_threshold: f64,
+		score_threshold: f64,
 	) -> AppResult<Vec<AcademicKeywordRow>> {
 		sqlx::query_as::<_, AcademicKeywordRow>(
 			"SELECT a.id AS academic_id, k.id AS keyword_id, k.name AS keyword_name,
@@ -152,7 +152,7 @@ impl CollaborationsRepository {
 			JOIN works w ON w.id = wks.work_id
 			WHERE wks.score >= $1",
 		)
-		.bind(keyword_threshold)
+		.bind(score_threshold)
 		.fetch_all(self.database.pool())
 		.await
 		.map_err(Into::into)
@@ -160,7 +160,7 @@ impl CollaborationsRepository {
 
 	pub async fn find_academic_lines(
 		&self,
-		topic_threshold: f64,
+		score_threshold: f64,
 	) -> AppResult<Vec<AcademicLineRow>> {
 		sqlx::query_as::<_, AcademicLineRow>(
 			"WITH topic_lines AS (
@@ -184,7 +184,7 @@ impl CollaborationsRepository {
 			UNION
 			SELECT * FROM override_lines",
 		)
-		.bind(topic_threshold)
+		.bind(score_threshold)
 		.fetch_all(self.database.pool())
 		.await
 		.map_err(Into::into)

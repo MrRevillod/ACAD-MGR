@@ -14,7 +14,7 @@
 	bind:open
 	title="Cómo leer esta red"
 	description="Significado de los filtros, colores y pesos del grafo."
-	class="max-w-xl"
+	class="max-w-3xl"
 >
 	<div class="space-y-5">
 		<section>
@@ -63,8 +63,8 @@
 				<li class="flex items-start gap-2">
 					<span class="mt-1.5 size-2.5 shrink-0 rounded-full bg-green-500"></span>
 					<span>
-						<span class="font-medium text-[#1A1A1A]">Sugerencia</span> — cantidad de tópicos
-						y palabras clave en común.
+						<span class="font-medium text-[#1A1A1A]">Sugerencia</span> — número de publicaciones
+						que cumplen el mínimo de coincidencias por publicación.
 					</span>
 				</li>
 				<li class="flex items-start gap-2">
@@ -93,7 +93,7 @@
 					<span>
 						Área temática (taxonomía OpenAlex) asignada a una publicación, agrupada en
 						subfield y línea de investigación. Si dos académicos comparten un topic con
-						score suficiente, cuenta como coincidencia.
+						porcentaje suficiente, cuenta como coincidencia.
 					</span>
 				</li>
 				<li class="flex items-start gap-2">
@@ -103,8 +103,8 @@
 						keyword
 					</span>
 					<span>
-						Palabra clave extraída de la publicación. Se matchea de forma independiente
-						de los topics, con su propio umbral.
+						Palabra clave extraída de la publicación. Cuenta como coincidencia con el
+						mismo umbral de porcentaje que los topics.
 					</span>
 				</li>
 			</ul>
@@ -131,12 +131,13 @@
 					<span class="font-medium text-[#1A1A1A]">Zoom</span> — acercamiento de la vista.
 				</li>
 				<li>
-					<span class="font-medium text-[#1A1A1A]">Tópicos ≥</span> — score mínimo para que
-					un topic cuente como coincidencia.
+					<span class="font-medium text-[#1A1A1A]">Porcentaje de coincidencia ≥</span> — porcentaje
+					mínimo para que un tópico o keyword cuente como coincidencia. Aplica a ambos tipos.
 				</li>
 				<li>
-					<span class="font-medium text-[#1A1A1A]">Keywords ≥</span> — score mínimo para que
-					una keyword cuente como coincidencia.
+					<span class="font-medium text-[#1A1A1A]">Coincidencias por publicación ≥</span> —
+					cuántos tópicos/keywords compartidos debe tener una publicación para contar como coincidencia.
+					El peso de una sugerencia es el número de publicaciones que cumplen esa condición.
 				</li>
 			</ul>
 		</section>
@@ -145,7 +146,7 @@
 			<Sparkles class="mt-0.5 size-4 shrink-0 text-corp-blue" />
 			<p class="text-xs text-corp-gray">
 				Haz clic en una arista de coautoría para ver las publicaciones compartidas, o en una
-				sugerencia para ver los tópicos y keywords en común con su score.
+				sugerencia para ver los tópicos y keywords en común con su porcentaje.
 			</p>
 		</div>
 	</div>

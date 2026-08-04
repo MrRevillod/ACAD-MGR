@@ -4,13 +4,15 @@ use crate::{
 		AcademicKeywordRow, AcademicLineRow, AcademicTopicRow, CollaborationEdge,
 		CollaborationGraph, CollaborationNode, CollaborationRecommendation, CollaborationsQuery,
 		CollaborationsRepository, KeywordId, MatchWorkRef, RecommendationCandidateRow,
-		RecommendationMatch, RecommendationMatchType, ResearchLineId, TopicId, WorkId, WorkRef,
+		RecommendationSharedItem, RecommendationWork, RecommendationWorkSide,
+		RecommendationMatchType, ResearchLineId, TopicId, WorkId, WorkRef,
 	},
 	shared::AppResult,
 };
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 use sword::prelude::*;
+use uuid::Uuid;
 
 #[injectable]
 pub struct CollaborationsService {
@@ -23,16 +25,16 @@ impl CollaborationsService {
 		academic_id: AcademicId,
 		query: CollaborationsQuery,
 	) -> AppResult<CollaborationGraph> {
-		let topic_threshold = query.topic_threshold.unwrap_or(0.6);
-		let keyword_threshold = query.keyword_threshold.unwrap_or(0.6);
+		let score_threshold = query.score_threshold.unwrap_or(0.6);
+		let min_coincidences = query.min_coincidences.unwrap_or(2) as usize;
 
 		let (nodes, edges, candidates, topics, keywords, lines) = tokio::join!(
 			self.repository.find_nodes(&academic_id),
 			self.repository.find_edges(&academic_id),
 			self.repository.find_recommendation_candidates(&academic_id),
-			self.repository.find_academic_topics(topic_threshold),
-			self.repository.find_academic_keywords(keyword_threshold),
-			self.repository.find_academic_lines(topic_threshold),
+			self.repository.find_academic_topics(score_threshold),
+			self.repository.find_academic_keywords(score_threshold),
+			self.repository.find_academic_lines(score_threshold),
 		);
 
 		let nodes = nodes?;
@@ -74,8 +76,15 @@ impl CollaborationsService {
 			})
 			.collect();
 
-		let recommendations =
-			self.build_recommendations(&academic_id, &edges, candidates, topics, keywords, lines);
+		let recommendations = self.build_recommendations(
+			&academic_id,
+			&edges,
+			candidates,
+			topics,
+			keywords,
+			lines,
+			min_coincidences,
+		);
 
 		Ok(CollaborationGraph {
 			academic_id,
@@ -85,6 +94,7 @@ impl CollaborationsService {
 		})
 	}
 
+	#[allow(clippy::too_many_arguments)]
 	fn build_recommendations(
 		&self,
 		academic_id: &AcademicId,
@@ -93,6 +103,7 @@ impl CollaborationsService {
 		topics: Vec<AcademicTopicRow>,
 		keywords: Vec<AcademicKeywordRow>,
 		lines: Vec<AcademicLineRow>,
+		min_coincidences: usize,
 	) -> Vec<CollaborationRecommendation> {
 		let mut topics_by_academic: HashMap<AcademicId, HashMap<TopicId, Vec<MatchWorkRef>>> =
 			HashMap::new();
@@ -163,7 +174,11 @@ impl CollaborationsService {
 				continue;
 			}
 
-			let mut matches = Vec::new();
+			let mut focus_shared: HashMap<WorkId, Vec<RecommendationSharedItem>> = HashMap::new();
+			let mut cand_shared: HashMap<WorkId, Vec<RecommendationSharedItem>> = HashMap::new();
+			let mut focus_meta: HashMap<WorkId, MatchWorkRef> = HashMap::new();
+			let mut cand_meta: HashMap<WorkId, MatchWorkRef> = HashMap::new();
+
 			if let (Some(focus_topics), Some(cand_topics)) =
 				(focus_topics, topics_by_academic.get(&candidate.id))
 			{
@@ -171,13 +186,29 @@ impl CollaborationsService {
 					.keys()
 					.filter(|id| focus_topics.contains_key(id))
 				{
-					matches.push(RecommendationMatch {
-						r#type: RecommendationMatchType::Topic,
-						id: **topic_id,
-						name: topic_names[&(candidate.id, *topic_id)].clone(),
-						focus_works: focus_topics[topic_id].clone(),
-						candidate_works: cand_topics[topic_id].clone(),
-					});
+					let name = topic_names[&(candidate.id, *topic_id)].clone();
+					for w in &focus_topics[topic_id] {
+						focus_meta.entry(w.work_id).or_insert_with(|| w.clone());
+						focus_shared.entry(w.work_id).or_default().push(
+							RecommendationSharedItem {
+								r#type: RecommendationMatchType::Topic,
+								id: **topic_id,
+								name: name.clone(),
+								score: w.score,
+							},
+						);
+					}
+					for w in &cand_topics[topic_id] {
+						cand_meta.entry(w.work_id).or_insert_with(|| w.clone());
+						cand_shared.entry(w.work_id).or_default().push(
+							RecommendationSharedItem {
+								r#type: RecommendationMatchType::Topic,
+								id: **topic_id,
+								name: name.clone(),
+								score: w.score,
+							},
+						);
+					}
 				}
 			}
 			if let (Some(focus_keywords), Some(cand_keywords)) =
@@ -187,18 +218,74 @@ impl CollaborationsService {
 					.keys()
 					.filter(|id| focus_keywords.contains_key(id))
 				{
-					matches.push(RecommendationMatch {
-						r#type: RecommendationMatchType::Keyword,
-						id: **keyword_id,
-						name: keyword_names[&(candidate.id, *keyword_id)].clone(),
-						focus_works: focus_keywords[keyword_id].clone(),
-						candidate_works: cand_keywords[keyword_id].clone(),
+					let name = keyword_names[&(candidate.id, *keyword_id)].clone();
+					for w in &focus_keywords[keyword_id] {
+						focus_meta.entry(w.work_id).or_insert_with(|| w.clone());
+						focus_shared.entry(w.work_id).or_default().push(
+							RecommendationSharedItem {
+								r#type: RecommendationMatchType::Keyword,
+								id: **keyword_id,
+								name: name.clone(),
+								score: w.score,
+							},
+						);
+					}
+					for w in &cand_keywords[keyword_id] {
+						cand_meta.entry(w.work_id).or_insert_with(|| w.clone());
+						cand_shared.entry(w.work_id).or_default().push(
+							RecommendationSharedItem {
+								r#type: RecommendationMatchType::Keyword,
+								id: **keyword_id,
+								name: name.clone(),
+								score: w.score,
+							},
+						);
+					}
+				}
+			}
+
+			let mut works = Vec::new();
+			for (work_id, shared) in cand_shared {
+				if shared.len() >= min_coincidences {
+					let meta = &cand_meta[&work_id];
+					works.push(RecommendationWork {
+						work_id,
+						title: meta.title.clone(),
+						publication_year: meta.publication_year,
+						side: RecommendationWorkSide::Candidate,
+						shared,
 					});
 				}
 			}
 
-			if matches.is_empty() {
+			if works.is_empty() {
 				continue;
+			}
+
+			let mut effective_items: HashSet<(RecommendationMatchType, Uuid)> = HashSet::new();
+			for work in &works {
+				for item in &work.shared {
+					effective_items.insert((item.r#type.clone(), item.id));
+				}
+			}
+
+			let mut focus_works = Vec::new();
+			for (work_id, shared) in focus_shared {
+				let filtered: Vec<RecommendationSharedItem> = shared
+					.into_iter()
+					.filter(|i| effective_items.contains(&(i.r#type.clone(), i.id)))
+					.collect();
+				if filtered.is_empty() {
+					continue;
+				}
+				let meta = &focus_meta[&work_id];
+				focus_works.push(RecommendationWork {
+					work_id,
+					title: meta.title.clone(),
+					publication_year: meta.publication_year,
+					side: RecommendationWorkSide::Focus,
+					shared: filtered,
+				});
 			}
 
 			recommendations.push(CollaborationRecommendation {
@@ -212,8 +299,9 @@ impl CollaborationsService {
 				maternal_surname: candidate.maternal_surname,
 				department: candidate.department,
 				total_works: candidate.total_works,
-				weight: matches.len() as i64,
-				matches,
+				weight: works.len() as i64,
+				works,
+				focus_works,
 			});
 		}
 
