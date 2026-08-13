@@ -9,6 +9,7 @@ export interface WorkOverridesDTO {
 	isAccepted?: boolean | null
 	isPublished?: boolean | null
 	researchLineId?: string | null
+	correspondingOrcid?: string | null
 }
 
 export interface WorkDTO {
@@ -123,6 +124,7 @@ export interface WorkOverridesInput {
 	isAccepted?: boolean | null
 	isPublished?: boolean | null
 	researchLineId?: string | null
+	correspondingOrcid?: string | null
 }
 
 export interface SyncResult {

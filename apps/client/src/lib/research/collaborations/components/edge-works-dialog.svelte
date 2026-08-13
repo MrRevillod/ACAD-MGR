@@ -2,10 +2,10 @@
 	import type { CollaborationWorkRefDTO } from "$collaborations/dtos"
 
 	import { FileText } from "@lucide/svelte"
+	import { goto } from "$app/navigation"
 
 	import Dialog from "$shared/components/ui/dialog.svelte"
 	import HtmlRenderer from "$shared/components/ui/html-renderer.svelte"
-	import WorkDetailDialog from "$works/components/work-detail-dialog.svelte"
 	import { authStore } from "$lib/auth/store.svelte"
 
 	interface Props {
@@ -17,9 +17,6 @@
 
 	let { open = $bindable(false), works, coauthor, coauthorId }: Props = $props()
 
-	let workDetailOpen = $state(false)
-	let selectedWorkId = $state<string | null>(null)
-
 	const profileHref = $derived(
 		coauthorId
 			? `${authStore.isAuthenticated ? "/academics" : "/public/academics"}/${coauthorId}`
@@ -27,8 +24,7 @@
 	)
 
 	function openWork(id: string) {
-		selectedWorkId = id
-		workDetailOpen = true
+		void goto(`/works/${id}`)
 	}
 </script>
 
@@ -80,5 +76,3 @@
 		</div>
 	{/if}
 </Dialog>
-
-<WorkDetailDialog bind:open={workDetailOpen} bind:workId={selectedWorkId} />

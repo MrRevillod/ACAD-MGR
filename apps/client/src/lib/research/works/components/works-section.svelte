@@ -4,11 +4,11 @@
 
 	import { useWorksByAcademicQuery } from "$works/queries"
 	import { CircleAlert, BookOpen, Loader } from "@lucide/svelte"
+	import { goto } from "$app/navigation"
 
 	import YearRange from "$shared/components/ui/year-range.svelte"
 	import WorksTable from "./works-table.svelte"
 	import SyncWorksButton from "./sync-works-button.svelte"
-	import WorkDetailDialog from "./work-detail-dialog.svelte"
 
 	interface Props {
 		academic: Academic
@@ -33,12 +33,8 @@
 
 	const worksQuery = useWorksByAcademicQuery(() => academic.id, worksParams)
 
-	let selectedWorkId = $state<string | null>(null)
-	let dialogOpen = $state(false)
-
 	function openWork(work: Work) {
-		selectedWorkId = work.id
-		dialogOpen = true
+		void goto(`/works/${work.id}`)
 	}
 </script>
 
@@ -102,5 +98,3 @@
 		<WorksTable works={worksQuery.data} onRowClick={openWork} pageSize={7} />
 	{/if}
 </section>
-
-<WorkDetailDialog bind:open={dialogOpen} bind:workId={selectedWorkId} />

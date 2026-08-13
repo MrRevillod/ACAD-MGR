@@ -6,12 +6,12 @@
 	} from "$collaborations/dtos"
 
 	import { Flame, Tag } from "@lucide/svelte"
+	import { goto } from "$app/navigation"
 
 	import Dialog from "$shared/components/ui/dialog.svelte"
 	import HtmlRenderer from "$shared/components/ui/html-renderer.svelte"
 	import { authStore } from "$lib/auth/store.svelte"
 	import { FullName } from "$shared/value-objects/full-name.value"
-	import WorkDetailDialog from "$works/components/work-detail-dialog.svelte"
 
 	interface Interest {
 		type: RecommendationSharedItemDTO["type"]
@@ -30,9 +30,6 @@
 	}
 
 	let { open = $bindable(false), recommendation, focusName, focusDepartment }: Props = $props()
-
-	let workDetailOpen = $state(false)
-	let selectedWorkId = $state<string | null>(null)
 
 	const fullName = $derived(
 		recommendation
@@ -83,8 +80,7 @@
 	})
 
 	function openWork(workId: string) {
-		selectedWorkId = workId
-		workDetailOpen = true
+		void goto(`/works/${workId}`)
 	}
 
 	function typePillClass(type: "topic" | "keyword"): string {
@@ -233,5 +229,3 @@
 		<HtmlRenderer html={work.title} class="pointer-events-none min-w-0 truncate leading-snug" />
 	</button>
 {/snippet}
-
-<WorkDetailDialog bind:open={workDetailOpen} bind:workId={selectedWorkId} />

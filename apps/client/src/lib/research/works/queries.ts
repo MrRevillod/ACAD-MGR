@@ -69,6 +69,23 @@ export function useUpdateOverridesMutation() {
 	}))
 }
 
+export function useUpdateAuthorshipAffiliationsMutation() {
+	const qc = useQueryClient()
+	return createMutation<void, Error, { workId: string; orcid: string; affiliations: string[] }>(
+		() => ({
+			mutationFn: ({ workId, orcid, affiliations }) =>
+				worksService.updateAuthorshipAffiliations(workId, orcid, affiliations),
+			onSuccess: () => {
+				void qc.invalidateQueries({ queryKey: ["works"] })
+				toast.success("Cambios guardados")
+			},
+			onError: () => {
+				toast.error("Error al guardar cambios")
+			},
+		}),
+	)
+}
+
 export function useClearOverridesMutation() {
 	const qc = useQueryClient()
 	return createMutation<void, Error, string>(() => ({

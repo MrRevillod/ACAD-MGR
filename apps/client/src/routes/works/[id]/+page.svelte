@@ -2,64 +2,92 @@
 	import {
 		CircleAlert,
 		ArrowLeft,
-		Building2,
+		Check,
+		ChevronDown,
 		ExternalLink,
+		FileText,
+		Folder,
+		FolderOpen,
 		Loader,
-		Mail,
 		Network,
 		Pencil,
 		Tag,
+		X,
 	} from "@lucide/svelte"
 
 	import { page } from "$app/state"
 	import { goto } from "$app/navigation"
-	import { toast } from "svelte-sonner"
 
-	import { FullName } from "$shared/value-objects/full-name.value"
 	import { DateValue } from "$shared/value-objects/date.value"
 	import { WORK_TYPE_LABELS } from "$works/dtos"
 
-	import { authStore } from "$auth/store.svelte"
 	import { useWorkDetailQuery } from "$works/queries"
-	import { AuthorshipPositionValue } from "$works/value-objects/position.value"
 
 	import Badge from "$shared/components/ui/badge.svelte"
 	import HtmlRenderer from "$shared/components/ui/html-renderer.svelte"
-	import WorkEditDialog from "$works/components/work-edit-dialog.svelte"
+	import WorkAuthorsList from "$works/components/work-authors-list.svelte"
+	import WorkEditForm from "$works/components/work-edit-form.svelte"
 
 	const id = $derived(page.params.id ?? "")
 
 	const query = useWorkDetailQuery(() => id)
 
-	let editDialogOpen = $state(false)
+	let editing = $state(false)
+	let editSubmit = $state<(() => Promise<void>) | null>(null)
+	let isSaving = $state(false)
+	let expandedTopicId = $state<string | null>(null)
 
-	function copyOrcid(orcid: string) {
-		void navigator.clipboard.writeText(orcid)
-		toast.success("ORCID copiado al portapapeles")
+	function toggleTopic(id: string) {
+		expandedTopicId = expandedTopicId === id ? null : id
 	}
 </script>
 
 <div class="h-full overflow-y-auto">
-	<div class="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
-		<button
-			type="button"
-			onclick={() => void goto("/works")}
-			class="inline-flex items-center gap-1 text-sm text-corp-blue transition-colors hover:text-corp-blue/80"
-		>
-			<ArrowLeft class="size-3.5" />
-			Volver al catálogo
-		</button>
-
-		{#if query.data}
+	<div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+		<div class="flex w-full items-center justify-between gap-3">
 			<button
 				type="button"
-				onclick={() => (editDialogOpen = true)}
-				class="inline-flex items-center gap-1.5 rounded-lg border border-corp-gray/20 px-3 py-1.5 text-sm font-medium text-corp-gray transition-colors hover:border-corp-blue/30 hover:text-corp-blue"
+				onclick={() => void goto("/works")}
+				class="inline-flex items-center gap-1 text-sm text-corp-blue transition-colors hover:text-corp-blue/80 active:scale-[0.96]"
 			>
-				<Pencil class="size-4" />
-				Editar
+				<ArrowLeft class="size-3.5" />
+				Volver al catálogo
 			</button>
-		{/if}
+
+			{#if query.data}
+				{#if editing}
+					<div class="flex items-center gap-2">
+						<button
+							type="button"
+							onclick={() => (editing = false)}
+							disabled={isSaving}
+							class="inline-flex items-center gap-1.5 rounded-lg border border-corp-gray/20 px-3 py-1.5 text-sm font-medium text-corp-gray transition-colors hover:border-corp-gray/40 hover:text-[#1A1A1A] active:scale-[0.96] disabled:pointer-events-none disabled:opacity-50"
+						>
+							<X class="size-4" />
+							Cancelar
+						</button>
+						<button
+							type="button"
+							onclick={() => editSubmit?.()}
+							disabled={isSaving}
+							class="inline-flex items-center gap-1.5 rounded-lg bg-corp-blue px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-corp-blue/90 active:scale-[0.96] disabled:pointer-events-none disabled:opacity-60"
+						>
+							<Check class="size-4" />
+							{isSaving ? "Guardando…" : "Guardar"}
+						</button>
+					</div>
+				{:else}
+					<button
+						type="button"
+						onclick={() => (editing = true)}
+						class="inline-flex items-center gap-1.5 rounded-lg border border-corp-gray/20 px-3 py-1.5 text-sm font-medium text-corp-gray transition-colors hover:border-corp-blue/30 hover:text-corp-blue active:scale-[0.96]"
+					>
+						<Pencil class="size-4" />
+						Editar
+					</button>
+				{/if}
+			{/if}
+		</div>
 
 		{#if query.isPending}
 			<div class="flex justify-center py-12">
@@ -71,270 +99,293 @@
 				<p class="mt-3 text-sm text-corp-gray">Error al cargar la obra.</p>
 			</div>
 		{:else}
-			{@const work = query.data}
-			<article class="mt-6 space-y-8">
-				<header>
-					<div class="flex flex-wrap items-center gap-2">
-						<Badge variant="base">{WORK_TYPE_LABELS[work.ty] ?? work.ty}</Badge>
-						{#if work.publicationYear}
-							<span class="text-sm text-corp-gray">
-								<span class="tabular-nums">{work.publicationYear}</span>
-								{#if work.publicationDate}· {DateValue.formatDate(
-										work.publicationDate,
-									)}{/if}
-							</span>
-						{/if}
-						{#if work.isAccepted}
-							<span
-								class="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold tracking-wide text-emerald-700 uppercase"
-							>
-								Aceptado
-							</span>
-						{/if}
-						{#if work.isPublished}
-							<span
-								class="inline-flex items-center rounded-full bg-corp-blue/10 px-2 py-0.5 text-[11px] font-semibold tracking-wide text-corp-blue uppercase"
-							>
-								Publicado
-							</span>
-						{/if}
-					</div>
-					<h1 class="mt-3 text-2xl font-semibold text-balance text-[#1A1A1A]">
-						<HtmlRenderer html={work.title} />
-					</h1>
-					<div
-						class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-corp-gray"
-					>
-						{#if work.doi}
+			{#if editing}
+				<WorkEditForm
+					work={query.data}
+					bind:submit={editSubmit}
+					bind:isSaving
+					onSaved={() => (editing = false)}
+				/>
+			{:else}
+				{@const work = query.data}
+				<article class="mt-6">
+					<header>
+						<div class="flex flex-wrap items-center gap-2">
+							<Badge variant="base">{WORK_TYPE_LABELS[work.ty] ?? work.ty}</Badge>
+							{#if work.isAccepted}
+								<span
+									class="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold tracking-wide text-emerald-700 uppercase"
+								>
+									Aceptado
+								</span>
+							{/if}
+							{#if work.isPublished}
+								<span
+									class="inline-flex items-center rounded-full bg-corp-blue/10 px-2 py-0.5 text-[11px] font-semibold tracking-wide text-corp-blue uppercase"
+								>
+									Publicado
+								</span>
+							{/if}
+							{#if work.publicationDate}
+								<span class="text-sm text-corp-gray tabular-nums">
+									{DateValue.formatDate(work.publicationDate)}
+								</span>
+							{:else if work.publicationYear}
+								<span class="text-sm text-corp-gray tabular-nums">
+									{work.publicationYear}
+								</span>
+							{/if}
+						</div>
+						<h1 class="mt-3 text-2xl font-semibold text-balance text-[#1A1A1A]">
+							<HtmlRenderer html={work.title} />
+						</h1>
+						<div
+							class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-corp-gray"
+						>
+							{#if work.doi}
+								<a
+									href={work.doi}
+									target="_blank"
+									rel="noopener"
+									class="inline-flex items-center gap-1 text-corp-blue hover:underline"
+								>
+									<span>Ver DOI</span>
+									<ExternalLink class="size-3" />
+								</a>
+							{/if}
 							<a
-								href={work.doi}
+								href={work.openalexId}
 								target="_blank"
 								rel="noopener"
 								class="inline-flex items-center gap-1 text-corp-blue hover:underline"
 							>
-								<span>Ver DOI</span>
+								<span>Ver en OpenAlex</span>
 								<ExternalLink class="size-3" />
 							</a>
-						{/if}
-						<a
-							href={work.openalexId}
-							target="_blank"
-							rel="noopener"
-							class="inline-flex items-center gap-1 text-corp-blue hover:underline"
-						>
-							<span>Ver en OpenAlex</span>
-							<ExternalLink class="size-3" />
-						</a>
-						<span>Idioma: {work.lang}</span>
-					</div>
-				</header>
+							<span>Idioma: {work.lang}</span>
+						</div>
+					</header>
 
-				{#if work.abstractText}
-					<section>
-						<h2
-							class="mb-3 text-xs font-semibold tracking-widest uppercase text-corp-blue"
-						>
-							Abstract
-							{#if work.isFieldOverridden("abstractText")}
-								<span class="ml-1 text-[10px] italic font-normal text-corp-blue/60"
-									>(editado)</span
+					<div
+						class="mt-8 lg:grid lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start lg:gap-10"
+					>
+						<div class="min-w-0 space-y-8">
+							<section>
+								<h2
+									class="mb-3 text-xs font-semibold tracking-widest uppercase text-corp-blue"
 								>
+									Abstract
+									{#if work.isFieldOverridden("abstractText")}
+										<span
+											class="ml-1 text-[10px] italic font-normal text-corp-blue/60"
+											>(editado)</span
+										>
+									{/if}
+								</h2>
+								{#if work.abstractText}
+									<HtmlRenderer
+										tag="p"
+										html={work.abstractText}
+										class="text-pretty text-sm leading-relaxed text-[#1A1A1A]"
+									/>
+								{:else}
+									<p class="text-sm italic text-corp-gray">
+										No se encuentra disponible. Puedes añadirlo manualmente
+										editando esta publicación.
+									</p>
+								{/if}
+							</section>
+
+							{#if work.authorships.length > 0}
+								<section>
+									<h2
+										class="mb-3 flex items-center gap-1.5 text-xs font-semibold tracking-widest uppercase text-corp-blue"
+									>
+										Autores
+										<span
+											class="rounded-full bg-corp-gray/10 px-1.5 py-0.5 text-[10px] font-semibold text-corp-gray"
+										>
+											{work.authorships.length}
+										</span>
+									</h2>
+									<WorkAuthorsList authors={work.authorships} />
+								</section>
 							{/if}
-						</h2>
-						<HtmlRenderer
-							tag="p"
-							html={work.abstractText}
-							class="text-pretty text-sm leading-relaxed text-[#1A1A1A]"
-						/>
-					</section>
-				{/if}
+						</div>
 
-				{#if work.source}
-					<section>
-						<h2
-							class="mb-3 text-xs font-semibold tracking-widest uppercase text-corp-blue"
-						>
-							Publicado en
-						</h2>
-						<p class="text-sm font-medium text-[#1A1A1A]">
-							{work.source.name}
-							<span class="text-corp-gray">· {work.source.ty}</span>
-							<span class="mx-1.5 text-corp-gray/40">|</span>
-							Indexación:
-							{#if work.source.kind.code}
-								<Badge
-									variant={work.source.kind.code === "scopus"
-										? "advanced"
-										: "base"}
-								>
-									{work.source.kind.toDisplay()}
-								</Badge>
-							{:else}
-								<span
-									class="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-semibold tracking-wide text-red-700 uppercase ml-1"
-								>
-									Desconocida
-								</span>
-							{/if}
-						</p>
-					</section>
-				{/if}
-
-				{#if work.researchLineName}
-					<section>
-						<h2
-							class="mb-3 text-xs font-semibold tracking-widest uppercase text-corp-blue"
-						>
-							Línea de Investigación
-							{#if work.isFieldOverridden("researchLineId")}
-								<span class="ml-1 text-[10px] italic font-normal text-corp-blue/60"
-									>(editado)</span
-								>
-							{/if}
-						</h2>
-						<p class="text-sm font-medium text-[#1A1A1A]">
-							{work.researchLineName}
-						</p>
-					</section>
-				{/if}
-
-				{#if work.authorships.length > 0}
-					<section>
-						<h2
-							class="mb-3 flex items-center gap-1.5 text-xs font-semibold tracking-widest uppercase text-corp-blue"
-						>
-							Autores
-							<span
-								class="rounded-full bg-corp-gray/10 px-1.5 py-0.5 text-[10px] font-semibold text-corp-gray"
-							>
-								{work.authorships.length}
-							</span>
-						</h2>
-						<div class="space-y-2">
-							{#each work.authorships as auth (auth.orcid)}
-								<div class="rounded-lg border border-corp-gray/10 bg-white p-3">
-									<div class="flex items-center justify-between gap-2">
-										<div class="flex items-center gap-2">
-											<p class="text-sm font-medium text-[#1A1A1A]">
-												{FullName.fromFullString(auth.name)}
-											</p>
-											{#if auth.isCorresponding}
-												<Badge variant="default">
-													<Mail class="mr-1 size-3" />
-													Corresponding
-												</Badge>
-											{/if}
-											{#if auth.isExternal}
-												<span
-													class="inline-flex items-center rounded-full bg-corp-gray/10 px-2 py-0.5 text-[11px] font-semibold tracking-wide text-corp-gray uppercase"
-												>
-													Externo
-												</span>
-											{/if}
-										</div>
-										{#if !auth.isExternal && auth.academicId}
-											<a
-												href={authStore.isAuthenticated
-													? `/academics/${auth.academicId}`
-													: `/public/academics/${auth.academicId}`}
-												class="shrink-0 text-xs font-medium text-corp-blue hover:underline"
+						<aside class="mt-8 space-y-4 lg:mt-0">
+							{#if work.source}
+								<section class="rounded-xl border border-corp-gray/20 bg-white p-4">
+									<h2
+										class="mb-2 text-xs font-semibold tracking-widest uppercase text-corp-blue"
+									>
+										Publicado en
+									</h2>
+									<p class="text-sm font-medium text-[#1A1A1A]">
+										{work.source.name}
+									</p>
+									<hr class="my-3 border-corp-gray/10" />
+									<div class="flex items-center gap-2">
+										<span
+											class="text-xs font-semibold uppercase tracking-widest text-corp-blue"
+											>Indexación:</span
+										>
+										{#if work.source.kind.code}
+											<Badge
+												variant={work.source.kind.code === "scopus"
+													? "advanced"
+													: "base"}
 											>
-												Ir al perfil académico →
-											</a>
+												{work.source.kind.toDisplay()}
+											</Badge>
+										{:else}
+											<span
+												class="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-semibold tracking-wide text-red-700 uppercase"
+											>
+												Desconocida
+											</span>
 										{/if}
 									</div>
-									<button
-										type="button"
-										onclick={() => copyOrcid(auth.orcid)}
-										class="mt-0.5 inline-flex items-center gap-1 text-xs text-corp-gray transition-colors hover:text-corp-blue"
-										title="Copiar ORCID"
+								</section>
+							{/if}
+
+							{#if work.researchLineName}
+								<section class="rounded-xl border border-corp-gray/20 bg-white p-4">
+									<h2
+										class="mb-2 text-xs font-semibold tracking-widest uppercase text-corp-blue"
 									>
-										<span>ORCID: {auth.orcid}</span>
-									</button>
-									<p class="mt-0.5 text-xs text-corp-gray">
-										Posición: <span class="font-medium text-[#1A1A1A]"
-											>{AuthorshipPositionValue.LABELS[auth.position]}</span
-										>
+										Línea de Investigación
+										{#if work.isFieldOverridden("researchLineId")}
+											<span
+												class="ml-1 text-[10px] italic font-normal text-corp-blue/60"
+												>(editado)</span
+											>
+										{/if}
+									</h2>
+									<p class="text-sm font-medium text-[#1A1A1A]">
+										{work.researchLineName}
 									</p>
-									{#if auth.affiliations.length > 0}
-										<ul class="mt-2 space-y-1">
-											{#each auth.affiliations as aff, i (i)}
-												<li
-													class="flex items-start gap-1.5 text-xs text-corp-gray"
-												>
-													<Building2 class="mt-0.5 size-3 shrink-0" />
-													<span>{aff}</span>
-												</li>
-											{/each}
-										</ul>
-									{/if}
-								</div>
-							{/each}
-						</div>
-					</section>
-				{/if}
+								</section>
+							{/if}
 
-				{#if work.topics.length > 0}
-					<section>
-						<h2
-							class="mb-3 flex items-center gap-1.5 text-xs font-semibold tracking-widest uppercase text-corp-blue"
-						>
-							<Network class="size-3" />
-							Topics
-						</h2>
-						<div class="space-y-2">
-							{#each work.topics as t (t.topicId)}
-								<div
-									class="flex items-center justify-between gap-3 rounded-lg border border-corp-gray/10 bg-white p-3"
-								>
-									<div class="min-w-0">
-										<p class="text-sm font-medium text-[#1A1A1A]">{t.name}</p>
-										<p class="mt-0.5 truncate text-xs text-corp-gray">
-											{t.domainName}
-											<span class="text-corp-gray/40">→</span>
-											{t.fieldName}
-											<span class="text-corp-gray/40">→</span>
-											{t.subfieldName}
-										</p>
-									</div>
-									<span
-										class="shrink-0 rounded-full bg-corp-blue/10 px-2 py-0.5 text-xs font-semibold text-corp-blue tabular-nums"
+							{#if work.topics.length > 0}
+								<section class="rounded-xl border border-corp-gray/20 bg-white p-4">
+									<h2
+										class="mb-2 flex items-center gap-1.5 text-xs font-semibold tracking-widest uppercase text-corp-blue"
 									>
-										{(t.score * 100).toFixed(1)}%
-									</span>
-								</div>
-							{/each}
-						</div>
-					</section>
-				{/if}
+										<Network class="size-3" />
+										Topics
+									</h2>
+									<div class="space-y-1">
+										{#each work.topics as t (t.topicId)}
+											<div>
+												<button
+													type="button"
+													class="flex w-full items-center gap-2 rounded-md px-1 py-0.5 text-left transition-colors hover:bg-corp-gray/5"
+													onclick={() => toggleTopic(t.topicId)}
+													aria-expanded={expandedTopicId === t.topicId}
+												>
+													<span
+														class="min-w-0 flex-1 truncate text-sm font-medium text-[#1A1A1A]"
+													>
+														{t.name}
+													</span>
+													<span
+														class="shrink-0 rounded-full bg-corp-blue/10 px-2 py-0.5 text-xs font-semibold text-corp-blue tabular-nums"
+													>
+														{(t.score * 100).toFixed(1)}%
+													</span>
+													<ChevronDown
+														class={`size-4 shrink-0 text-corp-gray transition-transform ${
+															expandedTopicId === t.topicId
+																? "rotate-180"
+																: ""
+														}`}
+													/>
+												</button>
 
-				{#if work.keywords.length > 0}
-					<section>
-						<h2
-							class="mb-3 flex items-center gap-1.5 text-xs font-semibold tracking-widest uppercase text-corp-blue"
-						>
-							<Tag class="size-3" />
-							Keywords
-						</h2>
-						<div class="flex flex-wrap gap-1.5">
-							{#each work.keywords as k (k.keywordId)}
-								<span
-									class="inline-flex items-center gap-1 rounded-full bg-corp-gray/10 px-2.5 py-1 text-xs text-corp-gray"
-								>
-									{k.name}
-									<span class="tabular-nums text-[10px] text-corp-gray/70">
-										{(k.score * 100).toFixed(0)}%
-									</span>
-								</span>
-							{/each}
-						</div>
-					</section>
-				{/if}
-			</article>
+												{#if expandedTopicId === t.topicId}
+													<div
+														class="mt-1 rounded-md bg-corp-gray/[0.03] p-2 text-xs"
+													>
+														<div class="flex items-center gap-1.5">
+															<FolderOpen
+																class="size-3.5 shrink-0 text-corp-gray/60"
+															/>
+															<span class="truncate text-corp-gray">
+																{t.domainName}
+															</span>
+														</div>
+														<div
+															class="ml-1.5 mt-1 space-y-1 border-l border-corp-gray/15 pl-3"
+														>
+															<div class="flex items-center gap-1.5">
+																<Folder
+																	class="size-3.5 shrink-0 text-corp-gray/60"
+																/>
+																<span
+																	class="truncate text-corp-gray"
+																>
+																	{t.fieldName}
+																</span>
+															</div>
+															<div class="flex items-center gap-1.5">
+																<Folder
+																	class="size-3.5 shrink-0 text-corp-gray/60"
+																/>
+																<span
+																	class="truncate text-corp-gray"
+																>
+																	{t.subfieldName}
+																</span>
+															</div>
+															<div class="flex items-center gap-1.5">
+																<FileText
+																	class="size-3.5 shrink-0 text-corp-blue/70"
+																/>
+																<span
+																	class="truncate font-medium text-[#1A1A1A]"
+																>
+																	{t.name}
+																</span>
+															</div>
+														</div>
+													</div>
+												{/if}
+											</div>
+										{/each}
+									</div>
+								</section>
+							{/if}
+
+							{#if work.keywords.length > 0}
+								<section class="rounded-xl border border-corp-gray/20 bg-white p-4">
+									<h2
+										class="mb-2 flex items-center gap-1.5 text-xs font-semibold tracking-widest uppercase text-corp-blue"
+									>
+										<Tag class="size-3" />
+										Keywords
+									</h2>
+									<div class="flex flex-wrap gap-1.5">
+										{#each work.keywords as k (k.keywordId)}
+											<span
+												class="inline-flex items-center gap-1 rounded-full bg-corp-gray/10 px-2.5 py-1 text-xs text-corp-gray"
+											>
+												{k.name}
+												<span
+													class="tabular-nums text-[10px] text-corp-gray/70"
+												>
+													{(k.score * 100).toFixed(0)}%
+												</span>
+											</span>
+										{/each}
+									</div>
+								</section>
+							{/if}
+						</aside>
+					</div>
+				</article>
+			{/if}
 		{/if}
 	</div>
 </div>
-
-{#if query.data && editDialogOpen}
-	<WorkEditDialog bind:open={editDialogOpen} work={query.data} />
-{/if}

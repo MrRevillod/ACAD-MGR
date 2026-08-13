@@ -58,6 +58,18 @@ class WorksService {
 		})
 	}
 
+	public async updateAuthorshipAffiliations(
+		workId: string,
+		orcid: string,
+		affiliations: string[],
+	): Promise<void> {
+		await http.request<null>({
+			method: "PUT",
+			url: `/works/${workId}/authorships/${orcid}/affiliations`,
+			data: { affiliations },
+		})
+	}
+
 	public async clearOverrides(id: string): Promise<void> {
 		await http.request<null>({
 			method: "DELETE",

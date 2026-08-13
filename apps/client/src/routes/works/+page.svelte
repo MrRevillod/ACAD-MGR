@@ -7,10 +7,10 @@
 	import { useWorksQuery } from "$works/queries"
 	import { useSearchParams } from "runed/kit"
 	import { CircleAlert, BookOpen, Loader } from "@lucide/svelte"
+	import { goto } from "$app/navigation"
 
 	import WorksTable from "$works/components/works-table.svelte"
 	import WorksFilters from "$works/components/works-filters.svelte"
-	import WorkDetailDialog from "$works/components/work-detail-dialog.svelte"
 
 	const yearFromDefault = String(new Date().getFullYear() - 5)
 
@@ -39,21 +39,13 @@
 
 	const worksQuery = useWorksQuery(() => filters)
 
-	let selectedWorkId = $state<string | null>(null)
-	let dialogOpen = $state(false)
-
 	function openWork(work: Work) {
-		selectedWorkId = work.id
-		dialogOpen = true
+		void goto(`/works/${work.id}`)
 	}
 
 	function clearFilters() {
 		params.reset()
 	}
-
-	$effect(() => {
-		if (!dialogOpen) selectedWorkId = null
-	})
 </script>
 
 <div class="mx-auto flex h-full max-w-[1600px] flex-col px-4 py-8 sm:px-6 lg:px-8">
@@ -98,5 +90,3 @@
 		</main>
 	</div>
 </div>
-
-<WorkDetailDialog bind:open={dialogOpen} bind:workId={selectedWorkId} />
