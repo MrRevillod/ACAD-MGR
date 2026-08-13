@@ -16,6 +16,10 @@ pub enum WorksError {
 	#[error("Work not found")]
 	NotFound,
 
+	#[http(code = 422, message = "La autoría no pertenece a la obra")]
+	#[error("Authorship not in work")]
+	AuthorshipNotInWork,
+
 	#[http(code = 502, message = "Error al consultar OpenAlex")]
 	#[error("OpenAlex API error: {0}")]
 	OpenAlexError(#[from] OpenAlexError),

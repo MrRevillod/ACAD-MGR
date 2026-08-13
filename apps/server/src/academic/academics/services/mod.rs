@@ -340,6 +340,6 @@ impl AcademicsService {
 	pub async fn sync_works_by_token(&self, token: &str) -> AppResult<SyncResultView> {
 		let academic_id = self.validate_one_time_token(token).await?;
 
-		self.works_import.sync_from_openalex(academic_id).await
+		self.works_import.sync_works(academic_id).await
 	}
 }

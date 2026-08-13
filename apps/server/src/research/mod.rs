@@ -45,5 +45,6 @@ impl Module for ResearchModule {
 		let client = OpenAlexClient::new(config);
 
 		providers.register(client);
+		providers.register(OrcidClient::new());
 	}
 }

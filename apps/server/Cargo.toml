@@ -57,6 +57,7 @@ bon = "3.9.3"
 sha2 = "0.11.0"
 regex = "1.12.4"
 papers-openalex = "0.3.1"
+orcid = "0.2"
 html-escape = "0.2.14"
 lettre = { version = "0.11.19", features = ["tokio1", "tokio1-native-tls"] }
 zip = "2"

@@ -19,6 +19,7 @@ pub struct WorkOverrides {
 	pub is_accepted: Option<bool>,
 	pub is_published: Option<bool>,
 	pub research_line_id: Option<Uuid>,
+	pub corresponding_orcid: Option<String>,
 }
 
 pub type WorkId = Id<Work>;

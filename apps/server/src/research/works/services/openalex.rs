@@ -7,7 +7,7 @@ use crate::{
 
 use chrono::NaiveDate;
 use html_escape::decode_html_entities;
-use papers_openalex::{ListParams, OpenAlexClient as OaClient, Work as OaWork};
+use papers_openalex::{GetParams, OpenAlexClient as OaClient, OpenAlexError, Work as OaWork};
 use serde::Deserialize;
 use sword::prelude::*;
 
@@ -30,7 +30,7 @@ const SELECT_FIELDS: &[&str] = &[
 	"created_date",
 ];
 
-const API_DELAY: Duration = Duration::from_millis(50);
+pub(crate) const API_DELAY: Duration = Duration::from_millis(50);
 
 fn repair_mojibake(s: &str) -> String {
 	if s.chars().any(|c| c > '\u{00FF}') {
@@ -63,34 +63,18 @@ impl OpenAlexClient {
 		}
 	}
 
-	pub async fn list_all_works_by_orcid(&self, orcid: &str) -> AppResult<Vec<OaWork>> {
-		let mut all = Vec::new();
-		let mut cursor = Some("*".to_string());
+	pub async fn get_work_by_doi(&self, doi: &str) -> AppResult<Option<OaWork>> {
+		let params = GetParams::builder()
+			.select(SELECT_FIELDS.join(","))
+			.build();
 
-		while let Some(c) = cursor {
-			let params = ListParams::builder()
-				.filter(format!("authorships.author.orcid:{}", orcid))
-				.select(SELECT_FIELDS.join(","))
-				.per_page(200)
-				.cursor(c)
-				.build();
+		let url = format!("https://doi.org/{doi}");
 
-			let response = self
-				.inner
-				.list_works(&params)
-				.await
-				.map_err(WorksError::from)?;
-
-			all.extend(response.results);
-
-			cursor = response.meta.next_cursor;
-
-			if cursor.is_some() {
-				tokio::time::sleep(API_DELAY).await;
-			}
+		match self.inner.get_work(&url, &params).await {
+			Ok(work) => Ok(Some(work)),
+			Err(e) if matches!(&e, OpenAlexError::Api { status: 404, .. }) => Ok(None),
+			Err(e) => Err(WorksError::OpenAlexError(e).into()),
 		}
-
-		Ok(all)
 	}
 }
 

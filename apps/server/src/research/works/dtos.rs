@@ -1,4 +1,4 @@
-use crate::research::JournalKind;
+use crate::research::{JournalKind, WorkId};
 use serde::Deserialize;
 use uuid::Uuid;
 use validator::Validate;
@@ -27,6 +27,7 @@ pub struct GetWorksQuery {
 }
 
 pub struct WorkImportProcessStats {
+	pub work_id: WorkId,
 	pub was_inserted: bool,
 	pub authorships: usize,
 	pub topics: usize,
@@ -43,4 +44,11 @@ pub struct WorkOverridesInput {
 	pub is_accepted: Option<Option<bool>>,
 	pub is_published: Option<Option<bool>>,
 	pub research_line_id: Option<Option<Uuid>>,
+	pub corresponding_orcid: Option<Option<String>>,
+}
+
+#[derive(Debug, Deserialize, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct AuthorshipAffiliationsInput {
+	pub affiliations: Vec<String>,
 }

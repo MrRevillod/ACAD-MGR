@@ -22,7 +22,7 @@ impl WorksController {
 	#[interceptor(SessionCheck)]
 	pub async fn sync_works(&self, req: Request) -> WebResult<SyncResultView> {
 		let academic_id = req.param::<AcademicId>("id")?;
-		Ok(self.works_import.sync_from_openalex(academic_id).await?)
+		Ok(self.works_import.sync_works(academic_id).await?)
 	}
 
 	#[post("/sync-all")]
@@ -73,6 +73,18 @@ impl WorksController {
 		let input = req.body_validator::<WorkOverridesInput>()?;
 		self.works.update_overrides(work_id, input).await?;
 		Ok(JsonResponse::Ok().message("Overrides actualizados"))
+	}
+
+	#[put("/{id}/authorships/{orcid}/affiliations")]
+	#[interceptor(SessionCheck)]
+	pub async fn update_authorship_affiliations(&self, req: Request) -> WebResult<JsonResponse> {
+		let work_id = req.param::<WorkId>("id")?;
+		let orcid = req.param::<String>("orcid")?;
+		let input = req.body_validator::<AuthorshipAffiliationsInput>()?;
+		self.works
+			.update_authorship_affiliations(work_id, orcid, input.affiliations)
+			.await?;
+		Ok(JsonResponse::Ok().message("Afiliaciones actualizadas"))
 	}
 
 	#[delete("/{id}/overrides")]

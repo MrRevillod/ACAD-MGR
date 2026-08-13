@@ -67,9 +67,12 @@ pub struct KeywordView {
 #[serde(rename_all = "camelCase")]
 pub struct SyncResultView {
 	pub academic_id: AcademicId,
-	pub works_fetched: usize,
+	pub orcid_works: usize,
+	pub works_without_doi: usize,
+	pub not_found_in_openalex: usize,
 	pub works_created: usize,
 	pub authorships_inserted: usize,
+	pub authorships_unlinked: usize,
 	pub topics_linked: usize,
 	pub keywords_linked: usize,
 	pub errors: Vec<String>,

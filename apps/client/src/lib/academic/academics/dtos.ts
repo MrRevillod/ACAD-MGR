@@ -231,11 +231,12 @@ export type SelfUpdateDTO = v.InferInput<typeof selfUpdateAcademicDTOSchema>
 
 export interface SyncResultDTO {
 	academicId: string
-	academicOrcid: string
-	worksFetched: number
+	orcidWorks: number
+	worksWithoutDoi: number
+	notFoundInOpenalex: number
 	worksCreated: number
-	worksSkipped: number
 	authorshipsInserted: number
+	authorshipsUnlinked: number
 	topicsLinked: number
 	keywordsLinked: number
 	errors: string[]

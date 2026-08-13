@@ -20,11 +20,11 @@
 			const result = await mutation.mutateAsync(academicId)
 			if (result.errors.length === 0) {
 				toast.success(
-					`Sincronización completa: ${result.worksCreated} creadas, ${result.worksSkipped} ya existían`,
+					`Sincronización completa: ${result.worksCreated} nuevas · ${result.authorshipsUnlinked} desvinculadas`,
 				)
 			} else {
 				toast.warning(
-					`Sincronización parcial: ${result.worksCreated} creadas, ${result.errors.length} errores`,
+					`Sincronización parcial: ${result.worksCreated} nuevas · ${result.authorshipsUnlinked} desvinculadas · ${result.errors.length} errores`,
 				)
 			}
 		} catch {

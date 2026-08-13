@@ -2,6 +2,7 @@ use crate::academic::{AcademicId, AcademicListFilter, AcademicsRepository};
 use crate::research::*;
 use crate::shared::AppResult;
 
+use super::openalex::API_DELAY;
 use papers_openalex::Work as OpenAlexWork;
 use std::sync::Arc;
 use sword::prelude::*;
@@ -14,53 +15,94 @@ pub struct WorksImportService {
 	classification: Arc<WorkClassificationRepository>,
 	academics: Arc<AcademicsRepository>,
 	openalex: Arc<OpenAlexClient>,
+	orcid: Arc<OrcidClient>,
 }
 
 impl WorksImportService {
-	pub async fn sync_from_openalex(&self, academic_id: AcademicId) -> AppResult<SyncResultView> {
+	pub async fn sync_works(&self, academic_id: AcademicId) -> AppResult<SyncResultView> {
 		let academic = self
 			.academics
 			.find_by_id(&academic_id)
 			.await?
 			.ok_or(WorksError::AcademicNotFound)?;
 
-		let orcid = academic.orcid.ok_or(WorksError::AcademicWithoutOrcid)?;
+		let orcid = academic.orcid.clone().ok_or(WorksError::AcademicWithoutOrcid)?;
 
-		let oa_works = self.openalex.list_all_works_by_orcid(&orcid).await?;
-		let works_fetched = oa_works.len();
+		let orcid_works = self.orcid.works(&orcid).await?;
+		let works_fetched = orcid_works.len();
 
 		let mut created = 0usize;
 		let mut authorships_count = 0usize;
 		let mut topics_count = 0usize;
 		let mut keywords_count = 0usize;
+		let mut works_without_doi = 0usize;
+		let mut not_found_in_openalex = 0usize;
 		let mut errors = Vec::new();
 
-		for oa_work in &oa_works {
+		let mut confirmed: Vec<WorkId> = Vec::with_capacity(orcid_works.len());
+
+		for ow in &orcid_works {
+			let Some(doi) = ow.doi.as_deref() else {
+				works_without_doi += 1;
+				continue;
+			};
+
+			let Some(oa_work) = self.openalex.get_work_by_doi(doi).await? else {
+				not_found_in_openalex += 1;
+				continue;
+			};
+
 			if oa_work.ty() != WorkType::Article {
 				continue;
 			}
 
-			let work_result = self.process_single_work(oa_work).await;
-
-			match work_result {
-				Ok(stats) if stats.was_inserted => {
-					created += 1;
-					authorships_count += stats.authorships;
-					topics_count += stats.topics;
-					keywords_count += stats.keywords;
+			match self.process_single_work(&oa_work).await {
+				Ok(stats) => {
+					if stats.was_inserted {
+						created += 1;
+						authorships_count += stats.authorships;
+						topics_count += stats.topics;
+						keywords_count += stats.keywords;
+					}
+					confirmed.push(stats.work_id);
 				}
-				Ok(_) => {}
 				Err(e) => {
-					errors.push(format!("{}: {e}", oa_work.id));
+					errors.push(format!("{doi}: {e}"));
 				}
 			}
+
+			tokio::time::sleep(API_DELAY).await;
 		}
+
+		for work_id in &confirmed {
+			let authorship = Authorship::builder()
+				.work_id(*work_id)
+				.orcid(orcid.clone())
+				.name(academic.full_name())
+				.is_external(false)
+				.is_corresponding(false)
+				.affiliations(Vec::new())
+				.position(AuthorshipPosition::Middle)
+				.build();
+			self.authorships.save(&authorship).await?;
+		}
+
+		let authorships_unlinked = if confirmed.is_empty() {
+			self.authorships.delete_for_orcid(&orcid).await?
+		} else {
+			self.authorships
+				.delete_for_orcid_not_in(&orcid, &confirmed)
+				.await?
+		};
 
 		Ok(SyncResultView {
 			academic_id,
-			works_fetched,
+			orcid_works: works_fetched,
+			works_without_doi,
+			not_found_in_openalex,
 			works_created: created,
 			authorships_inserted: authorships_count,
+			authorships_unlinked,
 			topics_linked: topics_count,
 			keywords_linked: keywords_count,
 			errors,
@@ -72,14 +114,17 @@ impl WorksImportService {
 		let mut results = Vec::with_capacity(academics.len());
 
 		for academic in &academics {
-			match self.sync_from_openalex(academic.id).await {
+			match self.sync_works(academic.id).await {
 				Ok(result) => results.push(result),
 				Err(e) => {
 					results.push(SyncResultView {
 						academic_id: academic.id,
-						works_fetched: 0,
+						orcid_works: 0,
+						works_without_doi: 0,
+						not_found_in_openalex: 0,
 						works_created: 0,
 						authorships_inserted: 0,
+						authorships_unlinked: 0,
 						topics_linked: 0,
 						keywords_linked: 0,
 						errors: vec![e.to_string()],
@@ -113,6 +158,7 @@ impl WorksImportService {
 
 		if !was_inserted {
 			return Ok(WorkImportProcessStats {
+				work_id: work.id,
 				was_inserted: false,
 				authorships: 0,
 				topics: 0,
@@ -200,6 +246,7 @@ impl WorksImportService {
 		}
 
 		Ok(WorkImportProcessStats {
+			work_id: work.id,
 			was_inserted: true,
 			authorships,
 			topics,

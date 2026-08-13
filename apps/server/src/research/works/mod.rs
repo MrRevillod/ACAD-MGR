@@ -21,6 +21,7 @@ pub use errors::*;
 pub use events::*;
 pub use repository::WorksRepository;
 pub use services::{
-	OpenAlexClient, OpenAlexConfig, OpenAlexWorkExt, WorksImportService, WorksService,
+	OpenAlexClient, OpenAlexConfig, OpenAlexWorkExt, OrcidClient, WorksImportService,
+	WorksService,
 };
 pub use views::*;
