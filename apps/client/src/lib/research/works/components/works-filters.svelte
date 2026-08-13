@@ -53,10 +53,16 @@
 		...(careersQuery.data?.map((c) => ({ value: c.id, label: c.name })) ?? []),
 	])
 
+	$effect(() => {
+		if (careerId && !careerItems.some((c) => c.value === careerId)) {
+			careerId = ""
+		}
+	})
+
 	const journalKindItems = $derived([
 		{ value: "", label: "Todas las clasificaciones" },
-		{ value: "scopus", label: "Scopus" },
 		{ value: "wos", label: "WoS" },
+		{ value: "scopus", label: "Scopus" },
 	])
 
 	const researchLineItems = $derived([
