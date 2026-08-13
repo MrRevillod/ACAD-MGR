@@ -11,7 +11,9 @@
 		Loader,
 		Network,
 		Pencil,
+		RotateCcw,
 		Tag,
+		TriangleAlert,
 		X,
 	} from "@lucide/svelte"
 
@@ -24,6 +26,7 @@
 	import { useWorkDetailQuery } from "$works/queries"
 
 	import Badge from "$shared/components/ui/badge.svelte"
+	import Dialog from "$shared/components/ui/dialog.svelte"
 	import HtmlRenderer from "$shared/components/ui/html-renderer.svelte"
 	import WorkAuthorsList from "$works/components/work-authors-list.svelte"
 	import WorkEditForm from "$works/components/work-edit-form.svelte"
@@ -34,11 +37,26 @@
 
 	let editing = $state(false)
 	let editSubmit = $state<(() => Promise<void>) | null>(null)
+	let editRestore = $state<(() => Promise<void>) | null>(null)
+	let showRestoreConfirm = $state(false)
 	let isSaving = $state(false)
 	let expandedTopicId = $state<string | null>(null)
 
 	function toggleTopic(id: string) {
 		expandedTopicId = expandedTopicId === id ? null : id
+	}
+
+	function goBack() {
+		if (window.history.length > 1) {
+			history.back()
+		} else {
+			void goto("/works")
+		}
+	}
+
+	async function confirmRestore() {
+		showRestoreConfirm = false
+		await editRestore?.()
 	}
 </script>
 
@@ -47,7 +65,7 @@
 		<div class="flex w-full items-center justify-between gap-3">
 			<button
 				type="button"
-				onclick={() => void goto("/works")}
+				onclick={goBack}
 				class="inline-flex items-center gap-1 text-sm text-corp-blue transition-colors hover:text-corp-blue/80 active:scale-[0.96]"
 			>
 				<ArrowLeft class="size-3.5" />
@@ -57,6 +75,15 @@
 			{#if query.data}
 				{#if editing}
 					<div class="flex items-center gap-2">
+						<button
+							type="button"
+							onclick={() => (showRestoreConfirm = true)}
+							disabled={isSaving}
+							class="inline-flex items-center gap-1.5 rounded-lg border border-red-200 px-3 py-1.5 text-sm font-medium text-red-600 transition-colors hover:border-red-300 hover:bg-red-50 active:scale-[0.96] disabled:pointer-events-none disabled:opacity-50"
+						>
+							<RotateCcw class="size-4" />
+							Restaurar originales
+						</button>
 						<button
 							type="button"
 							onclick={() => (editing = false)}
@@ -103,6 +130,7 @@
 				<WorkEditForm
 					work={query.data}
 					bind:submit={editSubmit}
+					bind:restore={editRestore}
 					bind:isSaving
 					onSaved={() => (editing = false)}
 				/>
@@ -389,3 +417,42 @@
 		{/if}
 	</div>
 </div>
+
+<Dialog
+	bind:open={showRestoreConfirm}
+	title="Restaurar valores originales"
+	description="Esta acción no se puede deshacer."
+	class="max-w-md"
+>
+	<div class="flex items-start gap-3">
+		<div class="flex size-9 shrink-0 items-center justify-center rounded-full bg-red-50">
+			<TriangleAlert class="size-4.5 text-red-600" />
+		</div>
+		<div>
+			<p class="text-sm text-[#1A1A1A]">
+				Se descartarán todos los cambios manuales y la obra volverá a mostrar sus valores
+				originales.
+			</p>
+			<p class="mt-1 text-xs text-corp-gray">
+				Si luego quieres volver a editar, podrás hacerlo desde el botón "Editar".
+			</p>
+		</div>
+	</div>
+	<div class="mt-5 flex justify-end gap-2">
+		<button
+			type="button"
+			onclick={() => (showRestoreConfirm = false)}
+			class="inline-flex items-center rounded-lg border border-corp-gray/20 px-3 py-1.5 text-sm font-medium text-corp-gray transition-colors hover:border-corp-gray/40 hover:text-[#1A1A1A] active:scale-[0.96]"
+		>
+			Cancelar
+		</button>
+		<button
+			type="button"
+			onclick={confirmRestore}
+			class="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-red-700 active:scale-[0.96]"
+		>
+			<RotateCcw class="size-4" />
+			Restaurar
+		</button>
+	</div>
+</Dialog>

@@ -106,13 +106,13 @@
 				<p class="text-xs font-medium tracking-wide uppercase text-corp-gray">Total</p>
 				<p class="mt-1 text-2xl font-bold text-[#1A1A1A]">{summaryTotal}</p>
 			</div>
-			<div class="rounded-lg border border-corp-yellow/30 bg-corp-yellow/5 p-4">
-				<p class="text-xs font-medium tracking-wide uppercase text-corp-gray">Scopus</p>
-				<p class="mt-1 text-2xl font-bold text-corp-yellow">{summaryScopus}</p>
-			</div>
 			<div class="rounded-lg border border-corp-blue/30 bg-corp-blue/5 p-4">
 				<p class="text-xs font-medium tracking-wide uppercase text-corp-gray">WoS</p>
 				<p class="mt-1 text-2xl font-bold text-corp-blue">{summaryWos}</p>
+			</div>
+			<div class="rounded-lg border border-corp-yellow/30 bg-corp-yellow/5 p-4">
+				<p class="text-xs font-medium tracking-wide uppercase text-corp-gray">Scopus</p>
+				<p class="mt-1 text-2xl font-bold text-corp-gold">{summaryScopus}</p>
 			</div>
 			<div class="rounded-lg border border-corp-gray/20 bg-white p-4">
 				<p class="text-xs font-medium tracking-wide uppercase text-corp-gray">Docencia</p>
@@ -141,7 +141,7 @@
 				<div class="mb-4 flex items-center gap-2">
 					<TrendingUp class="size-4 text-corp-blue" />
 					<h2 class="text-sm font-semibold tracking-wide uppercase text-corp-blue">
-						Tendencia Anual Scopus / WoS
+						Tendencia Anual WoS / Scopus
 					</h2>
 				</div>
 				<TrendLine journalKind={statsQuery.data?.byJournalKind ?? []} />

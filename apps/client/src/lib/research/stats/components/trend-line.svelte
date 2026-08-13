@@ -34,10 +34,10 @@
 		data={wideData}
 		x="year"
 		series={[
-			{ key: "scopus", color: "#EDC500", label: "Scopus" },
 			{ key: "wos", color: "#0075B4", label: "WoS" },
+			{ key: "scopus", color: "#C9A500", label: "Scopus" },
 		]}
-		height={260}
+		height={320}
 		padding={{ left: 50, right: 20, bottom: 50, top: 10 }}
 		xDomain={[minYear, maxYear]}
 		xNice={false}

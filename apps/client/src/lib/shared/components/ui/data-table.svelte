@@ -87,51 +87,53 @@
 	const pagination = $derived(table.state.pagination)
 </script>
 
-<div class="w-full rounded-xl border border-corp-gray/20 bg-white {className}">
-	<table class="w-full caption-bottom text-sm {tableClass}">
-		<thead>
-			{#each table.getHeaderGroups() as headerGroup (headerGroup.id)}
-				<tr class="border-b border-corp-gray/20 bg-gray-100">
-					{#each headerGroup.headers as header (header.id)}
-						<th
-							class="px-4 py-3 text-left text-xs font-medium tracking-wide uppercase text-corp-gray {header.column.getCanSort()
-								? 'cursor-pointer select-none'
-								: ''}"
-							onclick={header.column.getToggleSortingHandler()}
-							scope="col"
-						>
-							<span class="inline-flex items-center gap-1">
-								<FlexRender {header} />
-								{#if header.column.getIsSorted() === "asc"}
-									<ChevronUp class="size-3.5 shrink-0" />
-								{:else if header.column.getIsSorted() === "desc"}
-									<ChevronDown class="size-3.5 shrink-0" />
-								{/if}
-							</span>
-						</th>
-					{/each}
-				</tr>
-			{/each}
-		</thead>
-		<tbody>
-			{#each table.getRowModel().rows as row (row.id)}
-				<tr
-					class="border-b border-corp-gray/10 transition-colors last:border-0 even:bg-gray-50 {onRowClick
-						? 'cursor-pointer hover:bg-corp-blue/4'
-						: ''}"
-					role={onRowClick ? "button" : undefined}
-					tabindex={onRowClick ? 0 : undefined}
-					onclick={() => onRowClick?.(row.original)}
-				>
-					{#each row.getAllCells() as cell (cell.id)}
-						<td class="px-4 py-3 text-[#1A1A1A]">
-							<FlexRender {cell} />
-						</td>
-					{/each}
-				</tr>
-			{/each}
-		</tbody>
-	</table>
+<div class="w-full overflow-hidden rounded-xl border border-corp-gray/20 bg-white {className}">
+	<div class="overflow-x-auto">
+		<table class="w-full caption-bottom text-sm {tableClass}">
+			<thead>
+				{#each table.getHeaderGroups() as headerGroup (headerGroup.id)}
+					<tr class="border-b border-corp-gray/20 bg-gray-100">
+						{#each headerGroup.headers as header (header.id)}
+							<th
+								class="px-4 py-3 text-left text-xs font-medium tracking-wide uppercase text-corp-gray {header.column.getCanSort()
+									? 'cursor-pointer select-none'
+									: ''}"
+								onclick={header.column.getToggleSortingHandler()}
+								scope="col"
+							>
+								<span class="inline-flex items-center gap-1">
+									<FlexRender {header} />
+									{#if header.column.getIsSorted() === "asc"}
+										<ChevronUp class="size-3.5 shrink-0" />
+									{:else if header.column.getIsSorted() === "desc"}
+										<ChevronDown class="size-3.5 shrink-0" />
+									{/if}
+								</span>
+							</th>
+						{/each}
+					</tr>
+				{/each}
+			</thead>
+			<tbody>
+				{#each table.getRowModel().rows as row (row.id)}
+					<tr
+						class="border-b border-corp-gray/10 transition-colors last:border-0 even:bg-gray-50 {onRowClick
+							? 'cursor-pointer hover:bg-corp-blue/4'
+							: ''}"
+						role={onRowClick ? "button" : undefined}
+						tabindex={onRowClick ? 0 : undefined}
+						onclick={() => onRowClick?.(row.original)}
+					>
+						{#each row.getAllCells() as cell (cell.id)}
+							<td class="px-4 py-3 text-[#1A1A1A]">
+								<FlexRender {cell} />
+							</td>
+						{/each}
+					</tr>
+				{/each}
+			</tbody>
+		</table>
+	</div>
 
 	{#if filtered.length === 0}
 		<p class="px-4 py-8 text-center text-sm text-corp-gray">Sin resultados.</p>

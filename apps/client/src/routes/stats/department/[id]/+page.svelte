@@ -70,8 +70,8 @@
 		if (!d) return []
 		const unindexed = d.totalWorks - d.scopusCount - d.wosCount
 		return [
-			{ label: "Scopus", value: d.scopusCount, color: "#EDC500" },
 			{ label: "WoS", value: d.wosCount, color: "#0075B4" },
+			{ label: "Scopus", value: d.scopusCount, color: "#C9A500" },
 			...(unindexed > 0
 				? [{ label: "Sin indexar", value: unindexed, color: "#E5E7EB" }]
 				: []),
@@ -100,15 +100,6 @@
 					cls: "font-semibold text-[#1A1A1A]",
 				}),
 		}),
-		helper.accessor("scopus", {
-			id: "scopus",
-			header: "Scopus",
-			cell: (info) =>
-				renderSnippet(numberSnippet, {
-					value: info.getValue(),
-					cls: "font-medium text-corp-yellow",
-				}),
-		}),
 		helper.accessor("wos", {
 			id: "wos",
 			header: "WoS",
@@ -116,6 +107,15 @@
 				renderSnippet(numberSnippet, {
 					value: info.getValue(),
 					cls: "font-medium text-corp-blue",
+				}),
+		}),
+		helper.accessor("scopus", {
+			id: "scopus",
+			header: "Scopus",
+			cell: (info) =>
+				renderSnippet(numberSnippet, {
+					value: info.getValue(),
+					cls: "font-medium text-corp-gold",
 				}),
 		}),
 		helper.accessor("unindexed", {
@@ -189,13 +189,13 @@
 				<p class="text-xs font-medium tracking-wide uppercase text-corp-gray">Total</p>
 				<p class="mt-1 text-xl font-bold text-[#1A1A1A]">{d.totalWorks}</p>
 			</div>
-			<div class="rounded-lg border border-corp-yellow/30 bg-corp-yellow/5 p-4">
-				<p class="text-xs font-medium tracking-wide uppercase text-corp-gray">Scopus</p>
-				<p class="mt-1 text-xl font-bold text-corp-yellow">{d.scopusCount}</p>
-			</div>
 			<div class="rounded-lg border border-corp-blue/30 bg-corp-blue/5 p-4">
 				<p class="text-xs font-medium tracking-wide uppercase text-corp-gray">WoS</p>
 				<p class="mt-1 text-xl font-bold text-corp-blue">{d.wosCount}</p>
+			</div>
+			<div class="rounded-lg border border-corp-yellow/30 bg-corp-yellow/5 p-4">
+				<p class="text-xs font-medium tracking-wide uppercase text-corp-gray">Scopus</p>
+				<p class="mt-1 text-xl font-bold text-corp-gold">{d.scopusCount}</p>
 			</div>
 			<div class="rounded-lg border border-corp-gray/20 bg-white p-4">
 				<p class="text-xs font-medium tracking-wide uppercase text-corp-gray">

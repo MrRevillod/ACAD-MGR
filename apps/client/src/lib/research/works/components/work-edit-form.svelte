@@ -1,6 +1,7 @@
 <script lang="ts">
-	import { Plus, RotateCcw, X } from "@lucide/svelte"
+	import { Plus, X } from "@lucide/svelte"
 	import { createForm, Field, Form, handleSubmit, reset } from "@formisch/svelte"
+	import type { FieldElementProps } from "@formisch/svelte"
 	import { onMount } from "svelte"
 	import * as v from "valibot"
 
@@ -44,15 +45,30 @@
 		draftAffiliation: string
 	}
 
+	interface AutoGrowField {
+		props: FieldElementProps
+		input: string | null | undefined
+		errors: [string, ...string[]] | null
+	}
+
 	interface Props {
 		work: WorkDetail
 		submit?: (() => Promise<void>) | null
+		restore?: (() => Promise<void>) | null
 		isSaving?: boolean
 		onSaved: () => void
 	}
 
-	// eslint-disable-next-line no-useless-assignment -- `$bindable` writes are read by the parent
-	let { work, submit = $bindable(null), isSaving = $bindable(false), onSaved }: Props = $props()
+	let {
+		work,
+		// eslint-disable-next-line no-useless-assignment -- `$bindable` writes are read by the parent
+		submit = $bindable(null),
+		// eslint-disable-next-line no-useless-assignment -- `$bindable` writes are read by the parent
+		restore = $bindable(null),
+		// eslint-disable-next-line no-useless-assignment -- `$bindable` writes are read by the parent
+		isSaving = $bindable(false),
+		onSaved,
+	}: Props = $props()
 
 	const form = createForm({ schema: editSchema })
 
@@ -69,6 +85,7 @@
 
 	onMount(() => {
 		submit = handleSubmit(form, doSave)
+		restore = handleRestoreAll
 		reset(form, {
 			initialInput: {
 				title: work.title,
@@ -136,10 +153,11 @@
 			for (const draft of authorDrafts) {
 				const original =
 					authorships.find((a) => a.orcid === draft.orcid)?.affiliations ?? []
-				if (JSON.stringify(original) !== JSON.stringify(draft.affiliations)) {
+				const cleaned = draft.affiliations.filter((a) => a.trim() !== "")
+				if (JSON.stringify(original) !== JSON.stringify(cleaned)) {
 					affiliationChanges.push({
 						orcid: draft.orcid,
-						affiliations: [...draft.affiliations],
+						affiliations: cleaned,
 					})
 				}
 			}
@@ -160,30 +178,33 @@
 		}
 	}
 
-	function handleRestoreAll() {
-		clearMutation.mutate(work.id, {
-			onSuccess: () => onSaved(),
-		})
+	async function handleRestoreAll() {
+		await clearMutation.mutateAsync(work.id)
+		onSaved()
 	}
 </script>
+
+{#snippet autoGrowText(field: AutoGrowField, label: string)}
+	<div class="space-y-1">
+		<span class="block text-xs font-medium text-corp-gray">{label}</span>
+		<textarea
+			{...field.props}
+			value={field.input ?? ""}
+			rows={1}
+			class="field-sizing-content w-full resize-none rounded-lg border border-corp-gray/20 bg-white px-3 py-2 text-sm leading-6 text-[#1A1A1A] outline-none transition-colors placeholder:text-corp-gray/50 focus:border-corp-blue/50"
+		></textarea>
+		{#if field.errors}
+			<p class="text-xs text-red-500">{field.errors[0]}</p>
+		{/if}
+	</div>
+{/snippet}
 
 <Form of={form} onsubmit={doSave}>
 	<div class="mt-6 space-y-8">
 		<section>
 			<Field of={form} path={["title"]}>
 				{#snippet children(field)}
-					<div class="space-y-1">
-						<span class="block text-xs font-medium text-corp-gray">Título</span>
-						<textarea
-							{...field.props}
-							value={field.input}
-							rows={2}
-							class="w-full rounded-lg border border-corp-gray/20 bg-white px-3 py-2 text-sm text-[#1A1A1A] outline-none transition-colors placeholder:text-corp-gray/50 focus:border-corp-blue/50"
-						></textarea>
-						{#if field.errors}
-							<p class="text-xs text-red-500">{field.errors[0]}</p>
-						{/if}
-					</div>
+					{@render autoGrowText(field, "Título")}
 				{/snippet}
 			</Field>
 		</section>
@@ -193,25 +214,7 @@
 				<section>
 					<Field of={form} path={["abstractText"]}>
 						{#snippet children(field)}
-							<div class="space-y-1">
-								<span class="block text-xs font-medium text-corp-gray"
-									>Abstract</span
-								>
-								<div class="grid">
-									<span
-										class="invisible col-start-1 row-start-1 px-3 py-2 text-sm leading-6 break-words whitespace-pre-wrap"
-										aria-hidden="true">{field.input ?? " "}</span
-									>
-									<textarea
-										{...field.props}
-										value={field.input ?? ""}
-										class="col-start-1 row-start-1 w-full resize-none overflow-hidden rounded-lg border border-corp-gray/20 bg-white px-3 py-2 text-sm leading-6 text-[#1A1A1A] outline-none transition-colors placeholder:text-corp-gray/50 focus:border-corp-blue/50"
-									></textarea>
-								</div>
-								{#if field.errors}
-									<p class="text-xs text-red-500">{field.errors[0]}</p>
-								{/if}
-							</div>
+							{@render autoGrowText(field, "Abstract")}
 						{/snippet}
 					</Field>
 				</section>
@@ -236,36 +239,6 @@
 									<p class="text-xs text-red-500">{field.errors[0]}</p>
 								{/if}
 							</div>
-						{/snippet}
-					</Field>
-				</section>
-
-				<section class="space-y-2.5">
-					<Field of={form} path={["isAccepted"]}>
-						{#snippet children(field)}
-							<label class="flex items-center gap-2 text-sm">
-								<input
-									type="checkbox"
-									{...field.props}
-									checked={field.input ?? false}
-									class="size-4 rounded border-corp-gray/30 text-corp-blue focus:ring-corp-blue/30"
-								/>
-								Aceptado
-							</label>
-						{/snippet}
-					</Field>
-
-					<Field of={form} path={["isPublished"]}>
-						{#snippet children(field)}
-							<label class="flex items-center gap-2 text-sm">
-								<input
-									type="checkbox"
-									{...field.props}
-									checked={field.input ?? false}
-									class="size-4 rounded border-corp-gray/30 text-corp-blue focus:ring-corp-blue/30"
-								/>
-								Publicado
-							</label>
 						{/snippet}
 					</Field>
 				</section>
@@ -305,19 +278,57 @@
 						{/snippet}
 					</Field>
 				</section>
+
+				<section class="space-y-2">
+					<span class="block text-xs font-medium text-corp-gray">Estado</span>
+					<div class="flex w-full items-center justify-between">
+						<Field of={form} path={["isAccepted"]}>
+							{#snippet children(field)}
+								<label class="flex items-center gap-2 text-sm">
+									<input
+										type="checkbox"
+										{...field.props}
+										checked={field.input ?? false}
+										class="size-4 rounded border-corp-gray/30 text-corp-blue focus:ring-corp-blue/30"
+									/>
+									Aceptado
+								</label>
+							{/snippet}
+						</Field>
+
+						<Field of={form} path={["isPublished"]}>
+							{#snippet children(field)}
+								<label class="flex items-center gap-2 text-sm">
+									<input
+										type="checkbox"
+										{...field.props}
+										checked={field.input ?? false}
+										class="size-4 rounded border-corp-gray/30 text-corp-blue focus:ring-corp-blue/30"
+									/>
+									Publicado
+								</label>
+							{/snippet}
+						</Field>
+					</div>
+				</section>
 			</aside>
 		</div>
 
 		{#if authorships.length > 0}
 			<section>
-				<p class="mb-2 text-xs font-semibold tracking-widest uppercase text-corp-blue">
-					Autores
-				</p>
-				<div class="grid items-start gap-2 sm:grid-cols-2">
+				<div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+					<p class="text-xs font-semibold tracking-widest uppercase text-corp-blue">
+						Autores
+					</p>
+					<p class="text-[11px] text-corp-gray">
+						Solo un autor puede ser el correspondiente.
+					</p>
+				</div>
+				<div class="grid items-start gap-4 sm:grid-cols-2">
 					{#each authorDrafts as draft, index (draft.orcid)}
-						<div class="min-w-0 rounded-lg border border-corp-gray/10 p-3">
+						<div class="min-w-0 rounded-lg border border-corp-gray/10 p-4">
 							<label
-								class="flex cursor-pointer items-center gap-2"
+								class="flex cursor-pointer items-center gap-3"
 								title="Marcar como autor correspondiente"
 							>
 								<input
@@ -339,7 +350,7 @@
 								{/if}
 							</label>
 
-							<div class="mt-2.5">
+							<div class="mt-4">
 								<p
 									class="mb-1 text-[11px] font-semibold uppercase tracking-wide text-corp-gray"
 								>
@@ -350,12 +361,14 @@
 										Sin afiliaciones registradas.
 									</p>
 								{:else}
-									<ul class="space-y-1">
-										{#each draft.affiliations as aff, affIndex (aff)}
-											<li
-												class="flex items-start gap-2 text-xs text-corp-gray"
-											>
-												<span class="min-w-0 flex-1">{aff}</span>
+									<ul class="space-y-2">
+										{#each draft.affiliations as _, affIndex (affIndex)}
+											<li class="flex items-center gap-2">
+												<input
+													type="text"
+													bind:value={draft.affiliations[affIndex]}
+													class="min-w-0 flex-1 rounded-lg border border-corp-gray/25 bg-white px-2.5 py-1.5 text-xs text-[#1A1A1A] focus:border-corp-blue focus:outline-none"
+												/>
 												<button
 													type="button"
 													title="Quitar afiliación"
@@ -369,7 +382,7 @@
 										{/each}
 									</ul>
 								{/if}
-								<div class="mt-1.5 flex items-center gap-2">
+								<div class="mt-2.5 flex items-center gap-2">
 									<input
 										type="text"
 										bind:value={draft.draftAffiliation}
@@ -395,22 +408,7 @@
 						</div>
 					{/each}
 				</div>
-				<p class="mt-2 text-[11px] text-corp-gray">
-					Solo un autor puede ser el correspondiente.
-				</p>
 			</section>
 		{/if}
-
-		<div class="border-t border-corp-gray/10 pt-4">
-			<button
-				type="button"
-				onclick={handleRestoreAll}
-				disabled={clearMutation.isPending}
-				class="inline-flex items-center gap-1.5 text-xs font-semibold text-corp-gray transition-colors hover:text-corp-blue disabled:opacity-50"
-			>
-				<RotateCcw class="size-3.5" />
-				Restaurar originales
-			</button>
-		</div>
 	</div>
 </Form>
