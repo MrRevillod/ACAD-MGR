@@ -36,6 +36,7 @@
 				d: `M ${x1} ${y1} A ${radius} ${radius} 0 ${large} 1 ${x2} ${y2}`,
 				...seg,
 				pct: Math.round(ratio * 100),
+				isFull: ratio >= 1,
 			}
 		})
 	})
@@ -46,7 +47,18 @@
 <div class="flex flex-col items-center gap-2 {className}">
 	<svg {viewBox} class="w-40 h-40" role="img">
 		{#each arcs as arc (arc.label)}
-			<path d={arc.d} fill="none" stroke={arc.color} stroke-width={stroke} />
+			{#if arc.isFull}
+				<circle
+					cx={center}
+					cy={center}
+					r={radius}
+					fill="none"
+					stroke={arc.color}
+					stroke-width={stroke}
+				/>
+			{:else}
+				<path d={arc.d} fill="none" stroke={arc.color} stroke-width={stroke} />
+			{/if}
 		{/each}
 		<text
 			x={center}

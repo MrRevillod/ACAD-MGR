@@ -7,7 +7,7 @@ COPY ./apps/client/package.json ./
 COPY ./apps/client/pnpm-lock.yaml ./
 COPY ./apps/client/.npmrc ./
 
-RUN corepack enable && pnpm install --frozen-lockfile --ignore-scripts
+RUN npm install -g pnpm@11.6.0 && pnpm install --frozen-lockfile --ignore-scripts
 
 FROM base AS builder
 ARG VITE_API_URL

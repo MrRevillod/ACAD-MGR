@@ -1,3 +1,4 @@
+use crate::academic::AcademicId;
 use crate::research::stats::*;
 use crate::shared::{AppResult, Database};
 
@@ -189,6 +190,147 @@ impl StatsRepository {
 		.bind(query.option)
 		.bind(query.journal_kind)
 		.fetch_all(self.database.pool())
+		.await
+		.map_err(Into::into)
+	}
+
+	pub async fn academic_line_distribution(
+		&self,
+		academic_id: &AcademicId,
+		query: &AcademicStatsQuery,
+	) -> AppResult<Vec<ResearchLineRow>> {
+		sqlx::query_as::<_, ResearchLineRow>(
+			"SELECT rl.id AS research_line_id, rl.name AS name,
+		        COALESCE(lc.count, 0)::bigint AS count
+		    FROM research_lines rl
+		    LEFT JOIN (
+		        SELECT x.line_id, COUNT(*)::bigint AS count
+		        FROM (
+		            SELECT COALESCE(
+		                (w.overrides).research_line_id,
+		                (
+		                    SELECT sf.research_line_id
+		                    FROM work_topic_scores wt
+		                    JOIN topics t ON t.id = wt.topic_id
+		                    JOIN subfields sf ON sf.id = t.subfield_id
+		                    WHERE wt.work_id = w.id
+		                    ORDER BY wt.score DESC
+		                    LIMIT 1
+		                ),
+		                (SELECT id FROM research_lines WHERE slug = 'sin-asignar')
+		            ) AS line_id
+		            FROM works w
+		            JOIN work_authorships wa ON w.id = wa.work_id AND wa.is_external = false
+		            JOIN academics a ON a.orcid = wa.orcid AND a.id = $1
+		            WHERE COALESCE((w.overrides).publication_year, w.publication_year) >= $2
+		                AND COALESCE((w.overrides).publication_year, w.publication_year) <= $3
+		        ) x
+		        GROUP BY x.line_id
+		    ) lc ON lc.line_id = rl.id
+		    WHERE rl.slug <> 'sin-asignar'
+		    GROUP BY rl.id, rl.name, lc.count
+		    ORDER BY count DESC, rl.name",
+		)
+		.bind(academic_id)
+		.bind(query.year_from.unwrap_or(1900))
+		.bind(query.year_to.unwrap_or(2100))
+		.fetch_all(self.database.pool())
+		.await
+		.map_err(Into::into)
+	}
+
+	pub async fn academic_journal_kind_trend(
+		&self,
+		academic_id: &AcademicId,
+		query: &AcademicStatsQuery,
+	) -> AppResult<Vec<JournalKindRow>> {
+		sqlx::query_as::<_, JournalKindRow>(
+			"SELECT COALESCE((w.overrides).publication_year, w.publication_year) AS year,
+		        COUNT(DISTINCT w.id) FILTER (WHERE ji.kind = 'wos')::bigint    AS wos,
+		        COUNT(DISTINCT w.id) FILTER (WHERE ji.kind = 'scopus')::bigint AS scopus
+		    FROM works w
+		    JOIN work_authorships wa ON w.id = wa.work_id AND wa.is_external = false
+		    JOIN academics a ON a.orcid = wa.orcid AND a.id = $1
+		    LEFT JOIN sources src ON w.source_id = src.id
+		    LEFT JOIN journal_issn ji ON ji.issn = src.issn
+		    WHERE COALESCE((w.overrides).publication_year, w.publication_year) >= $2
+		        AND COALESCE((w.overrides).publication_year, w.publication_year) <= $3
+		    GROUP BY year
+		    ORDER BY year",
+		)
+		.bind(academic_id)
+		.bind(query.year_from.unwrap_or(1900))
+		.bind(query.year_to.unwrap_or(2100))
+		.fetch_all(self.database.pool())
+		.await
+		.map_err(Into::into)
+	}
+
+	pub async fn academic_contribution(
+		&self,
+		academic_id: &AcademicId,
+		query: &AcademicStatsQuery,
+	) -> AppResult<ContributionRow> {
+		sqlx::query_as::<_, ContributionRow>(
+			"SELECT
+		        (SELECT COUNT(DISTINCT w1.id)::bigint
+		         FROM works w1
+		         JOIN work_authorships wa1 ON w1.id = wa1.work_id AND wa1.is_external = false
+		         JOIN academics a1 ON a1.orcid = wa1.orcid AND a1.id = $1
+		         WHERE COALESCE((w1.overrides).publication_year, w1.publication_year) BETWEEN $2 AND $3) AS academic_works,
+		        (SELECT COUNT(DISTINCT w2.id)::bigint
+		         FROM works w2
+		         JOIN work_authorships wa2 ON w2.id = wa2.work_id AND wa2.is_external = false
+		         JOIN academics a2 ON a2.orcid = wa2.orcid
+		            AND a2.orcid != 'https://orcid.org/0000-0000-0000-0000'
+		         WHERE COALESCE((w2.overrides).publication_year, w2.publication_year) BETWEEN $2 AND $3) AS faculty_works,
+		        (SELECT COUNT(DISTINCT w3.id)::bigint
+		         FROM works w3
+		         JOIN work_authorships wa3 ON w3.id = wa3.work_id AND wa3.is_external = false
+		         JOIN academics a3 ON a3.orcid = wa3.orcid
+		            AND a3.department_id = (SELECT department_id FROM academics WHERE id = $1)
+		         WHERE COALESCE((w3.overrides).publication_year, w3.publication_year) BETWEEN $2 AND $3) AS department_works,
+		        (SELECT d.name FROM departments d
+		         JOIN academics a4 ON a4.department_id = d.id WHERE a4.id = $1) AS department_name",
+		)
+		.bind(academic_id)
+		.bind(query.year_from.unwrap_or(1900))
+		.bind(query.year_to.unwrap_or(2100))
+		.fetch_one(self.database.pool())
+		.await
+		.map_err(Into::into)
+	}
+
+	pub async fn works_in_research_line(
+		&self,
+		line_id: &Uuid,
+		query: &AcademicStatsQuery,
+	) -> AppResult<i64> {
+		sqlx::query_scalar::<_, i64>(
+			"SELECT COUNT(DISTINCT w.id)::bigint
+		    FROM works w
+		    JOIN work_authorships wa ON w.id = wa.work_id AND wa.is_external = false
+		    JOIN academics a ON a.orcid = wa.orcid
+		        AND a.orcid != 'https://orcid.org/0000-0000-0000-0000'
+		    WHERE COALESCE((w.overrides).publication_year, w.publication_year) BETWEEN $2 AND $3
+		        AND COALESCE(
+		            (w.overrides).research_line_id,
+		            (
+		                SELECT sf.research_line_id
+		                FROM work_topic_scores wt
+		                JOIN topics t ON t.id = wt.topic_id
+		                JOIN subfields sf ON sf.id = t.subfield_id
+		                WHERE wt.work_id = w.id
+		                ORDER BY wt.score DESC
+		                LIMIT 1
+		            ),
+		            (SELECT id FROM research_lines WHERE slug = 'sin-asignar')
+		        ) = $1",
+		)
+		.bind(line_id)
+		.bind(query.year_from.unwrap_or(1900))
+		.bind(query.year_to.unwrap_or(2100))
+		.fetch_one(self.database.pool())
 		.await
 		.map_err(Into::into)
 	}

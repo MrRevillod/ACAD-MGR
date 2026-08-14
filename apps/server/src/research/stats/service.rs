@@ -1,3 +1,4 @@
+use crate::academic::AcademicId;
 use crate::research::*;
 use crate::shared::AppResult;
 use crate::university::DepartmentId;
@@ -60,6 +61,62 @@ impl StatsService {
 			teaching_count: summary.teaching.unwrap_or(0),
 			research_count: summary.research.unwrap_or(0),
 			top_publishers,
+		})
+	}
+
+	pub async fn get_academic_stats(
+		&self,
+		academic_id: AcademicId,
+		query: AcademicStatsQuery,
+	) -> AppResult<AcademicStatsResponse> {
+		let (lines, trend, contribution) = tokio::join!(
+			self.stats.academic_line_distribution(&academic_id, &query),
+			self.stats.academic_journal_kind_trend(&academic_id, &query),
+			self.stats.academic_contribution(&academic_id, &query),
+		);
+
+		let lines = lines?;
+		let by_research_line = lines
+			.iter()
+			.map(|r| ResearchLineStat {
+				research_line_id: r.research_line_id.to_string(),
+				name: r.name.clone(),
+				count: r.count.unwrap_or(0),
+			})
+			.collect::<Vec<_>>();
+
+		let total = by_research_line.iter().map(|s| s.count).sum::<i64>();
+		let dominant = lines.iter().max_by_key(|r| r.count.unwrap_or(0));
+
+		let dominant_research_line_id = if total == 0 {
+			None
+		} else {
+			dominant.map(|r| r.research_line_id.to_string())
+		};
+
+		let dominant_line_works = dominant.map(|r| r.count.unwrap_or(0)).unwrap_or(0);
+		let line_total_works = match dominant {
+			Some(r) => self
+				.stats
+				.works_in_research_line(&r.research_line_id, &query)
+				.await?,
+			None => 0,
+		};
+
+		let contribution = contribution?;
+
+		Ok(AcademicStatsResponse {
+			by_research_line,
+			dominant_research_line_id,
+			by_journal_kind: Self::build_journal_kind_series(trend?),
+			contribution: AcademicContribution {
+				academic_works: contribution.academic_works.unwrap_or(0),
+				faculty_works: contribution.faculty_works.unwrap_or(0),
+				department_works: contribution.department_works.unwrap_or(0),
+				department_name: contribution.department_name,
+				dominant_line_works,
+				line_total_works,
+			},
 		})
 	}
 

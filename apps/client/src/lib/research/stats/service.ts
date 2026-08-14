@@ -1,5 +1,7 @@
 import { http } from "$lib/shared/http/client"
 import type {
+	AcademicStatsQuery,
+	AcademicStatsResponse,
 	DepartmentDetail,
 	DepartmentDetailQuery,
 	StatsQuery,
@@ -22,6 +24,17 @@ class StatsService {
 		return http.request<DepartmentDetail>({
 			method: "GET",
 			url: `/stats/department/${id}`,
+			params,
+		})
+	}
+
+	public getAcademicStats(
+		id: string,
+		params?: AcademicStatsQuery,
+	): Promise<AcademicStatsResponse> {
+		return http.request<AcademicStatsResponse>({
+			method: "GET",
+			url: `/stats/academic/${id}`,
 			params,
 		})
 	}

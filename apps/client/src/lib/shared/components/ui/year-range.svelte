@@ -6,6 +6,7 @@
 		yearFrom?: string
 		yearTo?: string
 		minYear?: number
+		label?: string
 		labelFrom?: string
 		labelTo?: string
 		showLabels?: boolean
@@ -18,12 +19,13 @@
 		yearFrom = $bindable(""),
 		yearTo = $bindable(""),
 		minYear = 2000,
+		label = "",
 		labelFrom = "Año desde",
 		labelTo = "Año hasta",
 		showLabels = true,
 		placeholderFrom = "Seleccionar",
 		placeholderTo = "Seleccionar",
-		class: className = "",
+		class: className = "min-w-64",
 	}: Props = $props()
 
 	const currentYear = new Date().getFullYear()
@@ -37,6 +39,11 @@
 </script>
 
 <div class={className} role="group" aria-label="Rango de años">
+	{#if label}
+		<span class="mb-1.5 block text-xs font-medium tracking-wide uppercase text-corp-gray">
+			{label}
+		</span>
+	{/if}
 	<div class="flex items-end gap-2">
 		<div class="flex-1 space-y-1">
 			{#if showLabels}

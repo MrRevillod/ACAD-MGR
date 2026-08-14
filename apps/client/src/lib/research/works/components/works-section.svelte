@@ -53,10 +53,11 @@
 				</span>
 			{/if}
 		</div>
-		<div class="flex items-center gap-3">
+		<div class="flex items-end gap-3">
 			<YearRange
 				bind:yearFrom
 				bind:yearTo
+				label="Rango anual de publicación"
 				showLabels={false}
 				placeholderFrom="DESDE"
 				placeholderTo="HASTA"

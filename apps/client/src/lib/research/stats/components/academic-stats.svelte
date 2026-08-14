@@ -1,0 +1,316 @@
+<script lang="ts">
+	import { ChartBar, ChevronDown, CircleAlert, Gauge, Loader, TrendingUp } from "@lucide/svelte"
+	import { expoOut } from "svelte/easing"
+	import { slide } from "svelte/transition"
+
+	import YearRange from "$shared/components/ui/year-range.svelte"
+	import { useAcademicStatsQuery } from "$stats/queries"
+
+	import DonutChart from "./donut-chart.svelte"
+	import RadarChart from "./radar-chart.svelte"
+	import TrendLine from "./trend-line.svelte"
+
+	const ACRONYMS: Record<string, string> = {
+		"Materiales Avanzados y Bioproductos": "MAB",
+		"Ciencias de la Tierra": "CT",
+		"Sostenibilidad": "SO",
+		"IA, Sistemas Complejos y Modelamiento Matemático": "IA",
+		"Educación en Ingeniería": "EI",
+	}
+
+	const STOPWORDS = new Set([
+		"de",
+		"del",
+		"la",
+		"las",
+		"los",
+		"el",
+		"en",
+		"y",
+		"e",
+		"a",
+		"para",
+		"por",
+		"su",
+		"un",
+		"una",
+	])
+
+	function acronymOf(name: string): string {
+		if (ACRONYMS[name]) return ACRONYMS[name]
+
+		const words = name
+			.replace(/[^\p{L}\s]/gu, " ")
+			.split(/\s+/)
+			.filter((w) => w.length > 0 && !STOPWORDS.has(w.toLowerCase()))
+
+		if (words.length === 0) return name.slice(0, 2).toUpperCase()
+		if (words.length === 1) return words[0].slice(0, 2).toUpperCase()
+		return words
+			.slice(0, 3)
+			.map((w) => w[0].toUpperCase())
+			.join("")
+	}
+
+	interface Props {
+		academicId: string
+	}
+
+	type Section = "lines" | "trend" | "impact"
+
+	let { academicId }: Props = $props()
+
+	const currentYear = new Date().getFullYear()
+
+	let yearFrom = $state(String(currentYear - 5))
+	let yearTo = $state(String(currentYear))
+
+	let openSection = $state<Section>("lines")
+
+	function toggleSection(section: Section) {
+		openSection = section
+	}
+
+	const query = useAcademicStatsQuery(
+		() => academicId,
+		() => ({
+			...(yearFrom && { yearFrom: Number(yearFrom) }),
+			...(yearTo && { yearTo: Number(yearTo) }),
+		}),
+	)
+
+	const lines = $derived(query.data?.byResearchLine ?? [])
+	const total = $derived(lines.reduce((a, l) => a + l.count, 0))
+	const maxCount = $derived(Math.max(0, ...lines.map((l) => l.count)))
+	const radarItems = $derived(
+		lines.map((l) => ({
+			name: l.name,
+			acronym: acronymOf(l.name),
+			count: l.count,
+		})),
+	)
+
+	const contribution = $derived(query.data?.contribution)
+	const dominant = $derived(
+		lines.find((l) => l.researchLineId === query.data?.dominantResearchLineId) ?? null,
+	)
+
+	const impactDonuts = $derived.by(() => {
+		if (!contribution) return []
+
+		const mk = (caption: string, theirs: number, scopeTotal: number) => ({
+			caption,
+			total: scopeTotal,
+			segments: [
+				{ label: "Sus publicaciones", value: Math.max(0, theirs), color: "#C9A500" },
+				{ label: "Otras", value: Math.max(0, scopeTotal - theirs), color: "#0075B4" },
+			],
+		})
+
+		return [
+			mk("Facultad de Ingeniería", contribution.academicWorks, contribution.facultyWorks),
+			mk(
+				contribution.departmentName
+					? `Departamento de ${contribution.departmentName}`
+					: "Departamento",
+				contribution.academicWorks,
+				contribution.departmentWorks,
+			),
+			mk(
+				dominant ? `Línea: ${dominant.name}` : "Línea de investigación",
+				contribution.dominantLineWorks,
+				contribution.lineTotalWorks,
+			),
+		]
+	})
+</script>
+
+<div class="space-y-4">
+	<div class="flex flex-wrap items-end justify-between gap-3">
+		<h2 class="text-lg font-semibold text-corp-blue">Estadísticas del académico</h2>
+		<YearRange
+			bind:yearFrom
+			bind:yearTo
+			minYear={1900}
+			label="Rango anual de publicación"
+			showLabels={false}
+			placeholderFrom="DESDE"
+			placeholderTo="HASTA"
+		/>
+	</div>
+
+	{#if query.isPending}
+		<div
+			class="flex items-center justify-center rounded-xl border border-corp-gray/20 bg-white py-12"
+		>
+			<Loader class="size-5 animate-spin text-corp-gray" />
+		</div>
+	{:else if query.isError}
+		<div
+			class="flex flex-col items-center rounded-xl border border-corp-gray/20 bg-white py-12 text-center"
+		>
+			<CircleAlert class="size-6 text-red-500" />
+			<p class="mt-2 text-sm text-corp-gray">Error al cargar las estadísticas.</p>
+		</div>
+	{:else}
+		<div class="overflow-hidden rounded-xl border border-corp-gray/20 bg-white">
+			<section>
+				<button
+					type="button"
+					class="flex w-full items-center gap-2 px-5 py-4 text-left transition-colors hover:bg-corp-gray/[0.03]"
+					onclick={() => toggleSection("lines")}
+					aria-expanded={openSection === "lines"}
+				>
+					<ChartBar class="size-4 shrink-0 text-corp-blue" />
+					<h2 class="text-sm font-semibold tracking-wide uppercase text-corp-blue">
+						Líneas de investigación
+					</h2>
+					<ChevronDown
+						class={`ml-auto size-4 shrink-0 text-corp-gray transition-transform ${
+							openSection === "lines" ? "rotate-180" : ""
+						}`}
+					/>
+				</button>
+
+				{#if openSection === "lines"}
+					<div
+						class="border-t border-corp-gray/10 p-6"
+						transition:slide={{ duration: 250, easing: expoOut }}
+					>
+						{#if lines.length === 0}
+							<p class="py-6 text-center text-sm text-corp-gray">
+								Sin líneas de investigación asignadas en el rango seleccionado.
+							</p>
+						{:else}
+							<div
+								class="grid grid-cols-1 items-center gap-8 lg:grid-cols-[minmax(0,1fr)_auto]"
+							>
+								<div class="space-y-3">
+									{#each lines as line (line.researchLineId)}
+										{@const pct =
+											total > 0 ? Math.round((line.count / total) * 100) : 0}
+										{@const w =
+											maxCount > 0
+												? Math.max((line.count / maxCount) * 100, 0)
+												: 0}
+										<div>
+											<div
+												class="mb-1 flex items-center justify-between gap-3"
+											>
+												<span class="flex min-w-0 items-center gap-2">
+													<span
+														class="shrink-0 rounded bg-corp-blue/10 px-1.5 py-0.5 text-[10px] font-bold text-corp-blue"
+													>
+														{acronymOf(line.name)}
+													</span>
+													<span
+														class="truncate text-sm font-medium text-[#1A1A1A]"
+													>
+														{line.name}
+													</span>
+												</span>
+												<span
+													class="shrink-0 text-xs text-corp-gray tabular-nums"
+													>{line.count} · {pct}%</span
+												>
+											</div>
+											<div
+												class="relative h-2.5 min-w-0 overflow-hidden rounded-sm bg-corp-gray/10"
+											>
+												<div
+													class="absolute inset-y-0 left-0 rounded-sm bg-corp-blue"
+													style="width:{w}%"
+												></div>
+											</div>
+										</div>
+									{/each}
+								</div>
+
+								<div class="flex justify-center">
+									<RadarChart items={radarItems} />
+								</div>
+							</div>
+						{/if}
+					</div>
+				{/if}
+			</section>
+
+			<section class="border-t border-corp-gray/20">
+				<button
+					type="button"
+					class="flex w-full items-center gap-2 px-5 py-4 text-left transition-colors hover:bg-corp-gray/[0.03]"
+					onclick={() => toggleSection("trend")}
+					aria-expanded={openSection === "trend"}
+				>
+					<TrendingUp class="size-4 shrink-0 text-corp-blue" />
+					<h2 class="text-sm font-semibold tracking-wide uppercase text-corp-blue">
+						Tendencia anual de publicaciones
+					</h2>
+					<ChevronDown
+						class={`ml-auto size-4 shrink-0 text-corp-gray transition-transform ${
+							openSection === "trend" ? "rotate-180" : ""
+						}`}
+					/>
+				</button>
+
+				{#if openSection === "trend"}
+					<div
+						class="border-t border-corp-gray/10 p-6"
+						transition:slide={{ duration: 250, easing: expoOut }}
+					>
+						<TrendLine journalKind={query.data?.byJournalKind ?? []} />
+					</div>
+				{/if}
+			</section>
+
+			<section class="border-t border-corp-gray/20">
+				<button
+					type="button"
+					class="flex w-full items-center gap-2 px-5 py-4 text-left transition-colors hover:bg-corp-gray/[0.03]"
+					onclick={() => toggleSection("impact")}
+					aria-expanded={openSection === "impact"}
+				>
+					<Gauge class="size-4 shrink-0 text-corp-blue" />
+					<h2 class="text-sm font-semibold tracking-wide uppercase text-corp-blue">
+						Impacto y Desempeño
+					</h2>
+					<ChevronDown
+						class={`ml-auto size-4 shrink-0 text-corp-gray transition-transform ${
+							openSection === "impact" ? "rotate-180" : ""
+						}`}
+					/>
+				</button>
+
+				{#if openSection === "impact"}
+					<div
+						class="border-t border-corp-gray/10 p-6"
+						transition:slide={{ duration: 250, easing: expoOut }}
+					>
+						{#if impactDonuts.length === 0}
+							<p class="py-6 text-center text-sm text-corp-gray">
+								Sin datos para mostrar.
+							</p>
+						{:else}
+							<div class="grid grid-cols-1 gap-8 md:grid-cols-3">
+								{#each impactDonuts as d (d.caption)}
+									<div class="flex flex-col items-center gap-2">
+										<p class="text-center text-sm font-medium text-[#1A1A1A]">
+											{d.caption}
+										</p>
+										{#if d.total > 0}
+											<DonutChart segments={d.segments} total={d.total} />
+										{:else}
+											<p class="py-6 text-xs text-corp-gray">
+												Sin datos en el rango.
+											</p>
+										{/if}
+									</div>
+								{/each}
+							</div>
+						{/if}
+					</div>
+				{/if}
+			</section>
+		</div>
+	{/if}
+</div>

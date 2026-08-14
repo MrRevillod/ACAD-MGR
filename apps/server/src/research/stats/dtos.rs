@@ -57,6 +57,44 @@ pub struct DepartmentDetailQuery {
 	pub journal_kind: Option<JournalKind>,
 }
 
+#[derive(Debug, Deserialize, Validate, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct AcademicStatsQuery {
+	#[validate(range(min = 1900, max = 2100))]
+	pub year_from: Option<i16>,
+
+	#[validate(range(min = 1900, max = 2100))]
+	pub year_to: Option<i16>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ResearchLineStat {
+	pub research_line_id: String,
+	pub name: String,
+	pub count: i64,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AcademicContribution {
+	pub academic_works: i64,
+	pub faculty_works: i64,
+	pub department_works: i64,
+	pub department_name: Option<String>,
+	pub dominant_line_works: i64,
+	pub line_total_works: i64,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AcademicStatsResponse {
+	pub by_research_line: Vec<ResearchLineStat>,
+	pub dominant_research_line_id: Option<String>,
+	pub by_journal_kind: Vec<TimeSeriesStat>,
+	pub contribution: AcademicContribution,
+}
+
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TopPublisher {

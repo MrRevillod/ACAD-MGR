@@ -49,3 +49,30 @@ export interface DepartmentDetailQuery {
 	option?: "teaching" | "research"
 	journalKind?: "wos" | "scopus"
 }
+
+export interface AcademicStatsQuery {
+	yearFrom?: number
+	yearTo?: number
+}
+
+export interface ResearchLineStat {
+	researchLineId: string
+	name: string
+	count: number
+}
+
+export interface AcademicContribution {
+	academicWorks: number
+	facultyWorks: number
+	departmentWorks: number
+	departmentName: string | null
+	dominantLineWorks: number
+	lineTotalWorks: number
+}
+
+export interface AcademicStatsResponse {
+	byResearchLine: ResearchLineStat[]
+	dominantResearchLineId: string | null
+	byJournalKind: TimeSeriesStat[]
+	contribution: AcademicContribution
+}

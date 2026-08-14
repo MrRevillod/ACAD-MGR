@@ -43,3 +43,18 @@ pub struct DeptSummaryRow {
 	pub teaching: Option<i64>,
 	pub research: Option<i64>,
 }
+
+#[derive(Debug, FromRow)]
+pub struct ResearchLineRow {
+	pub research_line_id: Uuid,
+	pub name: String,
+	pub count: Option<i64>,
+}
+
+#[derive(Debug, FromRow)]
+pub struct ContributionRow {
+	pub academic_works: Option<i64>,
+	pub faculty_works: Option<i64>,
+	pub department_works: Option<i64>,
+	pub department_name: Option<String>,
+}

@@ -10,14 +10,17 @@
 	import Dialog from "$shared/components/ui/dialog.svelte"
 	import Button from "$shared/components/ui/button.svelte"
 	import WorksSection from "$works/components/works-section.svelte"
+	import AcademicStats from "$stats/components/academic-stats.svelte"
 	import AcademicSidebar from "$academics/components/academic-sidebar.svelte"
 	import CollaborationGraph from "$collaborations/components/collaboration-graph.svelte"
 	import CollaborationGraphHelpDialog from "$collaborations/components/collaboration-graph-help-dialog.svelte"
 
 	const id = $derived(page.params.id ?? "")
 
+	const yearFromDefault = String(new Date().getFullYear() - 5)
+
 	const yearParamsSchema = v.object({
-		yearFrom: v.optional(v.fallback(v.string(), ""), ""),
+		yearFrom: v.optional(v.fallback(v.string(), yearFromDefault), yearFromDefault),
 		yearTo: v.optional(v.fallback(v.string(), ""), ""),
 	})
 
@@ -25,7 +28,7 @@
 
 	const tabParamsSchema = v.object({
 		tab: v.optional(
-			v.fallback(v.picklist(["publications", "collaborations"]), "publications"),
+			v.fallback(v.picklist(["publications", "stats", "collaborations"]), "publications"),
 			"publications",
 		),
 	})
@@ -95,6 +98,16 @@
 						<button
 							type="button"
 							class="flex-1 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors {activeTab ===
+							'stats'
+								? 'bg-white text-corp-blue shadow-sm'
+								: 'text-corp-gray hover:text-[#1a1a1a]'}"
+							onclick={() => (tabParams.tab = "stats")}
+						>
+							Estadísticas
+						</button>
+						<button
+							type="button"
+							class="flex-1 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors {activeTab ===
 							'collaborations'
 								? 'bg-white text-corp-blue shadow-sm'
 								: 'text-corp-gray hover:text-[#1a1a1a]'}"
@@ -130,6 +143,8 @@
 									<CollaborationGraph {academic} />
 								</div>
 							</section>
+						{:else if activeTab === "stats"}
+							<AcademicStats academicId={id} />
 						{:else}
 							<WorksSection
 								{academic}

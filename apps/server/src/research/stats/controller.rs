@@ -1,3 +1,4 @@
+use crate::academic::AcademicId;
 use crate::research::*;
 use crate::university::DepartmentId;
 
@@ -29,6 +30,17 @@ impl StatsController {
 		Ok(self
 			.stats
 			.get_department_detail(id, query.unwrap_or_default())
+			.await?)
+	}
+
+	#[get("/academic/{id}")]
+	pub async fn get_academic_stats(&self, req: Request) -> WebResult<AcademicStatsResponse> {
+		let id = req.param::<AcademicId>("id")?;
+		let query = req.query_validator::<AcademicStatsQuery>()?;
+
+		Ok(self
+			.stats
+			.get_academic_stats(id, query.unwrap_or_default())
 			.await?)
 	}
 }

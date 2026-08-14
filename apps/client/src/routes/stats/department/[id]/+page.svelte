@@ -157,19 +157,14 @@
 			</div>
 
 			<div class="flex items-end gap-3">
-				<div class="space-y-2.5">
-					<span
-						class="block text-xs font-medium tracking-wide uppercase text-corp-gray whitespace-nowrap"
-						>Rango anual de publicación</span
-					>
-					<YearRange
-						bind:yearFrom={params.yearFrom}
-						bind:yearTo={params.yearTo}
-						labelFrom="Desde"
-						labelTo="Hasta"
-						showLabels={false}
-					/>
-				</div>
+				<YearRange
+					bind:yearFrom={params.yearFrom}
+					bind:yearTo={params.yearTo}
+					label="Rango anual de publicación"
+					showLabels={false}
+					placeholderFrom="DESDE"
+					placeholderTo="HASTA"
+				/>
 				<Select
 					items={optionItems}
 					bind:value={params.option}

@@ -26,6 +26,7 @@
 	import Badge from "$shared/components/ui/badge.svelte"
 	import DegreeDialog from "$degrees/components/degree-dialog.svelte"
 	import WorksSection from "$works/components/works-section.svelte"
+	import AcademicStats from "$stats/components/academic-stats.svelte"
 	import AcademicSidebar from "$academics/components/academic-sidebar.svelte"
 	import AcademicEditDialog from "$academics/components/academic-edit-dialog.svelte"
 	import CollaborationGraph from "$collaborations/components/collaboration-graph.svelte"
@@ -33,8 +34,10 @@
 
 	const id = $derived(page.params.id ?? "")
 
+	const yearFromDefault = String(new Date().getFullYear() - 5)
+
 	const yearParamsSchema = v.object({
-		yearFrom: v.optional(v.fallback(v.string(), ""), ""),
+		yearFrom: v.optional(v.fallback(v.string(), yearFromDefault), yearFromDefault),
 		yearTo: v.optional(v.fallback(v.string(), ""), ""),
 	})
 
@@ -43,7 +46,7 @@
 	const tabParamsSchema = v.object({
 		tab: v.optional(
 			v.fallback(
-				v.picklist(["academic-info", "publications", "collaborations"]),
+				v.picklist(["academic-info", "publications", "stats", "collaborations"]),
 				"academic-info",
 			),
 			"academic-info",
@@ -144,6 +147,16 @@
 							onclick={() => (tabParams.tab = "publications")}
 						>
 							Publicaciones
+						</button>
+						<button
+							type="button"
+							class="flex-1 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors {activeTab ===
+							'stats'
+								? 'bg-white text-corp-blue shadow-sm'
+								: 'text-corp-gray hover:text-[#1a1a1a]'}"
+							onclick={() => (tabParams.tab = "stats")}
+						>
+							Estadísticas
 						</button>
 						<button
 							type="button"
@@ -395,6 +408,8 @@
 									<CollaborationGraph {academic} />
 								</div>
 							</section>
+						{:else if activeTab === "stats"}
+							<AcademicStats academicId={id} />
 						{:else}
 							<WorksSection
 								{academic}

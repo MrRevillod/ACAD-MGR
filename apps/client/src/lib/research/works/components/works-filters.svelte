@@ -135,17 +135,16 @@
 			<Select items={researchLineItems} bind:value={researchLineId} />
 		</div>
 
-		<div class="space-y-2.5">
-			<Label>Rango anual de publicación</Label>
-			<YearRange
-				bind:yearFrom
-				bind:yearTo
-				minYear={1900}
-				showLabels={false}
-				placeholderFrom="DESDE"
-				placeholderTo="HASTA"
-			/>
-		</div>
+		<YearRange
+			bind:yearFrom
+			bind:yearTo
+			minYear={1900}
+			label="Rango anual de publicación"
+			showLabels={false}
+			placeholderFrom="DESDE"
+			placeholderTo="HASTA"
+			class="w-full"
+		/>
 	</div>
 
 	<Button variant="secondary" class="mt-6 w-full" onclick={onClear}>
