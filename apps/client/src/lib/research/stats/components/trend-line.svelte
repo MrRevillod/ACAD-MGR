@@ -25,6 +25,19 @@
 
 	const minYear = $derived(allYears[0] ?? 0)
 	const maxYear = $derived(allYears[allYears.length - 1] ?? 0)
+
+	const maxVal = $derived(Math.max(0, ...wideData.flatMap((d) => [d.scopus, d.wos])))
+
+	const yTicks = $derived.by(() => {
+		const max = Math.max(maxVal, 1)
+		const step = Math.max(1, Math.ceil(max / 5))
+		const top = Math.ceil(max / step) * step
+		const ticks: number[] = []
+		for (let v = 0; v <= top; v += step) ticks.push(v)
+		return ticks
+	})
+
+	const yMax = $derived(yTicks[yTicks.length - 1] ?? 1)
 </script>
 
 {#if allYears.length === 0}
@@ -41,12 +54,13 @@
 		padding={{ left: 50, right: 20, bottom: 50, top: 10 }}
 		xDomain={[minYear, maxYear]}
 		xNice={false}
-		yDomain={[0, null]}
-		yNice={true}
+		yDomain={[0, yMax]}
+		yNice={false}
 		legend={true}
 		points={true}
 		props={{
 			xAxis: { ticks: allYears.length, format: (d: number) => String(d) },
+			yAxis: { ticks: yTicks, format: (d: number) => String(d) },
 		}}
 	/>
 {/if}
