@@ -48,6 +48,10 @@ impl DegreesService {
 			degree.country_code = country_code;
 		}
 
+		if let Some(kind) = input.kind {
+			degree.kind = kind;
+		}
+
 		self.degrees.save(&degree).await?;
 
 		Ok(degree)

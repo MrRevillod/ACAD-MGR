@@ -58,4 +58,6 @@ pub struct UpdateDegreeDto {
 		message = "El código de país debe tener 2 caracteres"
 	))]
 	pub country_code: Option<String>,
+
+	pub kind: Option<DegreeKind>,
 }

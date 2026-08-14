@@ -27,7 +27,7 @@
 	let {
 		academicId,
 		degree = null,
-		createKind = "base",
+		createKind = "professional",
 		open = $bindable(),
 		onClose,
 	}: Props = $props()
@@ -75,7 +75,13 @@
 			data,
 		}: {
 			degId: string
-			data: { name?: string; university?: string; obtainedAt?: string; countryCode?: string }
+			data: {
+				name?: string
+				university?: string
+				obtainedAt?: string
+				countryCode?: string
+				kind?: DegreeKind
+			}
 		}) => degreeService.update(degId, data),
 		onSuccess: () => {
 			void queryClient.invalidateQueries({ queryKey: ["degrees", academicId] })
@@ -99,6 +105,7 @@
 					university: output.university,
 					obtainedAt: output.obtainedAt,
 					countryCode: output.countryCode,
+					kind: output.kind,
 				},
 			})
 		} else {
@@ -108,10 +115,9 @@
 
 	const pending = $derived(createDeg.isPending || updateDeg.isPending)
 
-	const kindOptions = $derived([
-		{ label: DegreeKindValue.LABELS.base, value: "base" },
-		{ label: DegreeKindValue.LABELS.advanced, value: "advanced" },
-	])
+	const kindOptions = $derived(
+		DegreeKindValue.KINDS.map((k) => ({ label: DegreeKindValue.LABELS[k], value: k })),
+	)
 </script>
 
 <Dialog bind:open title={degree ? "Editar grado" : "Nuevo grado"} class="max-w-xl">
@@ -162,7 +168,7 @@
 							errors={field.errors}
 							label="Tipo"
 							options={kindOptions}
-							disabled
+							disabled={!degree}
 						/>
 					{/snippet}
 				</Field>

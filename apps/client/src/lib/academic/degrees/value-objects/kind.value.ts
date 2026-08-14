@@ -1,11 +1,12 @@
 export class DegreeKindValue {
 	private constructor(private readonly value: string) {}
 
-	public static readonly KINDS = ["base", "advanced"] as const
+	public static readonly KINDS = ["professional", "magister", "doctor"] as const
 
 	public static readonly LABELS: Record<string, string> = {
-		base: "Título Profesional",
-		advanced: "Grado Académico",
+		professional: "Profesional",
+		magister: "Magíster",
+		doctor: "Doctor",
 	}
 
 	static from(value?: string): DegreeKindValue {

@@ -49,6 +49,7 @@ export const updateDegreeSchema = v.object({
 	countryCode: v.optional(
 		v.pipe(v.string(), v.length(2, "El código de país debe tener 2 caracteres")),
 	),
+	kind: v.optional(v.picklist(DegreeKindValue.KINDS, "Seleccione un tipo de grado")),
 })
 
 export type UpdateDegreeDto = v.InferInput<typeof updateDegreeSchema>
@@ -58,6 +59,6 @@ export const createDegreeDTOInitialInput = {
 	name: "",
 	university: "",
 	obtainedAt: "",
-	kind: "base" as const,
+	kind: "professional" as const,
 	countryCode: "CL",
 }

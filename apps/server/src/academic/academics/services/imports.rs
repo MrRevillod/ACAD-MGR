@@ -195,20 +195,22 @@ impl ImportsService {
 			&input.degree_1_university,
 			input.degree_1_date,
 			degree_1_country_code,
-			DegreeKind::Base,
+			DegreeKind::Professional,
 		)
 		.await?;
 
-		self.save_degree(
-			tx,
-			&academic.id,
-			&input.degree_2_name,
-			&input.degree_2_university,
-			input.degree_2_date,
-			degree_2_country_code,
-			DegreeKind::Advanced,
-		)
-		.await?;
+		if let Some(kind) = input.degree_2_kind.as_ref().map(DegreeKind::from) {
+			self.save_degree(
+				tx,
+				&academic.id,
+				&input.degree_2_name,
+				&input.degree_2_university,
+				input.degree_2_date,
+				degree_2_country_code,
+				kind,
+			)
+			.await?;
+		}
 
 		Ok(())
 	}

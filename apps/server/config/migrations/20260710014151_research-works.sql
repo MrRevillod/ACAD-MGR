@@ -51,7 +51,8 @@ CREATE type work_overrides AS (
 	publication_year SMALLINT,
 	is_accepted BOOLEAN,
 	is_published BOOLEAN,
-	research_line_id UUID
+	research_line_id UUID,
+	corresponding_orcid TEXT
 );
 
 CREATE TABLE works (
@@ -67,7 +68,7 @@ CREATE TABLE works (
 	is_accepted BOOLEAN NOT NULL DEFAULT FALSE,
 	is_published BOOLEAN NOT NULL DEFAULT FALSE,
 	source_id UUID REFERENCES sources(id) ON DELETE SET NULL,
-	overrides work_overrides NOT NULL DEFAULT ROW(NULL, NULL, NULL, NULL, NULL, NULL, NULL)::work_overrides,
+	overrides work_overrides NOT NULL DEFAULT ROW(NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL)::work_overrides,
 	updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 

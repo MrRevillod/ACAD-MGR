@@ -83,9 +83,30 @@
 		}),
 	)
 
+	const degreeKindMeta: Record<
+		string,
+		{ label: string; badge: "base" | "advanced" | "doctor"; dot: string }
+	> = {
+		professional: {
+			label: DegreeKindValue.LABELS.professional,
+			badge: "base",
+			dot: "bg-corp-blue",
+		},
+		magister: {
+			label: DegreeKindValue.LABELS.magister,
+			badge: "advanced",
+			dot: "bg-corp-yellow",
+		},
+		doctor: {
+			label: DegreeKindValue.LABELS.doctor,
+			badge: "doctor",
+			dot: "bg-corp-gold",
+		},
+	}
+
 	let showDegreeDialog = $state(false)
 	let editingDegree = $state<Degree | null>(null)
-	let createKind = $state<(typeof DegreeKindValue.KINDS)[number]>("base")
+	let createKind = $state<(typeof DegreeKindValue.KINDS)[number]>("professional")
 
 	function openCreate(k: (typeof DegreeKindValue.KINDS)[number]) {
 		editingDegree = null
@@ -309,6 +330,10 @@
 								{:else}
 									<div class="relative">
 										{#each degreeSlots as slot, i (slot.kind)}
+											{@const meta =
+												degreeKindMeta[
+													slot.isPlaceholder ? slot.kind : slot.kind.code
+												]}
 											<div
 												class="relative flex gap-5 {i <
 												degreeSlots.length - 1
@@ -319,9 +344,7 @@
 													<div
 														class="z-10 size-3 shrink-0 rounded-full {slot.isPlaceholder
 															? 'bg-corp-gray/30'
-															: slot.kind.code === 'base'
-																? 'bg-corp-blue'
-																: 'bg-corp-yellow'}"
+															: meta.dot}"
 													></div>
 													{#if i < degreeSlots.length - 1}
 														<div
@@ -331,14 +354,8 @@
 												</div>
 												<div class="min-w-0 flex-1">
 													<div class="mb-1 flex items-center gap-2">
-														<Badge
-															variant={slot.kind === "base"
-																? "base"
-																: "advanced"}
-														>
-															{slot.kind === "base"
-																? "Título Profesional"
-																: "Grado Académico"}
+														<Badge variant={meta.badge}>
+															{meta.label}
 														</Badge>
 														{#if !slot.isPlaceholder && isAdmin}
 															<button

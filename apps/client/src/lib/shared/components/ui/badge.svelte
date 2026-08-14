@@ -8,6 +8,7 @@
 			variant: {
 				base: "bg-corp-blue/10 text-corp-blue",
 				advanced: "bg-corp-yellow/15 text-[#7A6400]",
+				doctor: "bg-corp-gold/15 text-[#8a7200]",
 				default: "bg-corp-gray/10 text-corp-gray",
 			},
 		},

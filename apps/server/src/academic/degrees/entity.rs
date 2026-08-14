@@ -11,8 +11,9 @@ use sqlx::{FromRow, Type};
 #[sqlx(type_name = "degree_kind", rename_all = "lowercase")]
 #[serde(rename_all = "lowercase")]
 pub enum DegreeKind {
-	Base,
-	Advanced,
+	Professional,
+	Magister,
+	Doctor,
 }
 
 pub type DegreeId = Id<Degree>;

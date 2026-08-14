@@ -1,6 +1,6 @@
 use super::*;
 use crate::{
-	academic::{AcademicOption, AcademicPlanta, Sex},
+	academic::{AcademicOption, AcademicPlanta, DegreeKind, Sex},
 	shared::{CLf64, Country},
 };
 
@@ -129,6 +129,10 @@ pub struct AcademicImportRowDto {
 	#[serde(rename = "PAIS (II)")]
 	#[serde(default)]
 	pub degree_2_country: Option<Country>,
+
+	#[serde(rename = "TIPO DE GRADO")]
+	#[serde(default)]
+	pub degree_2_kind: Option<ImportedDegreeKind>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -137,6 +141,14 @@ pub enum ImportedAcademicOption {
 	Teaching,
 	#[serde(rename = "Investigación")]
 	Research,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub enum ImportedDegreeKind {
+	#[serde(rename = "Magister")]
+	Magister,
+	#[serde(rename = "Doctor")]
+	Doctor,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -188,6 +200,15 @@ impl From<&ImportedAcademicOption> for AcademicOption {
 		match value {
 			ImportedAcademicOption::Teaching => AcademicOption::Teaching,
 			ImportedAcademicOption::Research => AcademicOption::Research,
+		}
+	}
+}
+
+impl From<&ImportedDegreeKind> for DegreeKind {
+	fn from(value: &ImportedDegreeKind) -> Self {
+		match value {
+			ImportedDegreeKind::Magister => DegreeKind::Magister,
+			ImportedDegreeKind::Doctor => DegreeKind::Doctor,
 		}
 	}
 }

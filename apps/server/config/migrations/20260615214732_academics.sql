@@ -26,8 +26,9 @@ CREATE INDEX idx_academics_orcid ON academics(orcid);
 CREATE INDEX idx_academics_department_id ON academics(department_id);
 
 CREATE TYPE degree_kind AS ENUM (
-    'base',
-    'advanced'
+    'professional',
+    'magister',
+    'doctor'
 );
 
 CREATE TABLE degrees (
