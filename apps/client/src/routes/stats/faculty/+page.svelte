@@ -9,8 +9,7 @@
 	import Button from "$shared/components/ui/button.svelte"
 	import YearRange from "$shared/components/ui/year-range.svelte"
 
-	import KpiStrip from "$stats/components/kpi-strip.svelte"
-	import StatsHub from "$stats/components/stats-hub.svelte"
+	import FacultyStats from "$stats/components/faculty-stats.svelte"
 
 	const currentYear = new Date().getFullYear()
 	const defaultYearFrom = String(currentYear - 5)
@@ -32,14 +31,6 @@
 	})
 
 	const statsQuery = useWorksStatsQuery(() => queryParams)
-
-	const unindexedCount = $derived.by(() => {
-		const d = statsQuery.data
-		if (!d) return 0
-		return (
-			d.facultySummary.totalWorks - d.facultySummary.wosCount - d.facultySummary.scopusCount
-		)
-	})
 </script>
 
 <div class="mx-auto flex h-full max-w-[1600px] flex-col overflow-y-auto px-4 py-8 sm:px-6 lg:px-8">
@@ -55,8 +46,10 @@
 	{:else}
 		<div class="mb-6 flex flex-wrap items-start justify-between gap-4">
 			<div>
-				<h1 class="text-xl font-semibold text-corp-ink">Estadísticas de Publicaciones</h1>
-				<p class="mt-1 text-sm text-corp-gray">Facultad de Ingeniería</p>
+				<h1 class="text-xl font-semibold text-corp-ink">
+					Estadísticas de la Facultad de Ingeniería
+				</h1>
+				<p class="mt-1 text-sm text-corp-gray">Detalle general de publicaciones</p>
 			</div>
 			<div class="flex items-end gap-3">
 				<YearRange
@@ -74,15 +67,6 @@
 			</div>
 		</div>
 
-		<KpiStrip
-			total={statsQuery.data.facultySummary.totalWorks}
-			wos={statsQuery.data.facultySummary.wosCount}
-			scopus={statsQuery.data.facultySummary.scopusCount}
-			unindexed={unindexedCount}
-		/>
-
-		<div class="mt-4">
-			<StatsHub data={statsQuery.data} />
-		</div>
+		<FacultyStats data={statsQuery.data} />
 	{/if}
 </div>

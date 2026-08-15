@@ -10,7 +10,6 @@ use validator::Validate;
 pub struct WorksStatsQuery {
 	pub journal_kind: Option<JournalKind>,
 
-	pub option: Option<AcademicOption>,
 	pub department_id: Option<Uuid>,
 
 	#[validate(range(min = 1900, max = 2100))]
@@ -37,10 +36,38 @@ pub struct TimeSeriesStat {
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
+pub struct ScopeSeries {
+	pub id: Option<String>,
+	pub name: String,
+	pub total: i64,
+	pub wos: Vec<YearValue>,
+	pub scopus: Vec<YearValue>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ScopeTotal {
+	pub id: Option<String>,
+	pub name: String,
+	pub total: i64,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FacultySummary {
+	pub total_works: i64,
+	pub wos_count: i64,
+	pub scopus_count: i64,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct WorksStatsResponse {
+	pub faculty_summary: FacultySummary,
 	pub by_journal_kind: Vec<TimeSeriesStat>,
-	pub by_option: Vec<TimeSeriesStat>,
-	pub by_department: Vec<TimeSeriesStat>,
+	pub by_department: Vec<ScopeSeries>,
+	pub by_research_line: Vec<ScopeSeries>,
+	pub top_publishers: Vec<TopPublisher>,
 }
 
 #[derive(Debug, Deserialize, Validate, Default)]
@@ -116,5 +143,28 @@ pub struct DepartmentDetailResponse {
 	pub wos_count: i64,
 	pub teaching_count: i64,
 	pub research_count: i64,
+	pub by_journal_kind: Vec<TimeSeriesStat>,
+	pub top_publishers: Vec<TopPublisher>,
+}
+
+#[derive(Debug, Deserialize, Validate, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct ResearchLineStatsQuery {
+	#[validate(range(min = 1900, max = 2100))]
+	pub year_from: Option<i16>,
+
+	#[validate(range(min = 1900, max = 2100))]
+	pub year_to: Option<i16>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ResearchLineStatsResponse {
+	pub name: String,
+	pub total_works: i64,
+	pub wos_count: i64,
+	pub scopus_count: i64,
+	pub by_journal_kind: Vec<TimeSeriesStat>,
+	pub by_department: Vec<ScopeTotal>,
 	pub top_publishers: Vec<TopPublisher>,
 }

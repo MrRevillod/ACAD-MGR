@@ -204,7 +204,7 @@
 														{acronymOf(line.name)}
 													</span>
 													<span
-														class="truncate text-sm font-medium text-[#1A1A1A]"
+														class="truncate text-sm font-medium text-corp-ink"
 													>
 														{line.name}
 													</span>
@@ -294,7 +294,7 @@
 							<div class="grid grid-cols-1 gap-8 md:grid-cols-3">
 								{#each impactDonuts as d (d.caption)}
 									<div class="flex flex-col items-center gap-2">
-										<p class="text-center text-sm font-medium text-[#1A1A1A]">
+										<p class="text-center text-sm font-medium text-corp-ink">
 											{d.caption}
 										</p>
 										{#if d.total > 0}

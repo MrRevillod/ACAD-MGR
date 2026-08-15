@@ -1,7 +1,12 @@
 import { createQuery } from "@tanstack/svelte-query"
 import { statsService } from "./service"
 
-import type { AcademicStatsQuery, DepartmentDetailQuery, StatsQuery } from "./dtos"
+import type {
+	AcademicStatsQuery,
+	DepartmentDetailQuery,
+	ResearchLineStatsQuery,
+	StatsQuery,
+} from "./dtos"
 
 const STALE_TIME = 5 * 60 * 1000
 const GC_TIME = 10 * 60 * 1000
@@ -22,6 +27,19 @@ export function useDepartmentDetailQuery(
 	return createQuery(() => ({
 		queryKey: ["stats", "department", id(), queryParams()],
 		queryFn: () => statsService.getDepartmentDetail(id(), queryParams()),
+		staleTime: STALE_TIME,
+		gcTime: GC_TIME,
+		enabled: Boolean(id()),
+	}))
+}
+
+export function useResearchLineStatsQuery(
+	id: () => string,
+	queryParams: () => ResearchLineStatsQuery,
+) {
+	return createQuery(() => ({
+		queryKey: ["stats", "research-line", id(), queryParams()],
+		queryFn: () => statsService.getResearchLineStats(id(), queryParams()),
 		staleTime: STALE_TIME,
 		gcTime: GC_TIME,
 		enabled: Boolean(id()),

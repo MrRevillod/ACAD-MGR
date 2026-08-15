@@ -60,14 +60,11 @@
 				<path d={arc.d} fill="none" stroke={arc.color} stroke-width={stroke} />
 			{/if}
 		{/each}
-		<text
-			x={center}
-			y={center - 4}
-			text-anchor="middle"
-			class="fill-[#1A1A1A] text-xl font-bold">{total}</text
+		<text x={center} y={center - 4} text-anchor="middle" class="fill-corp-ink text-xl font-bold"
+			>{total}</text
 		>
 		<text x={center} y={center + 16} text-anchor="middle" class="fill-corp-gray text-xs"
-			>total</text
+			>publicaciones</text
 		>
 	</svg>
 

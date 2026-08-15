@@ -43,4 +43,18 @@ impl StatsController {
 			.get_academic_stats(id, query.unwrap_or_default())
 			.await?)
 	}
+
+	#[get("/research-line/{id}")]
+	pub async fn get_research_line_stats(
+		&self,
+		req: Request,
+	) -> WebResult<ResearchLineStatsResponse> {
+		let id = req.param::<ResearchLineId>("id")?;
+		let query = req.query_validator::<ResearchLineStatsQuery>()?;
+
+		Ok(self
+			.stats
+			.get_research_line_stats(id, query.unwrap_or_default())
+			.await?)
+	}
 }

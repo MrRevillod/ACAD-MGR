@@ -1,17 +1,18 @@
 <script lang="ts">
 	import * as v from "valibot"
-	import type { StatsQuery } from "$stats/dtos"
+	import type { ResearchLineStatsQuery } from "$stats/dtos"
 
+	import { page } from "$app/state"
 	import { useSearchParams } from "runed/kit"
-	import { useWorksStatsQuery } from "$stats/queries"
+	import { useResearchLineStatsQuery } from "$stats/queries"
 	import { CircleAlert, Loader, RotateCcw } from "@lucide/svelte"
 
 	import Button from "$shared/components/ui/button.svelte"
 	import YearRange from "$shared/components/ui/year-range.svelte"
 
-	import KpiStrip from "$stats/components/kpi-strip.svelte"
-	import StatsHub from "$stats/components/stats-hub.svelte"
+	import ResearchLineStats from "$stats/components/research-line-stats.svelte"
 
+	const lineId = $derived(page.params.id ?? "")
 	const currentYear = new Date().getFullYear()
 	const defaultYearFrom = String(currentYear - 5)
 	const defaultYearTo = String(currentYear)
@@ -26,20 +27,15 @@
 		pushHistory: false,
 	})
 
-	const queryParams = $derived<StatsQuery>({
+	const queryParams = $derived<ResearchLineStatsQuery>({
 		yearFrom: Number(params.yearFrom),
 		yearTo: Number(params.yearTo),
 	})
 
-	const statsQuery = useWorksStatsQuery(() => queryParams)
-
-	const unindexedCount = $derived.by(() => {
-		const d = statsQuery.data
-		if (!d) return 0
-		return (
-			d.facultySummary.totalWorks - d.facultySummary.wosCount - d.facultySummary.scopusCount
-		)
-	})
+	const statsQuery = useResearchLineStatsQuery(
+		() => lineId,
+		() => queryParams,
+	)
 </script>
 
 <div class="mx-auto flex h-full max-w-[1600px] flex-col overflow-y-auto px-4 py-8 sm:px-6 lg:px-8">
@@ -50,13 +46,15 @@
 	{:else if statsQuery.isError || !statsQuery.data}
 		<div class="flex flex-col items-center justify-center py-16 text-center">
 			<CircleAlert class="size-8 text-red-500" />
-			<p class="mt-3 text-sm text-corp-gray">Error al cargar las estadísticas.</p>
+			<p class="mt-3 text-sm text-corp-gray">Error al cargar los datos de la línea.</p>
 		</div>
 	{:else}
 		<div class="mb-6 flex flex-wrap items-start justify-between gap-4">
 			<div>
-				<h1 class="text-xl font-semibold text-corp-ink">Estadísticas de Publicaciones</h1>
-				<p class="mt-1 text-sm text-corp-gray">Facultad de Ingeniería</p>
+				<h1 class="text-xl font-semibold text-corp-ink">
+					Línea: {statsQuery.data.name}
+				</h1>
+				<p class="mt-1 text-sm text-corp-gray">Detalle de publicaciones por línea</p>
 			</div>
 			<div class="flex items-end gap-3">
 				<YearRange
@@ -74,15 +72,6 @@
 			</div>
 		</div>
 
-		<KpiStrip
-			total={statsQuery.data.facultySummary.totalWorks}
-			wos={statsQuery.data.facultySummary.wosCount}
-			scopus={statsQuery.data.facultySummary.scopusCount}
-			unindexed={unindexedCount}
-		/>
-
-		<div class="mt-4">
-			<StatsHub data={statsQuery.data} />
-		</div>
+		<ResearchLineStats data={statsQuery.data} />
 	{/if}
 </div>

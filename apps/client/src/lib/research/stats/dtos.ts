@@ -1,6 +1,5 @@
 export interface StatsQuery {
 	journalKind?: "wos" | "scopus"
-	option?: "teaching" | "research"
 	departmentId?: string
 	yearFrom?: number
 	yearTo?: number
@@ -17,10 +16,32 @@ export interface TimeSeriesStat {
 	values: YearValue[]
 }
 
+export interface ScopeSeries {
+	id: string | null
+	name: string
+	total: number
+	wos: YearValue[]
+	scopus: YearValue[]
+}
+
+export interface ScopeTotal {
+	id: string | null
+	name: string
+	total: number
+}
+
+export interface FacultySummary {
+	totalWorks: number
+	wosCount: number
+	scopusCount: number
+}
+
 export interface WorksStatsResponse {
+	facultySummary: FacultySummary
 	byJournalKind: TimeSeriesStat[]
-	byOption: TimeSeriesStat[]
-	byDepartment: TimeSeriesStat[]
+	byDepartment: ScopeSeries[]
+	byResearchLine: ScopeSeries[]
+	topPublishers: TopPublisher[]
 }
 
 export interface TopPublisher {
@@ -40,6 +61,7 @@ export interface DepartmentDetail {
 	wosCount: number
 	teachingCount: number
 	researchCount: number
+	byJournalKind: TimeSeriesStat[]
 	topPublishers: TopPublisher[]
 }
 
@@ -75,4 +97,19 @@ export interface AcademicStatsResponse {
 	dominantResearchLineId: string | null
 	byJournalKind: TimeSeriesStat[]
 	contribution: AcademicContribution
+}
+
+export interface ResearchLineStatsQuery {
+	yearFrom?: number
+	yearTo?: number
+}
+
+export interface ResearchLineStatsResponse {
+	name: string
+	totalWorks: number
+	wosCount: number
+	scopusCount: number
+	byJournalKind: TimeSeriesStat[]
+	byDepartment: ScopeTotal[]
+	topPublishers: TopPublisher[]
 }

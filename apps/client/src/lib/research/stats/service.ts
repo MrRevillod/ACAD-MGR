@@ -4,6 +4,8 @@ import type {
 	AcademicStatsResponse,
 	DepartmentDetail,
 	DepartmentDetailQuery,
+	ResearchLineStatsQuery,
+	ResearchLineStatsResponse,
 	StatsQuery,
 	WorksStatsResponse,
 } from "$stats/dtos"
@@ -24,6 +26,17 @@ class StatsService {
 		return http.request<DepartmentDetail>({
 			method: "GET",
 			url: `/stats/department/${id}`,
+			params,
+		})
+	}
+
+	public getResearchLineStats(
+		id: string,
+		params?: ResearchLineStatsQuery,
+	): Promise<ResearchLineStatsResponse> {
+		return http.request<ResearchLineStatsResponse>({
+			method: "GET",
+			url: `/stats/research-line/${id}`,
 			params,
 		})
 	}
