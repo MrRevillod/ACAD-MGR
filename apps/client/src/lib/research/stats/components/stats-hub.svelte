@@ -66,7 +66,7 @@
 	>
 		<div>
 			<div class="mb-5 flex flex-wrap items-start justify-between gap-3">
-				<p class="max-w-2xl text-sm text-corp-gray">
+				<p class="min-w-0 flex-1 text-sm text-corp-gray">
 					Total de publicaciones por departamento en el rango seleccionado. Usa el
 					selector para comparar la tendencia entre WoS y Scopus.
 				</p>
@@ -87,7 +87,7 @@
 	>
 		<div>
 			<div class="mb-5 flex flex-wrap items-start justify-between gap-3">
-				<p class="max-w-2xl text-sm text-corp-gray">
+				<p class="min-w-0 flex-1 text-sm text-corp-gray">
 					Total de publicaciones por línea de investigación en el rango seleccionado. Usa
 					el selector para comparar la tendencia entre WoS y Scopus.
 				</p>
