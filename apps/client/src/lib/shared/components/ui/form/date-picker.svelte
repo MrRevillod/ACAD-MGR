@@ -3,7 +3,7 @@
 	import type { DateValue } from "@internationalized/date"
 
 	import { DatePicker } from "bits-ui"
-	import { CalendarDate, parseDate } from "@internationalized/date"
+	import { CalendarDate, parseDate, today, getLocalTimeZone } from "@internationalized/date"
 	import { Calendar as CalendarIcon } from "@lucide/svelte"
 
 	import InputLabel from "./label.svelte"
@@ -33,10 +33,15 @@
 	let selected: CalendarDate | undefined = $state()
 	let open = $state(false)
 
+	const maxDate = $derived(today(getLocalTimeZone()))
+
 	$effect(() => {
 		if (typeof input === "string" && /^\d{4}-\d{2}-\d{2}$/.test(input)) {
 			try {
-				selected = parseDate(input)
+				const parsed = parseDate(input)
+				if (selected?.toString() !== parsed.toString()) {
+					selected = parsed
+				}
 				return
 			} catch {
 				/* ignore */
@@ -70,6 +75,7 @@
 		closeOnDateSelect={true}
 		weekdayFormat="short"
 		fixedWeeks={true}
+		maxValue={maxDate}
 	>
 		<DatePicker.Input
 			class="flex h-10 w-full cursor-text select-none items-center rounded-lg border bg-white px-3 text-sm text-[#1A1A1A] outline-none transition-colors focus-within:border-corp-blue/50 focus-within:ring-2 focus-within:ring-corp-blue/10 {errors

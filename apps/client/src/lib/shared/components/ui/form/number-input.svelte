@@ -50,11 +50,19 @@
 	let value: string = $state("")
 	let inputEl: HTMLInputElement | undefined = $state()
 
+	const displayValue = (input: unknown): string => {
+		if (typeof input === "number") return toInput(input)
+		if (typeof input === "string") return input.replace(".", ",")
+		return ""
+	}
+
 	$effect(() => {
 		if (typeof input === "string" || typeof input === "number") {
-			const current = parse(input)
-			lastGood = toInput(current)
-			value = toInput(current)
+			const display = displayValue(input)
+			if (display !== value) {
+				lastGood = display
+				value = display
+			}
 		}
 	})
 

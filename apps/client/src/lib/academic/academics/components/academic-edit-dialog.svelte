@@ -178,13 +178,14 @@
 			</Field>
 			<Field of={form} path={["annualDiscountHours"]}>
 				{#snippet children(field)}
-					<NumberInput
+					<TextInput
 						{...field.props}
 						input={field.input}
 						errors={field.errors}
+						type="number"
 						label="Horas descuento anual"
 						min={0}
-						step={0.25}
+						step={1}
 					/>
 				{/snippet}
 			</Field>

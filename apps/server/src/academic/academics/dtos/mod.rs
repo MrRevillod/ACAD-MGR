@@ -47,11 +47,11 @@ pub struct GetAcademicsQuery {
 }
 
 fn validate_birth_date(date: &NaiveDate) -> Result<(), ValidationError> {
-	validate_future_date(date)
+	validate_future_date(date, "La fecha de nacimiento no puede ser en el futuro")
 }
 
 fn validate_joined_at(joined_at: &NaiveDate) -> Result<(), ValidationError> {
-	validate_future_date(joined_at)?;
+	validate_future_date(joined_at, "La fecha de ingreso no puede ser en el futuro")?;
 
 	if *joined_at < UCT_FOUNDATION_DATE {
 		return Err(ValidationError::new(
@@ -62,11 +62,9 @@ fn validate_joined_at(joined_at: &NaiveDate) -> Result<(), ValidationError> {
 	Ok(())
 }
 
-fn validate_future_date(date: &NaiveDate) -> Result<(), ValidationError> {
+fn validate_future_date(date: &NaiveDate, message: &'static str) -> Result<(), ValidationError> {
 	if *date > Utc::now().naive_utc().date() {
-		Err(ValidationError::new(
-			"La fecha de nacimiento no puede ser en el futuro",
-		))
+		Err(ValidationError::new(message))
 	} else {
 		Ok(())
 	}

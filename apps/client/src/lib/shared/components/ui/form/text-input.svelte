@@ -14,6 +14,9 @@
 		placeholder?: string
 		required?: boolean
 		autocomplete?: HTMLInputAttributes["autocomplete"]
+		min?: number
+		max?: number
+		step?: number
 		input: unknown
 		errors: [string, ...string[]] | null
 		rightIcon?: Snippet
