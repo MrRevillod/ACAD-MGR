@@ -37,5 +37,8 @@ impl Module for AcademicModule {
 		components.register::<AcademicsRepository>();
 
 		components.register::<ImportsService>();
+
+		components.register::<EditCodesService>();
+		components.register::<EditCodesRepository>();
 	}
 }

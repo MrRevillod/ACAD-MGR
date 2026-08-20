@@ -85,10 +85,25 @@ class AcademicsService {
 		})
 	}
 
-	public requestProfileUpdate(id: string): Promise<void> {
+	public requestProfileUpdate(id: string, code: string): Promise<void> {
 		return http.request<void>({
 			method: "POST",
 			url: `/academics/${id}/update-profile-request`,
+			data: { code },
+		})
+	}
+
+	public sendEditCodes(id: string): Promise<void> {
+		return http.request<void>({
+			method: "POST",
+			url: `/academics/${id}/edit-codes/send`,
+		})
+	}
+
+	public sendEditCodesMass(): Promise<number> {
+		return http.request<number>({
+			method: "POST",
+			url: "/academics/edit-codes/mass",
 		})
 	}
 

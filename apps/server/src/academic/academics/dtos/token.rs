@@ -10,6 +10,13 @@ pub struct ValidateTokenDto {
 	pub token: String,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct ProfileUpdateRequestDto {
+	#[validate(length(min = 1, message = "El código de autorización es obligatorio"))]
+	pub code: String,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SyncByTokenDto {

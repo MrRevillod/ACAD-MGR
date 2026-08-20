@@ -1,15 +1,17 @@
 <script lang="ts">
 	import { toast } from "svelte-sonner"
 	import { queryClient } from "$shared/http/tanstack"
-	import { Loader, Trash2, GripVertical } from "@lucide/svelte"
+	import { Loader, Trash2, GripVertical, Info } from "@lucide/svelte"
 
 	import { classificationService } from "$research/classification/service"
 	import { useAllSubfieldsQuery, useResearchLinesQuery } from "$research/classification/queries"
+	import ResearchLinesInfoDialog from "$research/classification/components/research-lines-info-dialog.svelte"
 
 	const subfieldsQuery = useAllSubfieldsQuery()
 	const researchLinesQuery = useResearchLinesQuery()
 
 	let draggingId = $state<string | null>(null)
+	let showInfo = $state(false)
 
 	interface AdminLine {
 		id: string
@@ -96,11 +98,22 @@
 </script>
 
 <div class="flex h-full flex-col">
-	<div class="mb-6">
-		<h1 class="text-lg font-semibold text-[#1A1A1A]">Líneas de Investigación</h1>
-		<p class="mt-1 text-sm text-corp-gray">
-			Arrastra subfields entre líneas para reasignarlos.
-		</p>
+	<div class="mb-6 flex items-start justify-between">
+		<div>
+			<h1 class="text-lg font-semibold text-[#1A1A1A]">Líneas de Investigación</h1>
+			<p class="mt-1 text-sm text-corp-gray">
+				Arrastra subfields entre líneas para reasignarlos.
+			</p>
+		</div>
+		<button
+			type="button"
+			class="flex size-9 shrink-0 items-center justify-center rounded-lg text-corp-gray transition-colors hover:bg-corp-gray/5 hover:text-corp-ink"
+			title="Cómo funciona la clasificación"
+			aria-label="Cómo funciona la clasificación"
+			onclick={() => (showInfo = true)}
+		>
+			<Info class="size-5" />
+		</button>
 	</div>
 
 	{#if researchLinesQuery.isPending || subfieldsQuery.isPending}
@@ -186,3 +199,5 @@
 		</div>
 	{/if}
 </div>
+
+<ResearchLinesInfoDialog bind:open={showInfo} />

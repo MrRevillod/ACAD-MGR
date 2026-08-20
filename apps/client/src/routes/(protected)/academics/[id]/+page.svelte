@@ -3,6 +3,7 @@
 	import type { Degree } from "$degrees/entity"
 
 	import { page } from "$app/state"
+	import { toast } from "svelte-sonner"
 	import { useSearchParams } from "runed/kit"
 	import {
 		GraduationCap,
@@ -16,7 +17,7 @@
 		Info,
 	} from "@lucide/svelte"
 
-	import { useQuery } from "$shared/http/tanstack"
+	import { useQuery, useMutation } from "$shared/http/tanstack"
 	import { authStore } from "$lib/auth/store.svelte"
 	import { CLf64Value } from "$shared/value-objects/cl-f64.value"
 	import { degreeService } from "$degrees/service"
@@ -124,6 +125,17 @@
 
 	const isAdmin = $derived(authStore.isAuthenticated)
 
+	const sendEditCodesMutation = useMutation(() => ({
+		mutationFn: () => academicService.sendEditCodes(id),
+		onSuccess: () => toast.success("Códigos enviados al correo del académico"),
+		onError: () => toast.error("Error al enviar los códigos de edición"),
+	}))
+
+	function handleSendEditCodes() {
+		if (!confirm("¿Enviar códigos de edición al académico?")) return
+		sendEditCodesMutation.mutate()
+	}
+
 	function closeEditAcademic() {
 		showEditAcademicDialog = false
 	}
@@ -145,7 +157,11 @@
 	{:else}
 		<div class="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8">
 			<div class="grid grid-cols-1 gap-6 lg:grid-cols-[320px_1fr]">
-				<AcademicSidebar {academic} onEdit={() => (showEditAcademicDialog = true)} />
+				<AcademicSidebar
+					{academic}
+					onEdit={() => (showEditAcademicDialog = true)}
+					onSendCodes={handleSendEditCodes}
+				/>
 
 				<div class="flex h-[calc(100dvh-10rem)] flex-col">
 					<div class="mb-4 flex shrink-0 rounded-lg bg-corp-gray/10 p-1">

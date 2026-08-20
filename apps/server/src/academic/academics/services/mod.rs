@@ -1,5 +1,7 @@
+mod edition_codes;
 mod imports;
 
+pub use edition_codes::*;
 pub use imports::*;
 use serde_json::{Value, json};
 
@@ -28,6 +30,7 @@ pub struct AcademicsService {
 	jwt_service: Arc<JsonWebTokenService>,
 
 	config: Arc<ConfigService>,
+	edit_codes: Arc<EditCodesService>,
 
 	works_import: Arc<WorksImportService>,
 }
@@ -215,11 +218,24 @@ impl AcademicsService {
 		self.find_view_by_id(&academic.id).await
 	}
 
-	pub async fn update_profile_request(&self, id: &AcademicId) -> AppResult<AcademicView> {
-		let Some(mut academic) = self.academics.find_by_id(id).await? else {
+	pub async fn update_profile_request(
+		&self,
+		id: &AcademicId,
+		code: &str,
+	) -> AppResult<AcademicView> {
+		let Some(academic) = self.academics.find_by_id(id).await? else {
 			return Err(AcademicError::AcademicNotFound)?;
 		};
 
+		let Some(code_academic_id) = self.edit_codes.consume(code).await? else {
+			return Err(AcademicError::InvalidEditCode)?;
+		};
+
+		if &code_academic_id != id {
+			Err(AcademicError::InvalidEditCode)?;
+		}
+
+		let mut academic = academic;
 		academic.updated_at = chrono::Utc::now();
 		self.academics.save(&academic).await?;
 		let updated_at = academic.updated_at;
@@ -248,6 +264,48 @@ impl AcademicsService {
 			.await;
 
 		self.find_view_by_id(&academic.id).await
+	}
+
+	pub async fn send_edit_codes(&self, id: &AcademicId) -> AppResult<AcademicView> {
+		let Some(academic) = self.academics.find_by_id(id).await? else {
+			return Err(AcademicError::AcademicNotFound)?;
+		};
+
+		let codes = self.edit_codes.ensure_vigentes(id).await?;
+
+		self.events
+			.publish(SendEditCodesEvent {
+				academic_name: academic.full_name(),
+				academic_email: academic.email.clone(),
+				codes: codes.into_iter().map(|c| c.code).collect(),
+			})
+			.await;
+
+		self.find_view_by_id(id).await
+	}
+
+	pub async fn send_edit_codes_all(&self) -> AppResult<usize> {
+		let academics = self.academics.list(AcademicListFilter::default()).await?;
+		let mut sent = 0;
+
+		for academic in academics {
+			let codes = self.edit_codes.ensure_vigentes(&academic.id).await?;
+
+			self.events
+				.publish(SendEditCodesEvent {
+					academic_name: format!(
+						"{} {} {}",
+						academic.names, academic.paternal_surname, academic.maternal_surname
+					),
+					academic_email: academic.email.clone(),
+					codes: codes.into_iter().map(|c| c.code).collect(),
+				})
+				.await;
+
+			sent += 1;
+		}
+
+		Ok(sent)
 	}
 
 	pub async fn validate_one_time_token(&self, token: &str) -> AppResult<AcademicId> {

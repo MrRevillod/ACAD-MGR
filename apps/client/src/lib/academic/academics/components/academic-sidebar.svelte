@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Academic } from "$academics/entity"
-	import { ChevronLeft, Pencil, ExternalLink } from "@lucide/svelte"
+	import { ChevronLeft, Pencil, ExternalLink, Send } from "@lucide/svelte"
 	import { FullName } from "$shared/value-objects/full-name.value"
 
 	interface Props {
@@ -8,9 +8,10 @@
 		readonly?: boolean
 		onEdit?: () => void
 		onRequestEdit?: () => void
+		onSendCodes?: () => void
 	}
 
-	let { academic, readonly = false, onEdit, onRequestEdit }: Props = $props()
+	let { academic, readonly = false, onEdit, onRequestEdit, onSendCodes }: Props = $props()
 
 	const nameObj = $derived(
 		FullName.of(academic.names, academic.paternalSurname, academic.maternalSurname),
@@ -99,6 +100,18 @@
 				onclick={onRequestEdit}
 			>
 				Solicitar edición de perfil
+			</button>
+		</div>
+	{/if}
+
+	{#if onSendCodes}
+		<div class="border-t border-white/10 px-6 py-4">
+			<button
+				class="flex w-full items-center justify-center gap-2 rounded-lg bg-white/10 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-white/15 active:scale-[0.97]"
+				onclick={onSendCodes}
+			>
+				<Send class="size-4" />
+				Enviar códigos de edición
 			</button>
 		</div>
 	{/if}

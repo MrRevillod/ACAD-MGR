@@ -68,3 +68,20 @@ impl Entity for Academic {
 		"academic"
 	}
 }
+
+pub type EditCodeId = Id<EditCode>;
+
+#[derive(Debug, Clone, Serialize, Deserialize, FromRow, Builder)]
+pub struct EditCode {
+	pub id: EditCodeId,
+	pub academic_id: AcademicId,
+	pub code: String,
+	pub used_at: Option<DateTime<Utc>>,
+	pub created_at: DateTime<Utc>,
+}
+
+impl Entity for EditCode {
+	fn key_name() -> &'static str {
+		"edit_code"
+	}
+}

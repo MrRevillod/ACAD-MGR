@@ -74,9 +74,30 @@ impl AcademicsController {
 	#[post("/{id}/update-profile-request")]
 	pub async fn update_academic_profile_request(&self, req: Request) -> WebResult<AcademicView> {
 		let id = req.param::<AcademicId>("id")?;
-		let academic = self.academics.update_profile_request(&id).await?;
+		let dto = req.body_validator::<ProfileUpdateRequestDto>()?;
+		let academic = self
+			.academics
+			.update_profile_request(&id, &dto.code)
+			.await?;
 
 		Ok(academic)
+	}
+
+	#[post("/{id}/edit-codes/send")]
+	#[interceptor(SessionCheck)]
+	pub async fn send_academic_edit_codes(&self, req: Request) -> WebResult<AcademicView> {
+		let id = req.param::<AcademicId>("id")?;
+		let academic = self.academics.send_edit_codes(&id).await?;
+
+		Ok(academic)
+	}
+
+	#[post("/edit-codes/mass")]
+	#[interceptor(SessionCheck)]
+	pub async fn send_edit_codes_mass(&self) -> WebResult<usize> {
+		let sent = self.academics.send_edit_codes_all().await?;
+
+		Ok(sent)
 	}
 
 	#[post("/import")]

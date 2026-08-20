@@ -2,13 +2,16 @@
 	import * as v from "valibot"
 
 	import { page } from "$app/state"
-	import { useQuery } from "$shared/http/tanstack"
+	import { toast } from "svelte-sonner"
+	import { Form, Field, createForm, reset } from "@formisch/svelte"
+	import { useQuery, useMutation } from "$shared/http/tanstack"
 	import { useSearchParams } from "runed/kit"
 	import { academicService } from "$academics/service"
-	import { Loader, CircleAlert, Construction, Network, Info } from "@lucide/svelte"
+	import { Loader, CircleAlert, CircleCheck, Network, Info, Send } from "@lucide/svelte"
 
 	import Dialog from "$shared/components/ui/dialog.svelte"
 	import Button from "$shared/components/ui/button.svelte"
+	import TextInput from "$shared/components/ui/form/text-input.svelte"
 	import WorksSection from "$works/components/works-section.svelte"
 	import AcademicStats from "$stats/components/academic-stats.svelte"
 	import AcademicSidebar from "$academics/components/academic-sidebar.svelte"
@@ -46,23 +49,34 @@
 
 	let requestEditDialogOpen = $state(false)
 	let showGraphHelp = $state(false)
-	/* -- disabled temporarily --
-	let isRequesting = $state(false)
 	let requestSent = $state(false)
 
-	async function handleRequestEdit() {
-		isRequesting = true
-		try {
-			await academicService.requestProfileUpdate(id)
+	const editCodeSchema = v.object({
+		code: v.pipe(v.string(), v.trim(), v.length(8, "El código debe tener 8 caracteres")),
+	})
+
+	const editCodeForm = createForm({ schema: editCodeSchema })
+
+	const requestEditMutation = useMutation(() => ({
+		mutationFn: (code: string) => academicService.requestProfileUpdate(id, code),
+		onSuccess: () => {
 			requestSent = true
 			toast.success("Enlace enviado a tu correo electrónico")
-		} catch {
-			toast.error("Error al solicitar la edición del perfil")
-		} finally {
-			isRequesting = false
-		}
+		},
+		onError: (error) => {
+			const message =
+				error.code === 400
+					? "Código inválido. Verifica el código enviado a tu correo."
+					: "Error al solicitar la edición del perfil"
+			toast.error(message)
+		},
+	}))
+
+	function handleCloseRequestDialog() {
+		requestEditDialogOpen = false
+		requestSent = false
+		reset(editCodeForm)
 	}
-	*/
 </script>
 
 <div class="h-full overflow-y-auto">
@@ -162,20 +176,56 @@
 	<Dialog
 		bind:open={requestEditDialogOpen}
 		title="Solicitar edición de perfil"
-		description="Esta funcionalidad no está disponible temporalmente."
+		description="Ingresa el código de 8 caracteres que recibiste por correo electrónico para recibir un enlace de edición."
 	>
-		<div class="flex flex-col items-center py-4 text-center">
-			<Construction class="size-10 text-amber-500" />
-			<p class="mt-3 text-sm text-corp-gray">
-				Esta funcionalidad estará disponible próximamente.
-			</p>
-		</div>
+		{#if requestSent}
+			<div class="flex flex-col items-center py-4 text-center">
+				<CircleCheck class="size-10 text-green-500" />
+				<p class="mt-3 text-sm text-corp-gray">
+					Revisa tu correo electrónico. Hemos enviado un enlace para editar tu perfil.
+				</p>
+			</div>
 
-		<div class="flex justify-end gap-2">
-			<Button variant="secondary" onclick={() => (requestEditDialogOpen = false)}>
-				Cerrar
-			</Button>
-		</div>
+			<div class="flex justify-end gap-2">
+				<Button variant="primary" onclick={handleCloseRequestDialog}>Aceptar</Button>
+			</div>
+		{:else}
+			<Form of={editCodeForm} onsubmit={(output) => requestEditMutation.mutate(output.code)}>
+				<div class="space-y-4">
+					<Field of={editCodeForm} path={["code"]}>
+						{#snippet children(field)}
+							<TextInput
+								{...field.props}
+								input={field.input}
+								errors={field.errors}
+								type="text"
+								label="Código de autorización"
+								placeholder="XXXXXXXX"
+							/>
+						{/snippet}
+					</Field>
+
+					<div class="flex justify-end gap-2">
+						<Button variant="secondary" onclick={handleCloseRequestDialog}>
+							Cancelar
+						</Button>
+						<Button
+							type="submit"
+							variant="primary"
+							disabled={requestEditMutation.isPending}
+						>
+							{#if requestEditMutation.isPending}
+								<Loader class="size-4 animate-spin" />
+								Solicitando...
+							{:else}
+								<Send class="size-4" />
+								Solicitar enlace
+							{/if}
+						</Button>
+					</div>
+				</div>
+			</Form>
+		{/if}
 	</Dialog>
 
 	<CollaborationGraphHelpDialog bind:open={showGraphHelp} />
