@@ -1,5 +1,8 @@
 use crate::{
-	academic::AcademicError, auth::AuthError, research::StatsError, research::WorksError,
+	academic::AcademicError,
+	auth::AuthError,
+	config::ConfigError,
+	research::{StatsError, WorksError},
 	university::UniversityError,
 };
 
@@ -31,6 +34,10 @@ pub enum AppError {
 	#[http(transparent)]
 	#[error(transparent)]
 	Stats(#[from] StatsError),
+
+	#[http(transparent)]
+	#[error(transparent)]
+	Config(#[from] ConfigError),
 
 	#[http(code = 500)]
 	#[tracing(error)]

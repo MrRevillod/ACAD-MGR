@@ -247,7 +247,7 @@
 											Jornada Completa Equivalente
 										</p>
 										<p class="mt-1 text-[15px] font-medium text-[#1a1a1a]">
-											{CLf64Value.format(academic.jce.number)}
+											{CLf64Value.format(academic.jce.number)} horas
 										</p>
 									</div>
 								</div>

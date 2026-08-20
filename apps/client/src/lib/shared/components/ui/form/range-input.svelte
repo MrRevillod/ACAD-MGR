@@ -8,6 +8,7 @@
 		class?: string
 		label?: string
 		hint?: string
+		unit?: string
 		min?: number
 		max?: number
 		step?: number
@@ -20,6 +21,7 @@
 		class: className,
 		label,
 		hint,
+		unit,
 		min = 0,
 		max = 1,
 		step = 0.1,
@@ -42,7 +44,9 @@
 		}
 	})
 
-	const displayValue = $derived(rawValue.toFixed(1))
+	const displayValue = $derived(
+		Number.isInteger(rawValue) ? String(rawValue) : rawValue.toFixed(1),
+	)
 	const fillPercent = $derived(((rawValue - min) / (max - min)) * 100)
 
 	function handleInput(e: Event) {
@@ -77,7 +81,7 @@
 			/>
 		</div>
 		<span class="min-w-10 text-right text-sm font-medium tabular-nums text-[#1A1A1A]">
-			{displayValue}
+			{displayValue}{unit ? ` ${unit}` : ""}
 		</span>
 	</div>
 

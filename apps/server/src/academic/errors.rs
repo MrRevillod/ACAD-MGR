@@ -57,6 +57,13 @@ pub enum AcademicError {
 	AcademicNotFound,
 
 	#[http(
+		code = 400,
+		message = "La JCE no puede superar el valor máximo configurado"
+	)]
+	#[error("JCE exceeds the configured maximum")]
+	JceExceedsMax,
+
+	#[http(
 		code = 401,
 		message = "El enlace de actualización es inválido o ha expirado"
 	)]

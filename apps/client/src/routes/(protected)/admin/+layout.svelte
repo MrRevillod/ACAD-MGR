@@ -11,6 +11,7 @@
 		GraduationCap,
 		Users,
 		GitFork,
+		Settings,
 		Menu,
 	} from "@lucide/svelte"
 
@@ -25,6 +26,7 @@
 		{ href: "/academics", label: "Académicos", icon: GraduationCap },
 		{ href: "/works", label: "Publicaciones", icon: BookOpen },
 		{ href: "/admin/users", label: "Usuarios", icon: Users },
+		{ href: "/admin/config", label: "Configuración", icon: Settings },
 	] as const
 
 	const currentPagePath = $derived(page.url.pathname)

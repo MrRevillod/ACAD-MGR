@@ -1,4 +1,5 @@
 use crate::academic::*;
+use crate::config::ConfigService;
 use crate::shared::{AppError, AppResult, Orcid, TransactionManager, Tx};
 use crate::university::*;
 
@@ -19,6 +20,7 @@ pub struct ImportsService {
 	category_options: Arc<AcademicCategoryOptionsRepository>,
 	countries: Arc<CountriesRepository>,
 	categories: Arc<AcademicCategoriesRepository>,
+	config: Arc<ConfigService>,
 }
 
 impl ImportsService {
@@ -163,6 +165,12 @@ impl ImportsService {
 
 		let orcid = input.orcid.as_deref().and_then(Orcid::normalize);
 
+		let jce = *input.jce;
+		let jce_max = self.config.jce_max().await?;
+		if jce > jce_max {
+			Err(AcademicError::JceExceedsMax)?;
+		}
+
 		let academic = Academic::builder()
 			.rut(input.rut.clone())
 			.names(input.names.clone())
@@ -176,7 +184,7 @@ impl ImportsService {
 			.work_position_id(work_position_id)
 			.department_id(department.id)
 			.maybe_career_id(career_id)
-			.jce(*input.jce)
+			.jce(jce)
 			.acad_category_options_id(category_option_id)
 			.annual_discount_hours(*input.annual_discount_hours)
 			.nationality_code(nationality_code)

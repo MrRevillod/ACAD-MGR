@@ -6,6 +6,7 @@ use serde_json::{Value, json};
 use crate::{
 	academic::*,
 	auth::AuthConfig,
+	config::ConfigService,
 	research::{SyncResultView, WorksImportService},
 	shared::{AppResult, JsonWebTokenService},
 	university::*,
@@ -25,6 +26,8 @@ pub struct AcademicsService {
 
 	auth_config: AuthConfig,
 	jwt_service: Arc<JsonWebTokenService>,
+
+	config: Arc<ConfigService>,
 
 	works_import: Arc<WorksImportService>,
 }
@@ -62,6 +65,11 @@ impl AcademicsService {
 			&& self.academics.find_by_orcid(orcid).await?.is_some()
 		{
 			Err(AcademicError::AcademicOrcidAlreadyExists)?;
+		}
+
+		let jce_max = self.config.jce_max().await?;
+		if academic.jce > jce_max {
+			Err(AcademicError::JceExceedsMax)?;
 		}
 
 		let Some(depto) = self.departments.find_by_id(&academic.department_id).await? else {
@@ -196,6 +204,11 @@ impl AcademicsService {
 
 		if let Some(city) = input.city {
 			academic.city = city;
+		}
+
+		let jce_max = self.config.jce_max().await?;
+		if academic.jce > jce_max {
+			Err(AcademicError::JceExceedsMax)?;
 		}
 
 		self.academics.save(&academic).await?;

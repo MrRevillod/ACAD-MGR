@@ -6,6 +6,7 @@
 	import { countryItems } from "$shared/countries"
 	import { academicService } from "$academics/service"
 	import { updateAcademicDTOSchema } from "$academics/dtos"
+	import { useConfig } from "$shared/config/queries"
 
 	import { queryClient, useMutation } from "$shared/http/tanstack"
 	import { createForm, Field, Form, reset } from "@formisch/svelte"
@@ -26,7 +27,10 @@
 
 	let { academic, open = $bindable(), onClose }: Props = $props()
 
-	const form = createForm({ schema: updateAcademicDTOSchema })
+	const configQuery = useConfig()
+	const jceMax = $derived(configQuery.data?.jceMax ?? 42.5)
+
+	const form = $derived.by(() => createForm({ schema: updateAcademicDTOSchema(jceMax) }))
 
 	$effect(() => {
 		if (!open) return
@@ -165,9 +169,11 @@
 						input={field.input ?? ""}
 						errors={field.errors}
 						label="JCE"
+						hint="Horas de la jornada completa equivalente"
 						min={0}
-						max={1}
-						step={0.1}
+						max={jceMax}
+						step={1}
+						unit="horas"
 					/>
 				{/snippet}
 			</Field>

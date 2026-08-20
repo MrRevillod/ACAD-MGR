@@ -1,5 +1,6 @@
 mod academic;
 mod auth;
+mod config;
 mod research;
 mod shared;
 mod university;
@@ -14,6 +15,7 @@ async fn main() {
 		.with_module::<university::UniversityModule>()
 		.with_module::<academic::AcademicModule>()
 		.with_module::<auth::AuthModule>()
+		.with_module::<config::ConfigModule>()
 		.with_module::<research::ResearchModule>()
 		.with_layer(LoggerLayer())
 		.build();

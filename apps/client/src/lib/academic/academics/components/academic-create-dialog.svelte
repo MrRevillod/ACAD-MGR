@@ -12,6 +12,7 @@
 	import { categoryService } from "$categories/service"
 	import { departmentService } from "$departments/service"
 	import { createAcademicDTOInitialInput, createAcademicDTOSchema } from "$academics/dtos"
+	import { useConfig } from "$shared/config/queries"
 
 	import { SexValue } from "$shared/value-objects/sex.value"
 
@@ -32,7 +33,10 @@
 
 	let { open = $bindable(), onClose }: Props = $props()
 
-	const form = createForm({ schema: createAcademicDTOSchema })
+	const configQuery = useConfig()
+	const jceMax = $derived(configQuery.data?.jceMax ?? 42.5)
+
+	const form = $derived.by(() => createForm({ schema: createAcademicDTOSchema(jceMax) }))
 
 	let selectedCategoryId = $state("")
 	let selectedCategoryError: string | undefined = $state(undefined)
@@ -325,9 +329,11 @@
 							input={field.input ?? ""}
 							errors={field.errors}
 							label="JCE"
+							hint="Horas de la jornada completa equivalente"
 							min={0}
-							max={1}
-							step={0.1}
+							max={jceMax}
+							step={1}
+							unit="horas"
 						/>
 					{/snippet}
 				</Field>

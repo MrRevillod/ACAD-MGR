@@ -48,7 +48,7 @@ pub struct UpdateAcademicDto {
 
 	pub acad_category_options_id: Option<AcademicCategoryOptionId>,
 
-	#[validate(range(min = 0.0, max = 1.0, message = "La JCE debe estar entre 0.0 y 1.0"))]
+	#[validate(range(min = 0.0, message = "La JCE no puede ser negativa"))]
 	pub jce: Option<f64>,
 
 	#[validate(range(
