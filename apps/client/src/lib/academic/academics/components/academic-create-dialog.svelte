@@ -22,7 +22,7 @@
 	import TextInput from "$shared/components/ui/form/text-input.svelte"
 	import DatePicker from "$shared/components/ui/form/date-picker.svelte"
 	import Select from "$shared/components/ui/form/select.svelte"
-	import RangeInput from "$shared/components/ui/form/range-input.svelte"
+	import NumberInput from "$shared/components/ui/form/number-input.svelte"
 	import CountrySelect from "$shared/components/ui/form/country-select.svelte"
 	import FormFooter from "$shared/components/ui/form/footer.svelte"
 
@@ -324,7 +324,7 @@
 			<div class="grid grid-cols-2 gap-4">
 				<Field of={form} path={["jce"]}>
 					{#snippet children(field)}
-						<RangeInput
+						<NumberInput
 							{...field.props}
 							input={field.input ?? ""}
 							errors={field.errors}
@@ -332,19 +332,19 @@
 							hint="Horas de la jornada completa equivalente"
 							min={0}
 							max={jceMax}
-							step={1}
-							unit="horas"
+							step={0.25}
 						/>
 					{/snippet}
 				</Field>
 				<Field of={form} path={["annualDiscountHours"]}>
 					{#snippet children(field)}
-						<TextInput
+						<NumberInput
 							{...field.props}
 							input={field.input ?? ""}
 							errors={field.errors}
-							type="number"
 							label="Horas descuento anual"
+							min={0}
+							step={0.25}
 						/>
 					{/snippet}
 				</Field>
