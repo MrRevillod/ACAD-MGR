@@ -22,9 +22,7 @@ impl OrcidClient {
 	}
 
 	pub async fn works(&self, orcid: &str) -> AppResult<Vec<OrcidWork>> {
-		let bare = orcid
-			.strip_prefix("https://orcid.org/")
-			.unwrap_or(orcid);
+		let bare = orcid.strip_prefix("https://orcid.org/").unwrap_or(orcid);
 
 		let author = self
 			.inner

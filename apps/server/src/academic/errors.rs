@@ -63,7 +63,10 @@ pub enum AcademicError {
 	#[error("JCE exceeds the configured maximum")]
 	JceExceedsMax,
 
-	#[http(code = 400, message = "El código de autorización es inválido o ya fue utilizado")]
+	#[http(
+		code = 400,
+		message = "El código de autorización es inválido o ya fue utilizado"
+	)]
 	#[error("Invalid or already used edit code")]
 	InvalidEditCode,
 

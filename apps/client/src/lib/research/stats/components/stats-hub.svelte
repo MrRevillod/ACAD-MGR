@@ -41,6 +41,14 @@
 	</a>
 {/snippet}
 
+{#snippet deptToggleAction()}
+	<IndexationToggle bind:kind={deptKind} />
+{/snippet}
+
+{#snippet lineToggleAction()}
+	<IndexationToggle bind:kind={lineKind} />
+{/snippet}
+
 <div class="overflow-hidden rounded-xl border border-corp-gray/20 bg-white">
 	<StatsSection
 		title="Métricas y Estadísticas de la Facultad"
@@ -49,13 +57,9 @@
 		ontoggle={() => (openSection = "faculty")}
 		first
 		action={facultyAction}
+		description="Publicaciones de la Facultad de Ingeniería indexadas en WoS y Scopus, por año."
 	>
-		<div>
-			<p class="mb-4 text-sm text-corp-gray">
-				Publicaciones de la Facultad de Ingeniería indexadas en WoS y Scopus, por año.
-			</p>
-			<TrendLine journalKind={data.byJournalKind} />
-		</div>
+		<TrendLine journalKind={data.byJournalKind} />
 	</StatsSection>
 
 	<StatsSection
@@ -63,19 +67,12 @@
 		icon={Building2}
 		open={openSection === "departments"}
 		ontoggle={() => (openSection = "departments")}
+		action={deptToggleAction}
+		description="Total de publicaciones por departamento en el rango seleccionado. Usa el selector para comparar la tendencia entre WoS y Scopus."
 	>
-		<div>
-			<div class="mb-5 flex flex-wrap items-start justify-between gap-3">
-				<p class="min-w-0 flex-1 text-sm text-corp-gray">
-					Total de publicaciones por departamento en el rango seleccionado. Usa el
-					selector para comparar la tendencia entre WoS y Scopus.
-				</p>
-				<IndexationToggle bind:kind={deptKind} />
-			</div>
-			<div class="grid grid-cols-1 items-start gap-8 lg:grid-cols-[320px_1fr]">
-				<BarsList data={departments} hrefFor={deptHref} />
-				<MultiTrend items={departments} bind:kind={deptKind} />
-			</div>
+		<div class="grid grid-cols-1 items-start gap-8 lg:grid-cols-[320px_1fr]">
+			<BarsList data={departments} hrefFor={deptHref} />
+			<MultiTrend items={departments} bind:kind={deptKind} />
 		</div>
 	</StatsSection>
 
@@ -84,19 +81,12 @@
 		icon={Layers}
 		open={openSection === "lines"}
 		ontoggle={() => (openSection = "lines")}
+		action={lineToggleAction}
+		description="Total de publicaciones por línea de investigación en el rango seleccionado. Usa el selector para comparar la tendencia entre WoS y Scopus."
 	>
-		<div>
-			<div class="mb-5 flex flex-wrap items-start justify-between gap-3">
-				<p class="min-w-0 flex-1 text-sm text-corp-gray">
-					Total de publicaciones por línea de investigación en el rango seleccionado. Usa
-					el selector para comparar la tendencia entre WoS y Scopus.
-				</p>
-				<IndexationToggle bind:kind={lineKind} />
-			</div>
-			<div class="grid grid-cols-1 items-start gap-8 lg:grid-cols-[320px_1fr]">
-				<BarsList data={lines} hrefFor={lineHref} />
-				<MultiTrend items={lines} bind:kind={lineKind} />
-			</div>
+		<div class="grid grid-cols-1 items-start gap-8 lg:grid-cols-[320px_1fr]">
+			<BarsList data={lines} hrefFor={lineHref} />
+			<MultiTrend items={lines} bind:kind={lineKind} />
 		</div>
 	</StatsSection>
 </div>

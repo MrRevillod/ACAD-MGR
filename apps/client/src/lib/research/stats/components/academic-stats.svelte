@@ -1,13 +1,12 @@
 <script lang="ts">
-	import { ChartBar, ChevronDown, CircleAlert, Gauge, Loader, TrendingUp } from "@lucide/svelte"
-	import { expoOut } from "svelte/easing"
-	import { slide } from "svelte/transition"
+	import { ChartBar, CircleAlert, Gauge, Loader, TrendingUp } from "@lucide/svelte"
 
 	import YearRange from "$shared/components/ui/year-range.svelte"
 	import { useAcademicStatsQuery } from "$stats/queries"
 
 	import DonutChart from "./donut-chart.svelte"
 	import RadarChart from "./radar-chart.svelte"
+	import StatsSection from "./stats-section.svelte"
 	import TrendLine from "./trend-line.svelte"
 
 	const ACRONYMS: Record<string, string> = {
@@ -154,163 +153,103 @@
 		</div>
 	{:else}
 		<div class="overflow-hidden rounded-xl border border-corp-gray/20 bg-white">
-			<section>
-				<button
-					type="button"
-					class="flex w-full items-center gap-2 px-5 py-4 text-left transition-colors hover:bg-corp-gray/[0.03]"
-					onclick={() => toggleSection("lines")}
-					aria-expanded={openSection === "lines"}
-				>
-					<ChartBar class="size-4 shrink-0 text-corp-blue" />
-					<h2 class="text-sm font-semibold tracking-wide uppercase text-corp-blue">
-						Líneas de investigación
-					</h2>
-					<ChevronDown
-						class={`ml-auto size-4 shrink-0 text-corp-gray transition-transform ${
-							openSection === "lines" ? "rotate-180" : ""
-						}`}
-					/>
-				</button>
-
-				{#if openSection === "lines"}
+			<StatsSection
+				title="Líneas de investigación"
+				icon={ChartBar}
+				open={openSection === "lines"}
+				ontoggle={() => toggleSection("lines")}
+				first
+				description="Distribución de las publicaciones del académico por línea de investigación."
+			>
+				{#if lines.length === 0}
+					<p class="py-6 text-center text-sm text-corp-gray">
+						Sin líneas de investigación asignadas en el rango seleccionado.
+					</p>
+				{:else}
 					<div
-						class="border-t border-corp-gray/10 p-6"
-						transition:slide={{ duration: 250, easing: expoOut }}
+						class="grid grid-cols-1 items-center gap-8 lg:grid-cols-[minmax(0,1fr)_auto]"
 					>
-						{#if lines.length === 0}
-							<p class="py-6 text-center text-sm text-corp-gray">
-								Sin líneas de investigación asignadas en el rango seleccionado.
-							</p>
-						{:else}
-							<div
-								class="grid grid-cols-1 items-center gap-8 lg:grid-cols-[minmax(0,1fr)_auto]"
-							>
-								<div class="space-y-3">
-									{#each lines as line (line.researchLineId)}
-										{@const pct =
-											total > 0 ? Math.round((line.count / total) * 100) : 0}
-										{@const w =
-											maxCount > 0
-												? Math.max((line.count / maxCount) * 100, 0)
-												: 0}
-										<div>
-											<div
-												class="mb-1 flex items-center justify-between gap-3"
+						<div class="space-y-3">
+							{#each lines as line (line.researchLineId)}
+								{@const pct =
+									total > 0 ? Math.round((line.count / total) * 100) : 0}
+								{@const w =
+									maxCount > 0 ? Math.max((line.count / maxCount) * 100, 0) : 0}
+								<div>
+									<div class="mb-1 flex items-center justify-between gap-3">
+										<span class="flex min-w-0 items-center gap-2">
+											<span
+												class="shrink-0 rounded bg-corp-blue/10 px-1.5 py-0.5 text-[10px] font-bold text-corp-blue"
 											>
-												<span class="flex min-w-0 items-center gap-2">
-													<span
-														class="shrink-0 rounded bg-corp-blue/10 px-1.5 py-0.5 text-[10px] font-bold text-corp-blue"
-													>
-														{acronymOf(line.name)}
-													</span>
-													<span
-														class="truncate text-sm font-medium text-corp-ink"
-													>
-														{line.name}
-													</span>
-												</span>
-												<span
-													class="shrink-0 text-xs text-corp-gray tabular-nums"
-													>{line.count} · {pct}%</span
-												>
-											</div>
-											<div
-												class="relative h-2.5 min-w-0 overflow-hidden rounded-sm bg-corp-gray/10"
+												{acronymOf(line.name)}
+											</span>
+											<span
+												class="truncate text-sm font-medium text-corp-ink"
 											>
-												<div
-													class="absolute inset-y-0 left-0 rounded-sm bg-corp-blue"
-													style="width:{w}%"
-												></div>
-											</div>
-										</div>
-									{/each}
-								</div>
-
-								<div class="flex justify-center">
-									<RadarChart items={radarItems} />
-								</div>
-							</div>
-						{/if}
-					</div>
-				{/if}
-			</section>
-
-			<section class="border-t border-corp-gray/20">
-				<button
-					type="button"
-					class="flex w-full items-center gap-2 px-5 py-4 text-left transition-colors hover:bg-corp-gray/[0.03]"
-					onclick={() => toggleSection("trend")}
-					aria-expanded={openSection === "trend"}
-				>
-					<TrendingUp class="size-4 shrink-0 text-corp-blue" />
-					<h2 class="text-sm font-semibold tracking-wide uppercase text-corp-blue">
-						Tendencia anual de publicaciones
-					</h2>
-					<ChevronDown
-						class={`ml-auto size-4 shrink-0 text-corp-gray transition-transform ${
-							openSection === "trend" ? "rotate-180" : ""
-						}`}
-					/>
-				</button>
-
-				{#if openSection === "trend"}
-					<div
-						class="border-t border-corp-gray/10 p-6"
-						transition:slide={{ duration: 250, easing: expoOut }}
-					>
-						<TrendLine journalKind={query.data?.byJournalKind ?? []} />
-					</div>
-				{/if}
-			</section>
-
-			<section class="border-t border-corp-gray/20">
-				<button
-					type="button"
-					class="flex w-full items-center gap-2 px-5 py-4 text-left transition-colors hover:bg-corp-gray/[0.03]"
-					onclick={() => toggleSection("impact")}
-					aria-expanded={openSection === "impact"}
-				>
-					<Gauge class="size-4 shrink-0 text-corp-blue" />
-					<h2 class="text-sm font-semibold tracking-wide uppercase text-corp-blue">
-						Impacto y Desempeño
-					</h2>
-					<ChevronDown
-						class={`ml-auto size-4 shrink-0 text-corp-gray transition-transform ${
-							openSection === "impact" ? "rotate-180" : ""
-						}`}
-					/>
-				</button>
-
-				{#if openSection === "impact"}
-					<div
-						class="border-t border-corp-gray/10 p-6"
-						transition:slide={{ duration: 250, easing: expoOut }}
-					>
-						{#if impactDonuts.length === 0}
-							<p class="py-6 text-center text-sm text-corp-gray">
-								Sin datos para mostrar.
-							</p>
-						{:else}
-							<div class="grid grid-cols-1 gap-8 md:grid-cols-3">
-								{#each impactDonuts as d (d.caption)}
-									<div class="flex flex-col items-center gap-2">
-										<p class="text-center text-sm font-medium text-corp-ink">
-											{d.caption}
-										</p>
-										{#if d.total > 0}
-											<DonutChart segments={d.segments} total={d.total} />
-										{:else}
-											<p class="py-6 text-xs text-corp-gray">
-												Sin datos en el rango.
-											</p>
-										{/if}
+												{line.name}
+											</span>
+										</span>
+										<span class="shrink-0 text-xs text-corp-gray tabular-nums"
+											>{line.count} · {pct}%</span
+										>
 									</div>
-								{/each}
-							</div>
-						{/if}
+									<div
+										class="relative h-2.5 min-w-0 overflow-hidden rounded-sm bg-corp-gray/10"
+									>
+										<div
+											class="absolute inset-y-0 left-0 rounded-sm bg-corp-blue"
+											style="width:{w}%"
+										></div>
+									</div>
+								</div>
+							{/each}
+						</div>
+
+						<div class="flex justify-center">
+							<RadarChart items={radarItems} />
+						</div>
 					</div>
 				{/if}
-			</section>
+			</StatsSection>
+
+			<StatsSection
+				title="Tendencia anual de publicaciones"
+				icon={TrendingUp}
+				open={openSection === "trend"}
+				ontoggle={() => toggleSection("trend")}
+				description="Evolución anual de las publicaciones del académico, según tipo de indexación."
+			>
+				<TrendLine journalKind={query.data?.byJournalKind ?? []} />
+			</StatsSection>
+
+			<StatsSection
+				title="Impacto y Desempeño"
+				icon={Gauge}
+				open={openSection === "impact"}
+				ontoggle={() => toggleSection("impact")}
+				description="Contribución del académico respecto a su facultad, departamento y línea."
+			>
+				{#if impactDonuts.length === 0}
+					<p class="py-6 text-center text-sm text-corp-gray">Sin datos para mostrar.</p>
+				{:else}
+					<div class="grid grid-cols-1 gap-8 md:grid-cols-3">
+						{#each impactDonuts as d (d.caption)}
+							<div class="flex flex-col items-center gap-2">
+								<p class="text-center text-sm font-medium text-corp-ink">
+									{d.caption}
+								</p>
+								{#if d.total > 0}
+									<DonutChart segments={d.segments} total={d.total} />
+								{:else}
+									<p class="py-6 text-xs text-corp-gray">
+										Sin datos en el rango.
+									</p>
+								{/if}
+							</div>
+						{/each}
+					</div>
+				{/if}
+			</StatsSection>
 		</div>
 	{/if}
 </div>

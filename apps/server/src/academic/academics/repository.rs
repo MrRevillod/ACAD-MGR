@@ -1,4 +1,6 @@
-use crate::academic::{Academic, AcademicId, AcademicListFilter, AcademicView, EditCode, EditCodeId};
+use crate::academic::{
+	Academic, AcademicId, AcademicListFilter, AcademicView, EditCode, EditCodeId,
+};
 use crate::shared::{AppResult, Database, Tx};
 
 use sqlx::QueryBuilder;

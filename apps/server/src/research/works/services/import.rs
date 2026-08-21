@@ -26,7 +26,10 @@ impl WorksImportService {
 			.await?
 			.ok_or(WorksError::AcademicNotFound)?;
 
-		let orcid = academic.orcid.clone().ok_or(WorksError::AcademicWithoutOrcid)?;
+		let orcid = academic
+			.orcid
+			.clone()
+			.ok_or(WorksError::AcademicWithoutOrcid)?;
 
 		let orcid_works = self.orcid.works(&orcid).await?;
 		let works_fetched = orcid_works.len();

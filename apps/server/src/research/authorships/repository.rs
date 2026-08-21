@@ -43,11 +43,7 @@ impl AuthorshipsRepository {
 		Ok(())
 	}
 
-	pub async fn delete_for_orcid_not_in(
-		&self,
-		orcid: &str,
-		keep: &[WorkId],
-	) -> AppResult<usize> {
+	pub async fn delete_for_orcid_not_in(&self, orcid: &str, keep: &[WorkId]) -> AppResult<usize> {
 		let result = sqlx::query(
 			"DELETE FROM work_authorships
 			WHERE orcid = $1 AND NOT (work_id = ANY($2))",

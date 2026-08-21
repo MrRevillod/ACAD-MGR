@@ -64,9 +64,7 @@ impl OpenAlexClient {
 	}
 
 	pub async fn get_work_by_doi(&self, doi: &str) -> AppResult<Option<OaWork>> {
-		let params = GetParams::builder()
-			.select(SELECT_FIELDS.join(","))
-			.build();
+		let params = GetParams::builder().select(SELECT_FIELDS.join(",")).build();
 
 		let url = format!("https://doi.org/{doi}");
 

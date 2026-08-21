@@ -38,7 +38,7 @@
 	)
 </script>
 
-<div class="mx-auto flex h-full max-w-[1600px] flex-col overflow-y-auto px-4 py-8 sm:px-6 lg:px-8">
+<div class="flex flex-col">
 	{#if statsQuery.isPending}
 		<div class="flex items-center justify-center py-16">
 			<Loader class="size-6 animate-spin text-corp-gray" />

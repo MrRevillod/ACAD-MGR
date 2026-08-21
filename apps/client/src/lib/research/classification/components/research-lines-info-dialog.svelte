@@ -39,15 +39,15 @@
 						>
 					</div>
 				</li>
-				<li class="ml-[7px] border-l border-corp-gray/20 pl-5">
+				<li class="ml-1.75 border-l border-corp-gray/20 pl-5">
 					<span class="text-sm font-semibold text-corp-ink">Campo</span>
 					<span class="text-sm text-corp-gray"> — disciplina dentro del dominio.</span>
 				</li>
-				<li class="ml-[7px] border-l border-corp-gray/20 pl-5">
+				<li class="ml-1.75 border-l border-corp-gray/20 pl-5">
 					<span class="text-sm font-semibold text-corp-ink">Subcampo</span>
 					<span class="text-sm text-corp-gray"> — especialidad dentro del campo.</span>
 				</li>
-				<li class="ml-[7px] border-l border-corp-gray/20 pl-5">
+				<li class="ml-1.75 border-l border-corp-gray/20 pl-5">
 					<span class="text-sm font-semibold text-corp-ink">Tema</span>
 					<span class="text-sm text-corp-gray"> — tema concreto de una publicación.</span>
 				</li>
@@ -64,7 +64,7 @@
 				Cómo se relaciona con las líneas
 			</h3>
 			<p class="mt-2 text-sm leading-relaxed text-corp-gray">
-				Cada <span class="font-medium text-corp-ink">subcampo</span> se asigna a una{" "}
+				Cada <span class="font-medium text-corp-ink">subcampo</span> se asigna a una
 				<span class="font-medium text-corp-ink">línea de investigación</span> de la facultad.
 				Como los temas cuelgan de sus subcampos, al asociar un subcampo a una línea, todas las
 				publicaciones con temas de ese subcampo quedan agrupadas en esa línea. Así se mide la
@@ -81,7 +81,8 @@
 				Cada columna es una línea de investigación y cada tarjeta es un subcampo. Para
 				reasignar un subcampo, <span class="font-medium text-corp-ink">arrástralo</span> de
 				una columna a otra: sus publicaciones quedarán asociadas a la nueva línea. La
-				columna{" "}
+				columna
+
 				<span class="font-medium text-corp-ink">Sin Asignar</span> reúne los subcampos que aún
 				no pertenecen a ninguna línea.
 			</p>

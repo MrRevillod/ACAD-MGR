@@ -7,6 +7,7 @@
 
 	interface Props {
 		title: string
+		description?: string
 		icon: Component
 		open: boolean
 		ontoggle: () => void
@@ -15,7 +16,16 @@
 		children: Snippet
 	}
 
-	let { title, icon: Icon, open, ontoggle, first = false, action, children }: Props = $props()
+	let {
+		title,
+		description,
+		icon: Icon,
+		open,
+		ontoggle,
+		first = false,
+		action,
+		children,
+	}: Props = $props()
 </script>
 
 <section class={first ? "" : "border-t border-corp-gray/20"}>
@@ -27,12 +37,21 @@
 			aria-expanded={open}
 		>
 			<Icon class="size-4 shrink-0 text-corp-blue" />
-			<h2 class="truncate text-sm font-semibold tracking-wide uppercase text-corp-blue">
-				{title}
-			</h2>
+			<div class="min-w-0">
+				<h2 class="truncate text-sm font-semibold tracking-wide uppercase text-corp-blue">
+					{title}
+				</h2>
+				{#if open && description}
+					<span
+						class="mt-0.5 block truncate text-xs font-normal normal-case text-corp-gray"
+					>
+						{description}
+					</span>
+				{/if}
+			</div>
 		</button>
 
-		{#if action}
+		{#if open && action}
 			<div class="shrink-0 pr-1">{@render action()}</div>
 		{/if}
 
