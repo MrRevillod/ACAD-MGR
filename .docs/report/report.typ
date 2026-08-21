@@ -94,6 +94,8 @@ Para la carga inicial masiva, la plataforma permite *importar académicos desde 
 - Las filas que superan la validación se *persisten en una transacción*; si alguna falla, se registra el error sin afectar a las filas correctas.
 - Al finalizar, se entrega un *reporte de resultados* con el número de académicos importados y el detalle de errores por fila, lo que permite corregir el archivo de forma dirigida.
 
+La importación está pensada para la *carga inicial* de datos. Si el archivo contiene un académico que ya existe (mismo RUT o mismo correo), esa fila *no se importa*: se detecta el duplicado, se descartan también sus grados asociados y el motivo se reporta como error en la fila correspondiente. La importación, por tanto, *no actualiza ni reemplaza* los datos de académicos ya registrados; los cambios sobre un académico existente se realizan mediante la edición individual o, cuando procede, a través del autoservicio por parte del propio académico.
+
 === Sincronización de publicaciones
 
 La plataforma importa automáticamente las publicaciones de cada académico desde fuentes públicas, evitando el registro manual. El flujo combina dos fuentes:
@@ -104,6 +106,15 @@ La plataforma importa automáticamente las publicaciones de cada académico desd
 De cada publicación se captura: título, DOI, fecha y año de publicación, idioma, estado (aceptado/publicado), revista o fuente, autores y afiliaciones. El proceso *distingue autores internos* (académicos de la facultad) de *autores externos* a partir de su ORCID, lo que es la base para los análisis por unidad y para la red de colaboración.
 
 La sincronización puede ejecutarse *por académico* (desde su perfil) o *de forma masiva* para todos los académicos, y al finalizar se entrega un *resumen de resultados* (publicaciones creadas, autores enlazados, tópicos y palabras clave asociados, obras sin DOI o no encontradas, y errores puntuales). Es un proceso idempotente: al repetirlo, actualiza los registros existentes en lugar de duplicarlos.
+
+Conviene precisar algunos casos particulares de la sincronización:
+
+- *Solo se importan publicaciones visibles en ORCID*: la fuente de partida es el perfil ORCID del académico, por lo que una obra que aún no aparece allí (o que no está visible públicamente) no se importa hasta que esté disponible en la fuente. Puede ser necesario esperar a que la fuente externa refleje la publicación.
+- *Se importan únicamente obras con DOI y presentes en OpenAlex*: las obras sin DOI se omiten, y las que no se encuentran en OpenAlex tampoco se incorporan; ambos casos se cuentan en el resumen de resultados.
+- *Solo se incorporan artículos*: otros tipos de obra (libros, capítulos, actas, etc.) quedan fuera de la importación.
+- *La sincronización puede tardar*: el proceso consulta OpenAlex con un intervalo entre peticiones, y la sincronización masiva recorre a todos los académicos, por lo que puede tomar varios minutos. Al repetir una sincronización, las obras ya registradas se actualizan sin duplicarse y las correcciones manuales se conservan.
+- *Persistencia de las ediciones*: cuando se corrige manualmente una publicación, los cambios se guardan de forma separada de los datos originales. En una re-sincronización, los metadatos base se actualizan desde la fuente pero *las correcciones manuales se conservan*.
+- *Desvinculación*: si una obra deja de aparecer en ORCID, se desvincula del académico (se registra en el resumen como autorías desvinculadas).
 
 === Clasificación institucional propia (líneas de investigación)
 
