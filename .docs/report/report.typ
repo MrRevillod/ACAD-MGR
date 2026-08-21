@@ -94,7 +94,7 @@ Para la carga inicial masiva, la plataforma permite *importar académicos desde 
 - Las filas que superan la validación se *persisten en una transacción*; si alguna falla, se registra el error sin afectar a las filas correctas.
 - Al finalizar, se entrega un *reporte de resultados* con el número de académicos importados y el detalle de errores por fila, lo que permite corregir el archivo de forma dirigida.
 
-La importación está pensada para la *carga inicial* de datos. Si el archivo contiene un académico que ya existe (mismo RUT o mismo correo), esa fila *no se importa*: se detecta el duplicado, se descartan también sus grados asociados y el motivo se reporta como error en la fila correspondiente. La importación, por tanto, *no actualiza ni reemplaza* los datos de académicos ya registrados; los cambios sobre un académico existente se realizan mediante la edición individual o, cuando procede, a través del autoservicio por parte del propio académico.
+La importación está pensada tanto para la *carga inicial* como para la *actualización* de datos. Si el archivo contiene un académico que ya existe (mismo RUT o mismo correo), esa fila *se actualiza*: el sistema lo reconoce por RUT o por correo, reemplaza sus datos con los del archivo y refresca sus grados académicos. El resumen de resultados distingue los académicos *creados* de los *actualizados*. Si alguna fila presenta un error (por ejemplo, referencias inexistentes o datos inconsistentes), se omite y el motivo se reporta en la fila correspondiente con un mensaje claro.
 
 === Sincronización de publicaciones
 
