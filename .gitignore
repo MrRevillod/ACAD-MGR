@@ -13,6 +13,8 @@ apps/client/.svelte-kit
 apps/client/node_modules
 **/dist/**
 
+.docs/**/*.pdf
+
 .output
 .vercel
 .netlify
