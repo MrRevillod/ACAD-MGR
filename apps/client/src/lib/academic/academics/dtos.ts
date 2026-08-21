@@ -250,6 +250,7 @@ export interface SyncResultDTO {
 
 export interface ImportResult {
 	imported: number
+	updated: number
 	errors: ImportRowError[]
 }
 

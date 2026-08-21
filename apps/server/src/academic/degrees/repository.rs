@@ -79,4 +79,17 @@ impl DegreesRepository {
 
 		Ok(())
 	}
+
+	pub async fn delete_for_academic_tx(
+		&self,
+		tx: &mut Tx<'_>,
+		academic_id: &AcademicId,
+	) -> AppResult<()> {
+		sqlx::query("DELETE FROM degrees WHERE academic_id = $1")
+			.bind(academic_id)
+			.execute(&mut **tx)
+			.await?;
+
+		Ok(())
+	}
 }

@@ -200,7 +200,7 @@ impl AcademicsRepository {
 		Ok(())
 	}
 
-	pub async fn save_tx(&self, tx: &mut Tx<'_>, academic: &Academic) -> AppResult<()> {
+	pub async fn save_tx_upsert(&self, tx: &mut Tx<'_>, academic: &Academic) -> AppResult<()> {
 		sqlx::query(
 			"INSERT INTO academics (
 			        id, rut, names, paternal_surname, maternal_surname, email, orcid, sex,
@@ -210,7 +210,25 @@ impl AcademicsRepository {
 			    ) VALUES (
 			        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
 			        $11, $12, $13, $14, $15, $16, $17, $18, $19
-			    )",
+			    ) ON CONFLICT (id) DO UPDATE SET
+			        rut                   = EXCLUDED.rut,
+			        names                 = EXCLUDED.names,
+			        paternal_surname      = EXCLUDED.paternal_surname,
+			        maternal_surname      = EXCLUDED.maternal_surname,
+			        email                 = EXCLUDED.email,
+			        orcid                 = EXCLUDED.orcid,
+			        sex                   = EXCLUDED.sex,
+			        birth_date            = EXCLUDED.birth_date,
+			        joined_at             = EXCLUDED.joined_at,
+			        work_position_id      = EXCLUDED.work_position_id,
+			        department_id         = EXCLUDED.department_id,
+			        career_id             = EXCLUDED.career_id,
+			        jce                   = EXCLUDED.jce,
+			        acad_category_options_id = EXCLUDED.acad_category_options_id,
+			        annual_discount_hours = EXCLUDED.annual_discount_hours,
+			        nationality_code      = EXCLUDED.nationality_code,
+			        city                  = EXCLUDED.city,
+			        updated_at            = NOW()",
 		)
 		.bind(academic.id)
 		.bind(&academic.rut)

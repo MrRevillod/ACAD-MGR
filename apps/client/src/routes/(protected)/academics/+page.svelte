@@ -8,7 +8,7 @@
 	import { toast } from "svelte-sonner"
 	import { useSearchParams } from "runed/kit"
 	import { createColumnHelper } from "@tanstack/svelte-table"
-	import { Loader, CircleAlert } from "@lucide/svelte"
+	import { Loader, CircleAlert, TriangleAlert } from "@lucide/svelte"
 	import { queryClient, useMutation, useQuery } from "$shared/http/tanstack"
 
 	import { FullName } from "$shared/value-objects/full-name.value"
@@ -16,8 +16,11 @@
 	import { academicService } from "$academics/service"
 	import { departmentService } from "$departments/service"
 	import { categoryService } from "$categories/service"
+	import type { ImportResult } from "$academics/dtos"
 
 	import DataTable from "$shared/components/ui/data-table.svelte"
+	import Dialog from "$shared/components/ui/dialog.svelte"
+	import Button from "$shared/components/ui/button.svelte"
 	import AcademicsFilters from "$academics/components/academics-filters.svelte"
 	import AcademicCreateDialog from "$academics/components/academic-create-dialog.svelte"
 
@@ -63,6 +66,8 @@
 	})
 
 	let showCreateDialog = $state(false)
+	let importResult = $state<ImportResult | null>(null)
+	let showImportErrors = $state(false)
 
 	function clearFilters() {
 		params.reset()
@@ -77,9 +82,12 @@
 		mutationFn: (file: File) => academicService.import(file),
 		onSuccess: (result) => {
 			void queryClient.invalidateQueries({ queryKey: ["academics"] })
-			toast.success(`${result.imported} académicos importados`)
+			toast.success(
+				`${result.imported} importados · ${result.updated} actualizados · ${result.errors.length} con errores`,
+			)
 			if (result.errors.length > 0) {
-				toast.error(`${result.errors.length} filas con errores`)
+				importResult = result
+				showImportErrors = true
 			}
 		},
 		onError: () => toast.error("Error al importar el archivo"),
@@ -148,3 +156,41 @@
 </div>
 
 <AcademicCreateDialog bind:open={showCreateDialog} onClose={() => (showCreateDialog = false)} />
+
+{#if importResult}
+	<Dialog
+		bind:open={showImportErrors}
+		title="Resultado de la importación"
+		description={`${importResult.imported} importados · ${importResult.updated} actualizados · ${importResult.errors.length} filas con errores`}
+		contentProps={{ class: "max-w-2xl" }}
+	>
+		<div class="max-h-[60vh] overflow-y-auto pr-1">
+			<div
+				class="mb-3 flex items-center gap-2 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700"
+			>
+				<TriangleAlert class="size-4 shrink-0" />
+				<p>
+					Las filas con errores no se procesaron. Revisa los motivos y corrige el archivo
+					antes de volver a intentarlo.
+				</p>
+			</div>
+			<ul class="space-y-3">
+				{#each importResult.errors as error (error.row)}
+					<li class="rounded-lg border border-corp-gray/15 bg-gray-50 p-3">
+						<p class="text-xs font-semibold tracking-wide text-corp-gray uppercase">
+							Fila {error.row + 1}
+						</p>
+						<ul class="mt-1.5 list-inside list-disc space-y-0.5 text-sm text-[#1A1A1A]">
+							{#each error.reasons as reason (reason)}
+								<li>{reason}</li>
+							{/each}
+						</ul>
+					</li>
+				{/each}
+			</ul>
+		</div>
+		<div class="mt-4 flex justify-end">
+			<Button variant="primary" onclick={() => (showImportErrors = false)}>Entendido</Button>
+		</div>
+	</Dialog>
+{/if}

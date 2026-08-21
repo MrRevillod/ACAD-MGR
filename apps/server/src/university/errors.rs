@@ -4,36 +4,36 @@ use thiserror::Error;
 #[derive(Debug, Error, HttpError)]
 pub enum UniversityError {
 	#[http(code = 404, message = "La Carrera no fue encontrada")]
-	#[error("Career not found")]
+	#[error("La Carrera no fue encontrada")]
 	CareerNotFound,
 
 	#[http(code = 404, message = "El Departamento no fue encontrado")]
-	#[error("Department not found")]
+	#[error("El Departamento no fue encontrado")]
 	DepartmentNotFound,
 
 	#[http(code = 404, message = "La Facultad no fue encontrada")]
-	#[error("Faculty not found")]
+	#[error("La Facultad no fue encontrada")]
 	FacultyNotFound,
 
 	#[http(code = 404, message = "El Cargo no fue encontrado")]
-	#[error("Work position not found")]
+	#[error("El Cargo no fue encontrado")]
 	WorkPositionNotFound,
 
 	#[http(
 		code = 400,
 		message = "Se debe especificar un cargo nuevo o un cargo existente"
 	)]
-	#[error("Either a new work position or an existing work position must be specified")]
+	#[error("Se debe especificar un cargo nuevo o un cargo existente")]
 	WorkPositionMissing,
 
 	#[http(code = 400, message = "El código de país no es válido")]
-	#[error("Country code '{0}' not found")]
+	#[error("El código de país no es válido")]
 	CountryNotFound(String),
 
 	#[http(
 		code = 400,
 		message = "La carrera no pertenece al departamento especificado"
 	)]
-	#[error("Career does not belong to the specified department")]
+	#[error("La carrera no pertenece al departamento especificado")]
 	CareerDepartmentMismatch,
 }

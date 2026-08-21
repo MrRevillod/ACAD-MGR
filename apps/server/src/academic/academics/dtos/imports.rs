@@ -163,6 +163,7 @@ pub enum ImportedAcademicPlanta {
 #[serde(rename_all = "camelCase")]
 pub struct ImportResult {
 	pub imported: usize,
+	pub updated: usize,
 	pub errors: Vec<ImportRowError>,
 }
 

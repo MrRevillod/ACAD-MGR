@@ -5,75 +5,75 @@ use thiserror::Error;
 pub enum AcademicError {
 	// Academic category errors
 	#[http(code = 404, message = "Categoría académica no encontrada")]
-	#[error("Category not found")]
+	#[error("Categoría académica no encontrada")]
 	CategoryNotFound,
 
 	#[http(code = 404, message = "Opción de categoría no encontrada")]
-	#[error("Category option not found")]
+	#[error("Opción de categoría no encontrada")]
 	CategoryOptionNotFound,
 
 	#[http(
 		code = 400,
 		message = "La opción de categoría no coincide con la planta académica"
 	)]
-	#[error("Category option does not match the academic planta")]
+	#[error("La opción de categoría no coincide con la planta académica")]
 	CategoryPlantaMismatch,
 
 	#[http(
 		code = 400,
 		message = "La opción de categoría no coincide con la categoría académica"
 	)]
-	#[error("Category option does not match the academic category")]
+	#[error("La opción de categoría no coincide con la categoría académica")]
 	CategoryOptionCategoryMismatch,
 
 	#[http(
 		code = 400,
 		message = "La opción de categoría no coincide con la categoría académica"
 	)]
-	#[error("Category option does not match the academic category")]
+	#[error("La opción de categoría no coincide con la categoría académica")]
 	CategoryOptionMismatch,
 
 	#[http(
 		code = 400,
 		message = "Las horas de la opción de categoría no coinciden con las horas proporcionadas"
 	)]
-	#[error("Category option hours do not match the provided hours")]
+	#[error("Las horas de la opción de categoría no coinciden con las horas proporcionadas")]
 	CategoryOptionHoursMismatch,
 
 	#[http(code = 404, message = "Grado académico no encontrado")]
-	#[error("Degree not found")]
+	#[error("Grado académico no encontrado")]
 	DegreeNotFound,
 
 	#[http(code = 409, message = "Ya existe un académico con el mismo RUT")]
-	#[error("Academic with the same RUT already exists")]
+	#[error("Ya existe un académico con el mismo RUT")]
 	AcademicRutAlreadyExists,
 
 	#[http(code = 409, message = "Ya existe un académico con el mismo ORCID")]
-	#[error("Academic with the same ORCID already exists")]
+	#[error("Ya existe un académico con el mismo ORCID")]
 	AcademicOrcidAlreadyExists,
 
 	#[http(code = 404, message = "Académico no encontrado")]
-	#[error("Academic not found")]
+	#[error("Académico no encontrado")]
 	AcademicNotFound,
 
 	#[http(
 		code = 400,
 		message = "La JCE no puede superar el valor máximo configurado"
 	)]
-	#[error("JCE exceeds the configured maximum")]
+	#[error("La JCE no puede superar el valor máximo configurado")]
 	JceExceedsMax,
 
 	#[http(
 		code = 400,
 		message = "El código de autorización es inválido o ya fue utilizado"
 	)]
-	#[error("Invalid or already used edit code")]
+	#[error("El código de autorización es inválido o ya fue utilizado")]
 	InvalidEditCode,
 
 	#[http(
 		code = 401,
 		message = "El enlace de actualización es inválido o ha expirado"
 	)]
-	#[error("Invalid or expired one-time token")]
+	#[error("El enlace de actualización es inválido o ha expirado")]
 	InvalidOneTimeToken,
 }

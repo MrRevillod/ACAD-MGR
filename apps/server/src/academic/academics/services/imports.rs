@@ -32,6 +32,7 @@ impl ImportsService {
 
 		let headers = reader.headers()?.clone();
 		let mut imported = 0usize;
+		let mut updated = 0usize;
 		let mut errors = Vec::new();
 
 		for (row_idx, result) in reader.records().enumerate() {
@@ -60,7 +61,7 @@ impl ImportsService {
 				let err = deserialization_result.err().unwrap();
 				let row_err = ImportRowError {
 					row: row_num,
-					reasons: vec![format!("Error de formato en la fila: {err}")],
+					reasons: vec![Self::deserialize_error_message(&err, &headers)],
 				};
 
 				errors.push(row_err);
@@ -76,9 +77,13 @@ impl ImportsService {
 			let mut tx = self.tx.begin().await?;
 
 			match self.process_row(&input, &mut tx).await {
-				Ok(()) => {
+				Ok(was_updated) => {
 					tx.commit().await?;
-					imported += 1;
+					if was_updated {
+						updated += 1;
+					} else {
+						imported += 1;
+					}
 				}
 				Err(e) => {
 					tx.rollback().await?;
@@ -90,10 +95,62 @@ impl ImportsService {
 			}
 		}
 
-		Ok(ImportResult { imported, errors })
+		Ok(ImportResult {
+			imported,
+			updated,
+			errors,
+		})
 	}
 
-	async fn process_row(&self, input: &AcademicImportRowDto, tx: &mut Tx<'_>) -> AppResult<()> {
+	fn deserialize_error_message(err: &csv::Error, headers: &csv::StringRecord) -> String {
+		match err.kind() {
+			csv::ErrorKind::Deserialize { err: derr, .. } => match derr.kind() {
+				csv::DeserializeErrorKind::ParseFloat(_) => {
+					let column = derr
+						.field()
+						.and_then(|i| headers.get(i as usize))
+						.unwrap_or("una columna");
+					format!("La columna '{column}' está vacía o no es un número válido")
+				}
+				csv::DeserializeErrorKind::ParseInt(_) => {
+					let column = derr
+						.field()
+						.and_then(|i| headers.get(i as usize))
+						.unwrap_or("una columna");
+					format!("La columna '{column}' debe ser un número entero")
+				}
+				csv::DeserializeErrorKind::ParseBool(_) => {
+					let column = derr
+						.field()
+						.and_then(|i| headers.get(i as usize))
+						.unwrap_or("una columna");
+					format!("La columna '{column}' debe ser verdadero o falso")
+				}
+				csv::DeserializeErrorKind::InvalidUtf8(_) => {
+					let column = derr
+						.field()
+						.and_then(|i| headers.get(i as usize))
+						.unwrap_or("una columna");
+					format!("La columna '{column}' contiene caracteres no válidos")
+				}
+				csv::DeserializeErrorKind::UnexpectedEndOfRow => {
+					"La fila tiene menos columnas de las esperadas".to_string()
+				}
+				csv::DeserializeErrorKind::Message(_) => {
+					"El formato de los datos de la fila no es válido".to_string()
+				}
+				csv::DeserializeErrorKind::Unsupported(_) => {
+					"El formato de los datos de la fila no es soportado".to_string()
+				}
+			},
+			csv::ErrorKind::UnequalLengths { .. } => {
+				"La fila tiene un número de columnas distinto al esperado".to_string()
+			}
+			_ => "Error de formato en la fila".to_string(),
+		}
+	}
+
+	async fn process_row(&self, input: &AcademicImportRowDto, tx: &mut Tx<'_>) -> AppResult<bool> {
 		let Some(department) = self
 			.departments
 			.find_by_name(&input.department_name)
@@ -171,8 +228,27 @@ impl ImportsService {
 			Err(AcademicError::JceExceedsMax)?;
 		}
 
+		let rut = input.rut.clone();
+		let existing = self
+			.academics
+			.find_by_rut(&rut)
+			.await?
+			.or(self.academics.find_by_email(&input.email).await?);
+
+		let (academic_id, was_updated) = match existing {
+			Some(a) => (a.id, true),
+			None => (AcademicId::new(), false),
+		};
+
+		if was_updated {
+			self.degrees
+				.delete_for_academic_tx(tx, &academic_id)
+				.await?;
+		}
+
 		let academic = Academic::builder()
-			.rut(input.rut.clone())
+			.id(academic_id)
+			.rut(rut)
 			.names(input.names.clone())
 			.paternal_surname(input.paternal_surname.clone())
 			.maternal_surname(input.maternal_surname.clone())
@@ -191,7 +267,7 @@ impl ImportsService {
 			.city(input.city.clone())
 			.build();
 
-		self.academics.save_tx(tx, &academic).await?;
+		self.academics.save_tx_upsert(tx, &academic).await?;
 
 		let degree_1_country_code = input.degree_1_country.as_ref().map(|c| c.code.as_str());
 		let degree_2_country_code = input.degree_2_country.as_ref().map(|c| c.code.as_str());
@@ -220,7 +296,7 @@ impl ImportsService {
 			.await?;
 		}
 
-		Ok(())
+		Ok(was_updated)
 	}
 
 	#[allow(clippy::too_many_arguments)]
