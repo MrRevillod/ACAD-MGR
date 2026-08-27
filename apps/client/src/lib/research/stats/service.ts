@@ -4,6 +4,8 @@ import type {
 	AcademicStatsResponse,
 	DepartmentDetail,
 	DepartmentDetailQuery,
+	ProductivityQuery,
+	ProductivityResponse,
 	ResearchLineStatsQuery,
 	ResearchLineStatsResponse,
 	StatsQuery,
@@ -48,6 +50,14 @@ class StatsService {
 		return http.request<AcademicStatsResponse>({
 			method: "GET",
 			url: `/stats/academic/${id}`,
+			params,
+		})
+	}
+
+	public getProductivity(params?: ProductivityQuery): Promise<ProductivityResponse> {
+		return http.request<ProductivityResponse>({
+			method: "GET",
+			url: "/stats/productivity",
 			params,
 		})
 	}

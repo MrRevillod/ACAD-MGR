@@ -1,4 +1,5 @@
-use crate::academic::AcademicId;
+use crate::academic::{AcademicId, DegreeKind};
+use crate::config::ConfigService;
 use crate::research::*;
 use crate::shared::AppResult;
 use crate::university::DepartmentId;
@@ -10,6 +11,7 @@ use sword::prelude::*;
 #[injectable]
 pub struct StatsService {
 	stats: Arc<StatsRepository>,
+	config: Arc<ConfigService>,
 }
 
 impl StatsService {
@@ -155,6 +157,86 @@ impl StatsService {
 				dominant_line_works,
 				line_total_works,
 			},
+		})
+	}
+
+	pub async fn get_productivity(
+		&self,
+		query: ProductivityQuery,
+	) -> AppResult<ProductivityResponse> {
+		let month = query.month.unwrap_or(1);
+		let year_from = query.year_from.unwrap_or(1900);
+		let year_to = query.year_to.unwrap_or(2100);
+
+		let degree = match query.degree {
+			Some(ProductivityDegree::All) | None => None,
+			Some(ProductivityDegree::Magister) => Some(DegreeKind::Magister),
+			Some(ProductivityDegree::Doctor) => Some(DegreeKind::Doctor),
+		};
+
+		let jce = match query.scope {
+			Some(ProductivityScope::Faculty) | None => self.stats.sum_jce_doctor(None).await?,
+			Some(ProductivityScope::Department) => {
+				let Some(department_id) = query.department_id else {
+					return Err(StatsError::InvalidScopeParams)?;
+				};
+
+				self.stats.sum_jce_doctor(Some(department_id)).await?
+			}
+			Some(ProductivityScope::ResearchLine) => {
+				let Some(research_line_id) = query.research_line_id else {
+					return Err(StatsError::InvalidScopeParams)?;
+				};
+
+				self.stats
+					.sum_jce_doctor_dominant_line(&research_line_id)
+					.await?
+			}
+		};
+
+		let jce_max = self.config.jce_max().await?;
+		let rows = self
+			.stats
+			.productivity_numerator(&query, month, year_from, year_to, degree)
+			.await?;
+
+		let factor = if jce > 0.0 { jce_max / jce } else { 0.0 };
+
+		let mut total = Vec::new();
+		let mut wos = Vec::new();
+		let mut scopus = Vec::new();
+
+		for r in &rows {
+			total.push(ProductivityYearValue {
+				year: r.period,
+				value: r.total.unwrap_or(0) as f64 * factor,
+			});
+			wos.push(ProductivityYearValue {
+				year: r.period,
+				value: r.wos.unwrap_or(0) as f64 * factor,
+			});
+			scopus.push(ProductivityYearValue {
+				year: r.period,
+				value: r.scopus.unwrap_or(0) as f64 * factor,
+			});
+		}
+
+		Ok(ProductivityResponse {
+			jce,
+			trend: vec![
+				ProductivitySeries {
+					key: "total".into(),
+					values: total,
+				},
+				ProductivitySeries {
+					key: "wos".into(),
+					values: wos,
+				},
+				ProductivitySeries {
+					key: "scopus".into(),
+					values: scopus,
+				},
+			],
 		})
 	}
 

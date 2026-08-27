@@ -1,55 +1,79 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use crate::research::{SyncWorksRequest, WorksImportService};
+use crate::research::{SyncSummary, SyncWorksRequest, WorksImportService};
 use crate::shared::{Mail, Mailer, TemplateRenderer};
 
 use sword::events::*;
 use sword::prelude::*;
 
-#[controller(kind = Controller::MemEventHandler, namespace = "works")]
+#[controller(kind = Controller::EventHandler, source = EventSource::Memory)]
 pub struct WorksEventsController {
 	mailer: Arc<Mailer>,
 	works_import: Arc<WorksImportService>,
 }
 
 impl WorksEventsController {
-	#[handle("sync-requested")]
+	#[handle("works.sync-requested")]
 	async fn handle_sync_requested(&self, event: SyncWorksRequest) -> EventHandlerResult<()> {
 		tracing::info!("processing sync-requested event for {}", event.user_email);
 		let result = self.works_import.sync_all_academics().await;
 
 		match result {
-			Ok(results) => {
+			Ok(summary) => {
+				let SyncSummary {
+					results,
+					skipped_without_orcid,
+				} = summary;
+
 				let total = results.len();
-				let error_ids: Vec<String> = results
-					.iter()
-					.filter(|r| !r.errors.is_empty())
-					.map(|r| r.academic_id.to_string())
-					.collect();
+
+				let mut errors_by_message: HashMap<&String, Vec<String>> = HashMap::new();
+				for r in &results {
+					if let Some(err) = r.errors.first() {
+						errors_by_message
+							.entry(err)
+							.or_default()
+							.push(r.academic_id.to_string());
+					}
+				}
+				let error_count: usize = errors_by_message.values().map(Vec::len).sum();
 
 				tracing::info!(
-					"sync completed: {} academics, {} errors",
+					"sync completed: {} synced, {} skipped (no ORCID), {} errors",
 					total,
-					error_ids.len()
+					skipped_without_orcid,
+					error_count
 				);
 
-				let (status_suffix, error_details, subject) = if error_ids.is_empty() {
+				let (status_suffix, error_details, subject) = if errors_by_message.is_empty() {
 					(
-						" exitosamente".to_string(),
+						format!(
+							" exitosamente ({total} académicos sincronizados, {skipped_without_orcid} omitidos por no tener ORCID)"
+						),
 						String::new(),
 						"Sincronización completada exitosamente",
 					)
 				} else {
-					let n = error_ids.len();
-					let items: String = error_ids
+					let items: String = errors_by_message
 						.iter()
-						.map(|o| format!("<li>{}</li>", o))
+						.map(|(msg, ids)| {
+							let id_list: String = ids
+								.iter()
+								.map(|o| format!("<li>{o}</li>"))
+								.collect();
+							format!(
+								"<li><b>{msg}</b> — {} académico(s)<ul>{id_list}</ul></li>",
+								ids.len()
+							)
+						})
 						.collect();
 					(
-						format!(" con {n} académico(s) con errores"),
 						format!(
-							"<p style=\"margin:0;padding:0;font-size:1em;padding-top:0.5em;padding-bottom:0.5em;color:#b91c1c\">Académicos con errores:</p><ul style=\"font-size:0.875em;color:#555\">{items}</ul>"
+							" con {error_count} académico(s) con errores ({total} sincronizados, {skipped_without_orcid} omitidos por no tener ORCID)"
+						),
+						format!(
+							"<p style=\"margin:0;padding:0;font-size:1em;padding-top:0.5em;padding-bottom:0.5em;color:#b91c1c\">Académicos con errores ({error_count}):</p><ul style=\"font-size:0.875em;color:#555\">{items}</ul>"
 						),
 						"Sincronización completada con errores",
 					)

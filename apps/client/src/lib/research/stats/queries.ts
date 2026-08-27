@@ -4,6 +4,7 @@ import { statsService } from "./service"
 import type {
 	AcademicStatsQuery,
 	DepartmentDetailQuery,
+	ProductivityQuery,
 	ResearchLineStatsQuery,
 	StatsQuery,
 } from "./dtos"
@@ -53,5 +54,14 @@ export function useAcademicStatsQuery(id: () => string, queryParams: () => Acade
 		staleTime: STALE_TIME,
 		gcTime: GC_TIME,
 		enabled: Boolean(id()),
+	}))
+}
+
+export function useProductivityQuery(queryParams: () => ProductivityQuery) {
+	return createQuery(() => ({
+		queryKey: ["stats", "productivity", queryParams()],
+		queryFn: () => statsService.getProductivity(queryParams()),
+		staleTime: STALE_TIME,
+		gcTime: GC_TIME,
 	}))
 }

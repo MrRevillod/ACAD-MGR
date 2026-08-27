@@ -157,6 +157,61 @@ pub struct ResearchLineStatsQuery {
 	pub year_to: Option<i16>,
 }
 
+#[derive(Debug, Clone, Copy, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ProductivityDegree {
+	All,
+	Magister,
+	Doctor,
+}
+
+#[derive(Debug, Clone, Copy, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ProductivityScope {
+	Faculty,
+	Department,
+	ResearchLine,
+}
+
+#[derive(Debug, Deserialize, Validate, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct ProductivityQuery {
+	pub degree: Option<ProductivityDegree>,
+	pub scope: Option<ProductivityScope>,
+	pub department_id: Option<Uuid>,
+	pub research_line_id: Option<Uuid>,
+
+	#[validate(range(min = 1, max = 12))]
+	pub month: Option<i16>,
+
+	#[validate(range(min = 1900, max = 2100))]
+	pub year_from: Option<i16>,
+
+	#[validate(range(min = 1900, max = 2100))]
+	pub year_to: Option<i16>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ProductivityYearValue {
+	pub year: i16,
+	pub value: f64,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ProductivitySeries {
+	pub key: String,
+	pub values: Vec<ProductivityYearValue>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ProductivityResponse {
+	pub jce: f64,
+	pub trend: Vec<ProductivitySeries>,
+}
+
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ResearchLineStatsResponse {

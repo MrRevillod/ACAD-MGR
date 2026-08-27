@@ -113,3 +113,31 @@ export interface ResearchLineStatsResponse {
 	byDepartment: ScopeTotal[]
 	topPublishers: TopPublisher[]
 }
+
+export type ProductivityDegree = "all" | "magister" | "doctor"
+export type ProductivityScope = "faculty" | "department" | "researchLine"
+
+export interface ProductivityQuery {
+	degree?: ProductivityDegree
+	scope?: ProductivityScope
+	departmentId?: string
+	researchLineId?: string
+	month?: number
+	yearFrom?: number
+	yearTo?: number
+}
+
+export interface ProductivityYearValue {
+	year: number
+	value: number
+}
+
+export interface ProductivitySeries {
+	key: string
+	values: ProductivityYearValue[]
+}
+
+export interface ProductivityResponse {
+	jce: number
+	trend: ProductivitySeries[]
+}

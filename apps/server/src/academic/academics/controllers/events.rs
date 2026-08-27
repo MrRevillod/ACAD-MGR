@@ -6,13 +6,13 @@ use std::sync::Arc;
 use sword::events::*;
 use sword::prelude::*;
 
-#[controller(kind = Controller::MemEventHandler, namespace = "academic.events")]
+#[controller(kind = Controller::EventHandler, source = EventSource::Memory)]
 pub struct AcademicEventsController {
 	mailer: Arc<Mailer>,
 }
 
 impl AcademicEventsController {
-	#[handle("update-academic-form")]
+	#[handle("academic.events.update-academic-form")]
 	async fn update_academic_form(&self, e: UpdateAcademicFormEvent) -> EventHandlerResult<()> {
 		let template_variables = HashMap::from([
 			("ACADEMIC_NAME".to_string(), e.academic_name),
@@ -32,7 +32,7 @@ impl AcademicEventsController {
 		Ok(())
 	}
 
-	#[handle("send-edit-codes")]
+	#[handle("academic.events.send-edit-codes")]
 	async fn send_edit_codes(&self, e: SendEditCodesEvent) -> EventHandlerResult<()> {
 		let codes_html = e
 			.codes

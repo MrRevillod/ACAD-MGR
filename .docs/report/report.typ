@@ -69,6 +69,8 @@ El diseño del modelo de datos refleja esta jerarquía institucional de forma ex
 
 Este dato es relevante para el alcance: la plataforma *no está diseñada (por ahora) para múltiples facultades o para toda la universidad*, aunque su modelo de datos lo permitiría bajo ciertos cambios.
 
+#pagebreak()
+
 == Capacidades del sistema
 
 La plataforma ofrece un conjunto de soluciones de alto nivel que reemplazan la gestión manual. En su gran mayoría, estas capacidades tienen que ver con la representación y visualización de la producción académica de la facultad. Cada una de ellas se describe a continuación con el detalle de su funcionamiento.
@@ -87,7 +89,7 @@ La creación y edición de registros incorpora *validaciones de negocio* que evi
 
 === Importación de datos académicos desde CSV
 
-Para la carga inicial masiva, la plataforma permite *importar académicos desde un archivo CSV* con un formato definido, evitando el registro uno a uno. El proceso es transaccional y controlado:
+Para la carga inicial de académicos, la plataforma permite *importar académicos desde un archivo CSV* con un formato definido, evitando el registro uno a uno. El proceso es transaccional y controlado:
 
 - Cada fila del archivo se *valida de forma independiente*: primero el formato de los campos y luego las reglas de negocio (existencia de referencias, consistencia entre categoría, planta, opción y horas).
 - Las referencias (departamento, carrera, cargo, categoría) se *resuelven por nombre* contra los catálogos existentes, y se comprueba la coherencia entre la categoría elegida, su planta y las horas declaradas.
@@ -114,7 +116,7 @@ Conviene precisar algunos casos particulares de la sincronización:
 - *Solo se incorporan artículos*: otros tipos de obra (libros, capítulos, actas, etc.) quedan fuera de la importación.
 - *La sincronización puede tardar*: el proceso consulta OpenAlex con un intervalo entre peticiones, y la sincronización masiva recorre a todos los académicos, por lo que puede tomar varios minutos. Al repetir una sincronización, las obras ya registradas se actualizan sin duplicarse y las correcciones manuales se conservan.
 - *Persistencia de las ediciones*: cuando se corrige manualmente una publicación, los cambios se guardan de forma separada de los datos originales. En una re-sincronización, los metadatos base se actualizan desde la fuente pero *las correcciones manuales se conservan*.
-- *Desvinculación*: si una obra deja de aparecer en ORCID, se desvincula del académico (se registra en el resumen como autorías desvinculadas).
+- *Desvinculación*: si una obra deja de aparecer en ORCID, se desvincula del académico.
 
 === Clasificación institucional propia (líneas de investigación)
 
@@ -134,6 +136,8 @@ La plataforma determina si cada publicación proviene de una revista *indexada e
 - Desglosar todas las estadísticas y rankings por tipo de indexación, que es un criterio habitual de evaluación de la producción científica.
 
 Este dato se integra en el resto de las vistas: cada publicación muestra su indexación, y los dashboards permiten filtrar y comparar la producción WoS frente a la de Scopus.
+
+*Punto a destacar*: Para clasificar cada publicación en su indexación correspondiente se utilizaron bases de datos públicas de años anteriores que relacionan *ISSNs* y tipos de indexación, además de busquedas manuales en internet. Esto es una limitación conocida debido a que las fuentes oficiales y actualizadas son de pago, resulta complejo mantener este tipo de clasificaciones sin pasar por la fuente oficial.
 
 === Estadísticas y dashboards
 

@@ -84,3 +84,11 @@ pub struct ContributionRow {
 	pub department_works: Option<i64>,
 	pub department_name: Option<String>,
 }
+
+#[derive(Debug, FromRow)]
+pub struct ProductivityTrendRow {
+	pub period: i16,
+	pub total: Option<i64>,
+	pub wos: Option<i64>,
+	pub scopus: Option<i64>,
+}

@@ -1,6 +1,6 @@
 use crate::academic::{AcademicId, AcademicListFilter, AcademicsRepository};
 use crate::research::*;
-use crate::shared::AppResult;
+use crate::shared::{AppError, AppResult};
 
 use super::openalex::API_DELAY;
 use papers_openalex::Work as OpenAlexWork;
@@ -112,14 +112,23 @@ impl WorksImportService {
 		})
 	}
 
-	pub async fn sync_all_academics(&self) -> AppResult<Vec<SyncResultView>> {
+	pub async fn sync_all_academics(&self) -> AppResult<SyncSummary> {
 		let academics = self.academics.list(AcademicListFilter::default()).await?;
 		let mut results = Vec::with_capacity(academics.len());
+		let mut skipped_without_orcid = 0usize;
 
 		for academic in &academics {
 			match self.sync_works(academic.id).await {
 				Ok(result) => results.push(result),
+				Err(AppError::Research(WorksError::AcademicWithoutOrcid)) => {
+					skipped_without_orcid += 1;
+				}
 				Err(e) => {
+					tracing::warn!(
+						academic_id = %academic.id,
+						error = %e,
+						"sync failed for academic"
+					);
 					results.push(SyncResultView {
 						academic_id: academic.id,
 						orcid_works: 0,
@@ -136,7 +145,10 @@ impl WorksImportService {
 			}
 		}
 
-		Ok(results)
+		Ok(SyncSummary {
+			results,
+			skipped_without_orcid,
+		})
 	}
 
 	async fn process_single_work(

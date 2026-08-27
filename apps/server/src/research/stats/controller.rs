@@ -57,4 +57,14 @@ impl StatsController {
 			.get_research_line_stats(id, query.unwrap_or_default())
 			.await?)
 	}
+
+	#[get("/productivity")]
+	pub async fn get_productivity(&self, req: Request) -> WebResult<ProductivityResponse> {
+		let query = req.query_validator::<ProductivityQuery>()?;
+
+		Ok(self
+			.stats
+			.get_productivity(query.unwrap_or_default())
+			.await?)
+	}
 }

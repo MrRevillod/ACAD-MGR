@@ -77,3 +77,9 @@ pub struct SyncResultView {
 	pub keywords_linked: usize,
 	pub errors: Vec<String>,
 }
+
+#[derive(Debug)]
+pub struct SyncSummary {
+	pub results: Vec<SyncResultView>,
+	pub skipped_without_orcid: usize,
+}

@@ -10,6 +10,7 @@
 	import YearRange from "$shared/components/ui/year-range.svelte"
 
 	import FacultyStats from "$stats/components/faculty-stats.svelte"
+	import ProductivitySection from "$stats/components/productivity-section.svelte"
 
 	const currentYear = new Date().getFullYear()
 	const defaultYearFrom = String(currentYear - 5)
@@ -68,5 +69,16 @@
 		</div>
 
 		<FacultyStats data={statsQuery.data} />
+
+		<div class="mt-4">
+			<ProductivitySection
+				title="Productividad por jornada completa"
+				denominator="de la facultad"
+				degree="all"
+				scope="faculty"
+				yearFrom={Number(params.yearFrom)}
+				yearTo={Number(params.yearTo)}
+			/>
+		</div>
 	{/if}
 </div>

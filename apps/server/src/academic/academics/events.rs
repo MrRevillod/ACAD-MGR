@@ -1,4 +1,4 @@
-use sword::prelude::event;
+use sword::events::*;
 
 #[event(key = "academic.events.update-academic-form")]
 pub struct UpdateAcademicFormEvent {

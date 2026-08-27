@@ -1,4 +1,4 @@
-use sword::prelude::event;
+use sword::events::*;
 
 #[event(key = "works.sync-requested")]
 pub struct SyncWorksRequest {
