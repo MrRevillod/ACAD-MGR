@@ -165,20 +165,20 @@ impl StatsRepository {
 		        COUNT(DISTINCT w.id) FILTER (WHERE ji.kind = 'wos')::bigint     AS wos,
 		        COUNT(DISTINCT w.id) FILTER (WHERE aco.option = 'teaching')::bigint AS teaching,
 		        COUNT(DISTINCT w.id) FILTER (WHERE aco.option = 'research')::bigint AS research
-		    FROM works w
-		    JOIN work_authorships wa ON w.id = wa.work_id AND wa.is_external = false
-		    JOIN academics a         ON a.orcid = wa.orcid
+		    FROM departments d
+		    LEFT JOIN academics a ON a.department_id = d.id
 		        AND a.orcid != 'https://orcid.org/0000-0000-0000-0000'
-		    JOIN departments d       ON a.department_id = d.id
-		    JOIN academic_category_options aco ON a.acad_category_options_id = aco.id
-		    LEFT JOIN sources src    ON w.source_id = src.id
-		    LEFT JOIN journal_issn ji ON ji.issn = src.issn
-		    WHERE d.id = $1
+		    LEFT JOIN academic_category_options aco ON a.acad_category_options_id = aco.id
+		    LEFT JOIN work_authorships wa ON wa.orcid = a.orcid AND wa.is_external = false
+		    LEFT JOIN works w       ON w.id = wa.work_id
 		        AND COALESCE((w.overrides).publication_year, w.publication_year) >= $2
 		        AND ($3::smallint IS NULL
 		            OR COALESCE((w.overrides).publication_year, w.publication_year) <= $3)
 		        AND ($4::academic_option IS NULL OR aco.option = $4)
 		        AND ($5::journal_kind IS NULL OR ji.kind = $5)
+		    LEFT JOIN sources src    ON w.source_id = src.id
+		    LEFT JOIN journal_issn ji ON ji.issn = src.issn
+		    WHERE d.id = $1
 		    GROUP BY d.id, d.name",
 		)
 		.bind(id)
@@ -445,19 +445,12 @@ impl StatsRepository {
 		query: &ResearchLineStatsQuery,
 	) -> AppResult<ResearchLineSummaryRow> {
 		sqlx::query_as::<_, ResearchLineSummaryRow>(
-			"SELECT (SELECT name FROM research_lines WHERE id = $1) AS name,
+			"SELECT rl.name AS name,
 		        COUNT(DISTINCT w.id)::bigint AS total,
 		        COUNT(DISTINCT w.id) FILTER (WHERE ji.kind = 'scopus')::bigint AS scopus,
 		        COUNT(DISTINCT w.id) FILTER (WHERE ji.kind = 'wos')::bigint    AS wos
-		    FROM works w
-		    JOIN work_authorships wa ON w.id = wa.work_id AND wa.is_external = false
-		    JOIN academics a ON a.orcid = wa.orcid
-		        AND a.orcid != 'https://orcid.org/0000-0000-0000-0000'
-		    LEFT JOIN sources src ON w.source_id = src.id
-		    LEFT JOIN journal_issn ji ON ji.issn = src.issn
-		    WHERE COALESCE((w.overrides).publication_year, w.publication_year) >= $2
-		        AND COALESCE((w.overrides).publication_year, w.publication_year) <= $3
-		        AND COALESCE(
+		    FROM research_lines rl
+		    LEFT JOIN works w ON rl.id = COALESCE(
 		            (w.overrides).research_line_id,
 		            (
 		                SELECT sf.research_line_id
@@ -469,7 +462,20 @@ impl StatsRepository {
 		                LIMIT 1
 		            ),
 		            (SELECT id FROM research_lines WHERE slug = 'sin-asignar')
-		        ) = $1",
+		        )
+		        AND COALESCE((w.overrides).publication_year, w.publication_year) >= $2
+		        AND COALESCE((w.overrides).publication_year, w.publication_year) <= $3
+		        AND EXISTS (
+		            SELECT 1
+		            FROM work_authorships wa
+		            JOIN academics a ON a.orcid = wa.orcid
+		                AND a.orcid != 'https://orcid.org/0000-0000-0000-0000'
+		            WHERE wa.work_id = w.id AND wa.is_external = false
+		        )
+		    LEFT JOIN sources src    ON w.source_id = src.id
+		    LEFT JOIN journal_issn ji ON ji.issn = src.issn
+		    WHERE rl.id = $1
+		    GROUP BY rl.id, rl.name",
 		)
 		.bind(line_id)
 		.bind(query.year_from.unwrap_or(1900))

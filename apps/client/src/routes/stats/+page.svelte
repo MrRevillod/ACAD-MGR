@@ -10,7 +10,6 @@
 	import YearRange from "$shared/components/ui/year-range.svelte"
 
 	import KpiStrip from "$stats/components/kpi-strip.svelte"
-	import ProductivitySection from "$stats/components/productivity-section.svelte"
 	import StatsHub from "$stats/components/stats-hub.svelte"
 
 	const currentYear = new Date().getFullYear()
@@ -83,17 +82,15 @@
 		/>
 
 		<div class="mt-4">
-			<StatsHub data={statsQuery.data} />
-		</div>
-
-		<div class="mt-4">
-			<ProductivitySection
-				title="Productividad por jornada completa"
-				denominator="de la facultad"
-				degree="all"
-				scope="faculty"
-				yearFrom={Number(params.yearFrom)}
-				yearTo={Number(params.yearTo)}
+			<StatsHub
+				data={statsQuery.data}
+				productivity={{
+					denominator: "de la facultad",
+					degree: "all",
+					scope: "faculty",
+					yearFrom: Number(params.yearFrom),
+					yearTo: Number(params.yearTo),
+				}}
 			/>
 		</div>
 	{/if}

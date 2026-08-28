@@ -1,5 +1,4 @@
 use crate::academic::{AcademicId, DegreeKind};
-use crate::config::ConfigService;
 use crate::research::*;
 use crate::shared::AppResult;
 use crate::university::DepartmentId;
@@ -11,7 +10,6 @@ use sword::prelude::*;
 #[injectable]
 pub struct StatsService {
 	stats: Arc<StatsRepository>,
-	config: Arc<ConfigService>,
 }
 
 impl StatsService {
@@ -194,13 +192,12 @@ impl StatsService {
 			}
 		};
 
-		let jce_max = self.config.jce_max().await?;
 		let rows = self
 			.stats
 			.productivity_numerator(&query, month, year_from, year_to, degree)
 			.await?;
 
-		let factor = if jce > 0.0 { jce_max / jce } else { 0.0 };
+		let factor = if jce > 0.0 { 1.0 / jce } else { 0.0 };
 
 		let mut total = Vec::new();
 		let mut wos = Vec::new();

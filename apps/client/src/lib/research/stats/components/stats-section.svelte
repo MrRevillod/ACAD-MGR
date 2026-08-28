@@ -13,6 +13,7 @@
 		ontoggle: () => void
 		first?: boolean
 		action?: Snippet
+		barAction?: Snippet
 		children: Snippet
 	}
 
@@ -24,6 +25,7 @@
 		ontoggle,
 		first = false,
 		action,
+		barAction,
 		children,
 	}: Props = $props()
 </script>
@@ -53,6 +55,10 @@
 
 		{#if open && action}
 			<div class="shrink-0 pr-1">{@render action()}</div>
+		{/if}
+
+		{#if barAction}
+			<div class="shrink-0 pr-1">{@render barAction()}</div>
 		{/if}
 
 		<button

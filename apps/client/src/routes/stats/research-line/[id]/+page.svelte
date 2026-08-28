@@ -11,7 +11,6 @@
 	import YearRange from "$shared/components/ui/year-range.svelte"
 
 	import ResearchLineStats from "$stats/components/research-line-stats.svelte"
-	import ProductivitySection from "$stats/components/productivity-section.svelte"
 
 	const lineId = $derived(page.params.id ?? "")
 	const currentYear = new Date().getFullYear()
@@ -73,18 +72,16 @@
 			</div>
 		</div>
 
-		<ResearchLineStats data={statsQuery.data} />
-
-		<div class="mt-4">
-			<ProductivitySection
-				title="Productividad por jornada completa"
-				denominator="de la línea dominante"
-				degree="doctor"
-				scope="researchLine"
-				researchLineId={lineId}
-				yearFrom={Number(params.yearFrom)}
-				yearTo={Number(params.yearTo)}
-			/>
-		</div>
+		<ResearchLineStats
+			data={statsQuery.data}
+			productivity={{
+				denominator: "de la línea dominante",
+				degree: "doctor",
+				scope: "researchLine",
+				researchLineId: lineId,
+				yearFrom: Number(params.yearFrom),
+				yearTo: Number(params.yearTo),
+			}}
+		/>
 	{/if}
 </div>
