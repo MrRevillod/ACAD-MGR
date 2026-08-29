@@ -169,7 +169,7 @@
 					<div
 						class="grid grid-cols-1 items-center gap-8 lg:grid-cols-[minmax(0,1fr)_auto]"
 					>
-						<div class="space-y-3">
+						<div class="space-y-3 flex flex-col gap-2">
 							{#each lines as line (line.researchLineId)}
 								{@const pct =
 									total > 0 ? Math.round((line.count / total) * 100) : 0}
@@ -194,7 +194,7 @@
 										>
 									</div>
 									<div
-										class="relative h-2.5 min-w-0 overflow-hidden rounded-sm bg-corp-gray/10"
+										class="mt-3 relative h-2.5 min-w-0 overflow-hidden rounded-sm bg-corp-gray/10"
 									>
 										<div
 											class="absolute inset-y-0 left-0 rounded-sm bg-corp-blue"
