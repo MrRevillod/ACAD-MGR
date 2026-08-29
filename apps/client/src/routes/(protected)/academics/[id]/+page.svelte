@@ -15,6 +15,7 @@
 		Plus,
 		Network,
 		Info,
+		Mail,
 	} from "@lucide/svelte"
 
 	import { authStore } from "$lib/auth/store.svelte"
@@ -25,6 +26,8 @@
 	import { useQuery, useMutation } from "$shared/http/tanstack"
 
 	import Badge from "$shared/components/ui/badge.svelte"
+	import Button from "$shared/components/ui/button.svelte"
+	import Dialog from "$shared/components/ui/dialog.svelte"
 	import DegreeDialog from "$degrees/components/degree-dialog.svelte"
 	import WorksSection from "$works/components/works-section.svelte"
 	import AcademicStats from "$stats/components/academic-stats.svelte"
@@ -144,6 +147,7 @@
 
 	let showEditAcademicDialog = $state(false)
 	let showGraphHelp = $state(false)
+	let showSendEditCodesConfirmDialog = $state(false)
 
 	const isAdmin = $derived(authStore.isAuthenticated)
 
@@ -154,7 +158,11 @@
 	}))
 
 	function handleSendEditCodes() {
-		if (!confirm("¿Enviar códigos de edición al académico?")) return
+		showSendEditCodesConfirmDialog = true
+	}
+
+	function confirmSendEditCodes() {
+		showSendEditCodesConfirmDialog = false
 		sendEditCodesMutation.mutate()
 	}
 
@@ -493,3 +501,52 @@
 {#if isAdmin && academic}
 	<AcademicEditDialog {academic} bind:open={showEditAcademicDialog} onClose={closeEditAcademic} />
 {/if}
+
+<Dialog
+	bind:open={showSendEditCodesConfirmDialog}
+	title="Enviar códigos de edición"
+	description="Usa esta función para permitir que el académico edite su perfil de forma segura."
+>
+	<div class="space-y-4">
+		<div class="rounded-lg bg-corp-blue/5 p-4">
+			<p class="text-sm text-corp-ink">
+				Se enviará un <strong>código de 8 caracteres</strong> al correo del académico. Con este código,
+				podrá generar un enlace temporal para editar:
+			</p>
+			<ul class="mt-3 space-y-1 text-xs text-corp-gray">
+				<li class="flex items-start gap-2">
+					<span class="mt-1.5 inline-block size-1.5 shrink-0 rounded-full bg-corp-blue"></span>
+					<span>Nombres y apellidos</span>
+				</li>
+				<li class="flex items-start gap-2">
+					<span class="mt-1.5 inline-block size-1.5 shrink-0 rounded-full bg-corp-blue"></span>
+					<span>Correo electrónico</span>
+				</li>
+				<li class="flex items-start gap-2">
+					<span class="mt-1.5 inline-block size-1.5 shrink-0 rounded-full bg-corp-blue"></span>
+					<span>ORCID y otras ID externas</span>
+				</li>
+			</ul>
+		</div>
+
+		<p class="text-xs text-corp-gray">
+			Esta es una forma segura de delegación: el académico no tiene acceso directo a la plataforma, pero puede
+			mantener su información actualizada.
+		</p>
+
+		<div class="flex justify-end gap-2">
+			<Button variant="secondary" onclick={() => (showSendEditCodesConfirmDialog = false)}>
+				Cancelar
+			</Button>
+			<Button variant="primary" disabled={sendEditCodesMutation.isPending} onclick={confirmSendEditCodes}>
+				{#if sendEditCodesMutation.isPending}
+					<Loader class="size-4 animate-spin" />
+					Enviando...
+				{:else}
+					<Mail class="size-4" />
+					Enviar código
+				{/if}
+			</Button>
+		</div>
+	</div>
+</Dialog>

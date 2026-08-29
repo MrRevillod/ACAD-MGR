@@ -84,16 +84,22 @@
 			<div class="mb-3 flex size-12 items-center justify-center rounded-full bg-corp-blue/5">
 				<BookOpen class="size-5 text-corp-blue/60" />
 			</div>
-			<p class="text-sm text-[#1A1A1A]">No hay publicaciones sincronizadas.</p>
-			<p class="mt-1 max-w-sm text-xs text-corp-gray">
-				{#if academic.orcid}
-					Usa el botón "Sincronizar Publicaciones" para importar las publicaciones de este
-					académico.
-				{:else}
-					Este académico no tiene ORCID asociado, por lo que no se pueden importar
-					publicaciones automáticamente.
-				{/if}
-			</p>
+			{#if readonly}
+				<p class="text-sm text-[#1A1A1A]">
+					Este académico no tiene publicaciones disponibles para mostrar.
+				</p>
+			{:else}
+				<p class="text-sm text-[#1A1A1A]">No hay publicaciones sincronizadas.</p>
+				<p class="mt-1 max-w-sm text-xs text-corp-gray">
+					{#if academic.orcid}
+						Usa el botón "Sincronizar Publicaciones" para importar las publicaciones de este
+						académico.
+					{:else}
+						Este académico no tiene ORCID asociado, por lo que no se pueden importar
+						publicaciones automáticamente.
+					{/if}
+				</p>
+			{/if}
 		</div>
 	{:else}
 		<WorksTable works={worksQuery.data} onRowClick={openWork} pageSize={7} />

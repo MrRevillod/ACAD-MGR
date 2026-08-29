@@ -23,10 +23,11 @@
 	import { updateAppConfigSchema } from "$shared/config/dtos"
 	import { CONFIG_TABS } from "$shared/config/tabs"
 
-	import { Plus, Loader, Pencil, Trash2, Settings, Send } from "@lucide/svelte"
+	import { Plus, Loader, Pencil, Trash2, Settings, Send, Mail } from "@lucide/svelte"
 	import Badge from "$shared/components/ui/badge.svelte"
 	import Button from "$shared/components/ui/button.svelte"
 	import DataTable from "$shared/components/ui/data-table.svelte"
+	import Dialog from "$shared/components/ui/dialog.svelte"
 	import NumberInput from "$shared/components/ui/form/number-input.svelte"
 	import CategoryDialog from "$categories/components/category-dialog.svelte"
 	import OptionDialog from "$options/components/option-dialog.svelte"
@@ -112,6 +113,8 @@
 	]
 
 	// Códigos de edición ----------------------------------------------------
+	let showSendEditCodesConfirmDialog = $state(false)
+
 	const sendEditCodesMutation = useMutation(() => ({
 		mutationFn: () => academicService.sendEditCodesMass(),
 		onSuccess: (count) => {
@@ -121,7 +124,11 @@
 	}))
 
 	function handleSendEditCodes() {
-		if (!confirm("¿Enviar códigos de edición a todos los académicos?")) return
+		showSendEditCodesConfirmDialog = true
+	}
+
+	function confirmSendEditCodes() {
+		showSendEditCodesConfirmDialog = false
 		sendEditCodesMutation.mutate()
 	}
 
@@ -332,6 +339,55 @@
 		</div>
 	{/if}
 </div>
+
+<Dialog
+	bind:open={showSendEditCodesConfirmDialog}
+	title="Enviar códigos de edición masivo"
+	description="Usa esta función para permitir que todos los académicos editen su perfil de forma segura."
+>
+	<div class="space-y-4">
+		<div class="rounded-lg bg-corp-blue/5 p-4">
+			<p class="text-sm text-corp-ink">
+				Se enviará un <strong>código de 8 caracteres</strong> al correo de cada académico. Con este código,
+				podrán generar enlaces temporales para editar:
+			</p>
+			<ul class="mt-3 space-y-1 text-xs text-corp-gray">
+				<li class="flex items-start gap-2">
+					<span class="mt-1.5 inline-block size-1.5 shrink-0 rounded-full bg-corp-blue"></span>
+					<span>Nombres y apellidos</span>
+				</li>
+				<li class="flex items-start gap-2">
+					<span class="mt-1.5 inline-block size-1.5 shrink-0 rounded-full bg-corp-blue"></span>
+					<span>Correo electrónico</span>
+				</li>
+				<li class="flex items-start gap-2">
+					<span class="mt-1.5 inline-block size-1.5 shrink-0 rounded-full bg-corp-blue"></span>
+					<span>ORCID y otras ID externas</span>
+				</li>
+			</ul>
+		</div>
+
+		<p class="text-xs text-corp-gray">
+			Cada académico recibirá su código personalizado por correo. Esta es una forma segura de delegación sin
+			dar acceso directo a la plataforma.
+		</p>
+
+		<div class="flex justify-end gap-2">
+			<Button variant="secondary" onclick={() => (showSendEditCodesConfirmDialog = false)}>
+				Cancelar
+			</Button>
+			<Button variant="primary" disabled={sendEditCodesMutation.isPending} onclick={confirmSendEditCodes}>
+				{#if sendEditCodesMutation.isPending}
+					<Loader class="size-4 animate-spin" />
+					Enviando...
+				{:else}
+					<Mail class="size-4" />
+					Enviar códigos
+				{/if}
+			</Button>
+		</div>
+	</div>
+</Dialog>
 
 {#snippet plantaBadge(params: { value: PlantaValue })}
 	<Badge variant={params.value.code === "permanente" ? "advanced" : "base"}>

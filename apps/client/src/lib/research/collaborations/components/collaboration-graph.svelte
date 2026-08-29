@@ -157,7 +157,7 @@
 	function nodeFill(node: GraphNode): string {
 		if (node.kind === "focus") return "#0075B4"
 		if (node.kind === "recommendation") return "#F0FDF4"
-		return "#D8E6EF"
+		return "#5B9FD4"
 	}
 
 	function nodeStroke(node: GraphNode): string {
@@ -175,7 +175,7 @@
 	let showCollaborations = $state(true)
 	let showSuggestions = $state(true)
 	let showWeights = $state(false)
-	let linkDistance = $state(110)
+	let linkDistance = $state(130)
 	let chartContext = $state<ChartState>()
 
 	const zoomPercent = $derived(Math.round((chartContext?.transform.scale ?? 1) * 100))
@@ -206,7 +206,7 @@
 	}
 
 	function edgeOpacity(link: GraphLink): number {
-		const base = link.kind === "recommendation" ? 0.3 : isFocusEdge(link) ? 0.6 : 0.45
+		const base = link.kind === "recommendation" ? 0.3 : isFocusEdge(link) ? 0.6 : 0.65
 		if (!hoveredId) return base
 		const s = linkEndpointId(link.source)
 		const t = linkEndpointId(link.target)
@@ -514,6 +514,7 @@
 						scaleExtent: [0.5, 4],
 						initialScale: 1,
 						scrollMode: "scale",
+						translateExtent: [[-1500, -1500], [1500, 1500]],
 					}}
 					bind:context={chartContext}
 				>
