@@ -514,7 +514,10 @@
 						scaleExtent: [0.5, 4],
 						initialScale: 1,
 						scrollMode: "scale",
-						translateExtent: [[-1500, -1500], [1500, 1500]],
+						translateExtent: [
+							[-1500, -1500],
+							[1500, 1500],
+						],
 					}}
 					bind:context={chartContext}
 				>
