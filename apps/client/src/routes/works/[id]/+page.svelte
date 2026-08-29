@@ -334,7 +334,7 @@
 
 												{#if expandedTopicId === t.topicId}
 													<div
-														class="mt-1 rounded-md bg-corp-gray/[0.03] p-2 text-xs"
+														class="mt-1 rounded-md bg-corp-gray/3 p-2 text-xs"
 													>
 														<div class="flex items-center gap-1.5">
 															<FolderOpen

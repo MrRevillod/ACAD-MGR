@@ -104,7 +104,7 @@
 							class="flex-1 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors {activeTab ===
 							'publications'
 								? 'bg-white text-corp-blue shadow-sm'
-								: 'text-corp-gray hover:text-[#1a1a1a]'}"
+								: 'text-corp-gray hover:text-corp-ink'}"
 							onclick={() => (tabParams.tab = "publications")}
 						>
 							Publicaciones
@@ -114,7 +114,7 @@
 							class="flex-1 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors {activeTab ===
 							'stats'
 								? 'bg-white text-corp-blue shadow-sm'
-								: 'text-corp-gray hover:text-[#1a1a1a]'}"
+								: 'text-corp-gray hover:text-corp-ink'}"
 							onclick={() => (tabParams.tab = "stats")}
 						>
 							Estadísticas
@@ -124,7 +124,7 @@
 							class="flex-1 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors {activeTab ===
 							'collaborations'
 								? 'bg-white text-corp-blue shadow-sm'
-								: 'text-corp-gray hover:text-[#1a1a1a]'}"
+								: 'text-corp-gray hover:text-corp-ink'}"
 							onclick={() => (tabParams.tab = "collaborations")}
 						>
 							Colaboraciones

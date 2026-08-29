@@ -17,12 +17,12 @@
 		Info,
 	} from "@lucide/svelte"
 
-	import { useQuery, useMutation } from "$shared/http/tanstack"
 	import { authStore } from "$lib/auth/store.svelte"
 	import { CLf64Value } from "$shared/value-objects/cl-f64.value"
 	import { degreeService } from "$degrees/service"
 	import { academicService } from "$academics/service"
 	import { DegreeKindValue } from "$degrees/value-objects/kind.value"
+	import { useQuery, useMutation } from "$shared/http/tanstack"
 
 	import Badge from "$shared/components/ui/badge.svelte"
 	import DegreeDialog from "$degrees/components/degree-dialog.svelte"
@@ -192,7 +192,7 @@
 							class="flex-1 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors {activeTab ===
 							'academic-info'
 								? 'bg-white text-corp-blue shadow-sm'
-								: 'text-corp-gray hover:text-[#1a1a1a]'}"
+								: 'text-corp-gray hover:text-ink'}"
 							onclick={() => (tabParams.tab = "academic-info")}
 						>
 							Información Académica
@@ -202,7 +202,7 @@
 							class="flex-1 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors {activeTab ===
 							'publications'
 								? 'bg-white text-corp-blue shadow-sm'
-								: 'text-corp-gray hover:text-[#1a1a1a]'}"
+								: 'text-corp-gray hover:text-ink'}"
 							onclick={() => (tabParams.tab = "publications")}
 						>
 							Publicaciones
@@ -212,7 +212,7 @@
 							class="flex-1 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors {activeTab ===
 							'stats'
 								? 'bg-white text-corp-blue shadow-sm'
-								: 'text-corp-gray hover:text-[#1a1a1a]'}"
+								: 'text-corp-gray hover:text-ink'}"
 							onclick={() => (tabParams.tab = "stats")}
 						>
 							Estadísticas
@@ -222,7 +222,7 @@
 							class="flex-1 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors {activeTab ===
 							'collaborations'
 								? 'bg-white text-corp-blue shadow-sm'
-								: 'text-corp-gray hover:text-[#1a1a1a]'}"
+								: 'text-corp-gray hover:text-corp-ink'}"
 							onclick={() => (tabParams.tab = "collaborations")}
 						>
 							Colaboraciones
@@ -244,7 +244,7 @@
 										>
 											Departamento
 										</p>
-										<p class="mt-1 text-[15px] font-medium text-[#1a1a1a]">
+										<p class="mt-1 text-[15px] font-medium text-corp-ink">
 											{academic.department}
 										</p>
 									</div>
@@ -254,7 +254,7 @@
 										>
 											Carrera
 										</p>
-										<p class="mt-1 text-[15px] font-medium text-[#1a1a1a]">
+										<p class="mt-1 text-[15px] font-medium text-corp-ink">
 											{academic.career ?? "—"}
 										</p>
 									</div>
@@ -264,7 +264,7 @@
 										>
 											Ingreso
 										</p>
-										<p class="mt-1 text-[15px] font-medium text-[#1a1a1a]">
+										<p class="mt-1 text-[15px] font-medium text-corp-ink">
 											{academic.joinedAt.toDisplayDate()}
 										</p>
 									</div>
@@ -274,7 +274,7 @@
 										>
 											Cargo
 										</p>
-										<p class="mt-1 text-[15px] font-medium text-[#1a1a1a]">
+										<p class="mt-1 text-[15px] font-medium text-corp-ink">
 											{academic.workPosition ?? "—"}
 										</p>
 									</div>
@@ -284,7 +284,7 @@
 										>
 											Jornada Completa Equivalente
 										</p>
-										<p class="mt-1 text-[15px] font-medium text-[#1a1a1a]">
+										<p class="mt-1 text-[15px] font-medium text-corp-ink">
 											{CLf64Value.format(academic.jce.number)} horas
 										</p>
 									</div>
@@ -305,7 +305,7 @@
 										>
 											Planta
 										</p>
-										<p class="mt-1 text-[15px] font-medium text-[#1a1a1a]">
+										<p class="mt-1 text-[15px] font-medium text-corp-ink">
 											{academic.planta.toDisplay()}
 										</p>
 									</div>
@@ -315,7 +315,7 @@
 										>
 											Categoría
 										</p>
-										<p class="mt-1 text-[15px] font-medium text-[#1a1a1a]">
+										<p class="mt-1 text-[15px] font-medium text-corp-ink">
 											{academic.category}
 										</p>
 									</div>
@@ -325,7 +325,7 @@
 										>
 											Opción
 										</p>
-										<p class="mt-1 text-[15px] font-medium text-[#1a1a1a]">
+										<p class="mt-1 text-[15px] font-medium text-corp-ink">
 											{academic.option.toDisplay()}
 										</p>
 									</div>
@@ -335,7 +335,7 @@
 										>
 											Horas de categoría y opción
 										</p>
-										<p class="mt-1 text-[15px] font-medium text-[#1a1a1a]">
+										<p class="mt-1 text-[15px] font-medium text-corp-ink">
 											{academic.acadCategoryHours?.toLocaleString("es-CL") ??
 												"—"} horas
 										</p>
@@ -346,7 +346,7 @@
 										>
 											Descuento anual
 										</p>
-										<p class="mt-1 text-[15px] font-medium text-[#1a1a1a]">
+										<p class="mt-1 text-[15px] font-medium text-corp-ink">
 											{CLf64Value.format(academic.annualDiscountHours)} horas
 										</p>
 									</div>
@@ -415,7 +415,7 @@
 													{:else}
 														{@const degree = slot as Degree}
 														<p
-															class="text-[15px] font-medium text-[#1a1a1a]"
+															class="text-[15px] font-medium text-corp-ink"
 														>
 															{degree.name}
 														</p>
