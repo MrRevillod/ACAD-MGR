@@ -58,10 +58,8 @@ impl WorksEventsController {
 					let items: String = errors_by_message
 						.iter()
 						.map(|(msg, ids)| {
-							let id_list: String = ids
-								.iter()
-								.map(|o| format!("<li>{o}</li>"))
-								.collect();
+							let id_list: String =
+								ids.iter().map(|o| format!("<li>{o}</li>")).collect();
 							format!(
 								"<li><b>{msg}</b> — {} académico(s)<ul>{id_list}</ul></li>",
 								ids.len()

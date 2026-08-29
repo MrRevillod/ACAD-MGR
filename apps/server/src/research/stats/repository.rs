@@ -175,10 +175,10 @@ impl StatsRepository {
 		        AND ($3::smallint IS NULL
 		            OR COALESCE((w.overrides).publication_year, w.publication_year) <= $3)
 		        AND ($4::academic_option IS NULL OR aco.option = $4)
-		        AND ($5::journal_kind IS NULL OR ji.kind = $5)
 		    LEFT JOIN sources src    ON w.source_id = src.id
 		    LEFT JOIN journal_issn ji ON ji.issn = src.issn
 		    WHERE d.id = $1
+		        AND ($5::journal_kind IS NULL OR ji.kind = $5)
 		    GROUP BY d.id, d.name",
 		)
 		.bind(id)
@@ -666,25 +666,55 @@ impl StatsRepository {
 		.map_err(Into::into)
 	}
 
-	pub async fn sum_jce_doctor(&self, department_id: Option<Uuid>) -> AppResult<f64> {
+	pub async fn sum_jce(
+		&self,
+		department_id: Option<Uuid>,
+		degree_kind: Option<DegreeKind>,
+	) -> AppResult<f64> {
 		sqlx::query_scalar::<_, f64>(
 			"SELECT COALESCE(SUM(a.jce), 0)::float8
 			    FROM academics a
-			    WHERE a.id IN (SELECT academic_id FROM degrees WHERE kind = 'doctor')
+			    WHERE ($2::degree_kind IS NULL
+			            OR a.id IN (SELECT academic_id FROM degrees WHERE kind = $2))
 			        AND ($1::uuid IS NULL OR a.department_id = $1)",
 		)
 		.bind(department_id)
+		.bind(degree_kind)
 		.fetch_one(self.database.pool())
 		.await
 		.map_err(Into::into)
 	}
 
-	pub async fn sum_jce_doctor_dominant_line(&self, research_line_id: &Uuid) -> AppResult<f64> {
+	pub async fn count_jce(
+		&self,
+		department_id: Option<Uuid>,
+		degree_kind: Option<DegreeKind>,
+	) -> AppResult<i64> {
+		sqlx::query_scalar::<_, i64>(
+			"SELECT COUNT(DISTINCT a.id)
+			    FROM academics a
+			    WHERE ($2::degree_kind IS NULL
+			            OR a.id IN (SELECT academic_id FROM degrees WHERE kind = $2))
+			        AND ($1::uuid IS NULL OR a.department_id = $1)",
+		)
+		.bind(department_id)
+		.bind(degree_kind)
+		.fetch_one(self.database.pool())
+		.await
+		.map_err(Into::into)
+	}
+
+	pub async fn sum_jce_dominant_line(
+		&self,
+		research_line_id: &Uuid,
+		degree_kind: Option<DegreeKind>,
+	) -> AppResult<f64> {
 		sqlx::query_scalar::<_, f64>(
 			"WITH doc AS (
 			        SELECT a.id AS academic_id, a.orcid, a.jce
 			        FROM academics a
-			        WHERE a.id IN (SELECT academic_id FROM degrees WHERE kind = 'doctor')
+			        WHERE ($2::degree_kind IS NULL
+			                OR a.id IN (SELECT academic_id FROM degrees WHERE kind = $2))
 			    ),
 			    dw AS (
 			        SELECT d.academic_id, d.jce,
@@ -716,6 +746,55 @@ impl StatsRepository {
 			    SELECT COALESCE(SUM(jce), 0)::float8 FROM dom WHERE line_id = $1",
 		)
 		.bind(research_line_id)
+		.bind(degree_kind)
+		.fetch_one(self.database.pool())
+		.await
+		.map_err(Into::into)
+	}
+
+	pub async fn count_jce_dominant_line(
+		&self,
+		research_line_id: &Uuid,
+		degree_kind: Option<DegreeKind>,
+	) -> AppResult<i64> {
+		sqlx::query_scalar::<_, i64>(
+			"WITH doc AS (
+			        SELECT a.id AS academic_id, a.orcid
+			        FROM academics a
+			        WHERE ($2::degree_kind IS NULL
+			                OR a.id IN (SELECT academic_id FROM degrees WHERE kind = $2))
+			    ),
+			    dw AS (
+			        SELECT d.academic_id,
+			            COALESCE(
+			                (w.overrides).research_line_id,
+			                (
+			                    SELECT sf.research_line_id
+			                    FROM work_topic_scores wt
+			                    JOIN topics t ON t.id = wt.topic_id
+			                    JOIN subfields sf ON sf.id = t.subfield_id
+			                    WHERE wt.work_id = w.id
+			                    ORDER BY wt.score DESC
+			                    LIMIT 1
+			                ),
+			                (SELECT id FROM research_lines WHERE slug = 'sin-asignar')
+			            ) AS line_id
+			        FROM doc d
+			        JOIN work_authorships wa ON wa.orcid = d.orcid AND wa.is_external = false
+			        JOIN works w ON w.id = wa.work_id
+			    ),
+			    cnt AS (
+			        SELECT academic_id, line_id, COUNT(*) AS n
+			        FROM dw GROUP BY academic_id, line_id
+			    ),
+			    dom AS (
+			        SELECT DISTINCT ON (academic_id) academic_id, line_id
+			        FROM cnt ORDER BY academic_id, n DESC, line_id
+			    )
+			    SELECT COUNT(*)::bigint FROM dom WHERE line_id = $1",
+		)
+		.bind(research_line_id)
+		.bind(degree_kind)
 		.fetch_one(self.database.pool())
 		.await
 		.map_err(Into::into)

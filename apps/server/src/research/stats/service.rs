@@ -172,23 +172,42 @@ impl StatsService {
 			Some(ProductivityDegree::Doctor) => Some(DegreeKind::Doctor),
 		};
 
-		let jce = match query.scope {
-			Some(ProductivityScope::Faculty) | None => self.stats.sum_jce_doctor(None).await?,
+		let jce_kind = match query.jce_scope {
+			Some(ProductivityJceScope::All) => None,
+			Some(ProductivityJceScope::Doctor) | None => Some(DegreeKind::Doctor),
+		};
+
+		let (jce, academic_count) = match query.scope {
+			Some(ProductivityScope::Faculty) | None => {
+				let (jce, count) = tokio::join!(
+					self.stats.sum_jce(None, jce_kind.clone()),
+					self.stats.count_jce(None, jce_kind.clone()),
+				);
+				(jce?, count?)
+			}
 			Some(ProductivityScope::Department) => {
 				let Some(department_id) = query.department_id else {
 					return Err(StatsError::InvalidScopeParams)?;
 				};
 
-				self.stats.sum_jce_doctor(Some(department_id)).await?
+				let (jce, count) = tokio::join!(
+					self.stats.sum_jce(Some(department_id), jce_kind.clone()),
+					self.stats.count_jce(Some(department_id), jce_kind.clone()),
+				);
+				(jce?, count?)
 			}
 			Some(ProductivityScope::ResearchLine) => {
 				let Some(research_line_id) = query.research_line_id else {
 					return Err(StatsError::InvalidScopeParams)?;
 				};
 
-				self.stats
-					.sum_jce_doctor_dominant_line(&research_line_id)
-					.await?
+				let (jce, count) = tokio::join!(
+					self.stats
+						.sum_jce_dominant_line(&research_line_id, jce_kind.clone()),
+					self.stats
+						.count_jce_dominant_line(&research_line_id, jce_kind.clone()),
+				);
+				(jce?, count?)
 			}
 		};
 
@@ -207,19 +226,23 @@ impl StatsService {
 			total.push(ProductivityYearValue {
 				year: r.period,
 				value: r.total.unwrap_or(0) as f64 * factor,
+				pubs: r.total.unwrap_or(0),
 			});
 			wos.push(ProductivityYearValue {
 				year: r.period,
 				value: r.wos.unwrap_or(0) as f64 * factor,
+				pubs: r.wos.unwrap_or(0),
 			});
 			scopus.push(ProductivityYearValue {
 				year: r.period,
 				value: r.scopus.unwrap_or(0) as f64 * factor,
+				pubs: r.scopus.unwrap_or(0),
 			});
 		}
 
 		Ok(ProductivityResponse {
 			jce,
+			academic_count,
 			trend: vec![
 				ProductivitySeries {
 					key: "total".into(),

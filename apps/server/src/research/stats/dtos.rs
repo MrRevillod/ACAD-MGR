@@ -173,11 +173,20 @@ pub enum ProductivityScope {
 	ResearchLine,
 }
 
+#[derive(Debug, Clone, Copy, Deserialize, Serialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub enum ProductivityJceScope {
+	#[default]
+	Doctor,
+	All,
+}
+
 #[derive(Debug, Deserialize, Validate, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct ProductivityQuery {
 	pub degree: Option<ProductivityDegree>,
 	pub scope: Option<ProductivityScope>,
+	pub jce_scope: Option<ProductivityJceScope>,
 	pub department_id: Option<Uuid>,
 	pub research_line_id: Option<Uuid>,
 
@@ -196,6 +205,7 @@ pub struct ProductivityQuery {
 pub struct ProductivityYearValue {
 	pub year: i16,
 	pub value: f64,
+	pub pubs: i64,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -209,6 +219,7 @@ pub struct ProductivitySeries {
 #[serde(rename_all = "camelCase")]
 pub struct ProductivityResponse {
 	pub jce: f64,
+	pub academic_count: i64,
 	pub trend: Vec<ProductivitySeries>,
 }
 
