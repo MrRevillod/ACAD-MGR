@@ -1,0 +1,2570 @@
+openapi: "3.0.3"
+
+info:
+  title: "ORCID ACAD MGR API - Research Module"
+  description: |
+    API para la gestión de la producción científica (works), estadísticas,
+    colaboraciones y clasificación de obras.
+
+    Proporciona operaciones de:
+      - **Obras** (`/works`)
+      - **Estadísticas** (`/stats`)
+      - **Colaboraciones** (`/collaborations`)
+      - **Clasificación de Obras** (`/works-classification`)
+
+    Todos los responses del API usan un envelope estándar:
+    `{ success, code, message, timestamp, data? }`.
+    Las rutas de sincronización (`/works/sync/*`) y edición de overrides
+    requieren autenticación; el resto son públicas.
+  version: "0.1.0"
+
+servers:
+  - url: /api
+    description: API Gateway
+
+tags:
+  - name: Obras
+    description: Sincronización, consulta y edición de works científicos
+  - name: Estadísticas
+    description: Métricas de producción científica por facultad, departamento, académico y línea
+  - name: Colaboraciones
+    description: Grafo de colaboraciones y recomendaciones entre académicos
+  - name: Clasificación de Obras
+    description: Dominios, campos, subcampos, tópicos y keywords de la clasificación OpenAlex
+
+paths:
+  # ============================================================================
+  # WORKS - SYNC
+  # ============================================================================
+  /works/sync/{id}:
+    post:
+      tags:
+        - Obras
+      summary: Sincronizar obras de un académico
+      description: >
+        Sincroniza las obras de un académico desde su ORCID mediante OpenAlex.
+        Crea las obras, autorías, tópicos y keywords que falten.
+      operationId: syncWorks
+      parameters:
+        - name: id
+          in: path
+          description: UUID del académico
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: e5f6a7b8-c9d0-1234-ef56-789012345678
+      responses:
+        "200":
+          description: Sincronización completada
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/SyncResultView"
+        "401":
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Académico no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: El académico no tiene ORCID asociado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - CookieAuth: []
+
+  /works/sync-all:
+    post:
+      tags:
+        - Obras
+      summary: Sincronizar obras de todos los académicos
+      description: >
+        Dispara de forma asíncrona la sincronización de obras de todos los
+        académicos con ORCID. Los resultados se envían por correo al usuario
+        autenticado.
+      operationId: syncAllWorks
+      responses:
+        "202":
+          description: Sincronización iniciada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+        "401":
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - CookieAuth: []
+
+  # ============================================================================
+  # WORKS - LIST & GET
+  # ============================================================================
+  /works:
+    get:
+      tags:
+        - Obras
+      summary: Listar works
+      description: >
+        Obtiene un listado de works con filtros opcionales por académico,
+        texto, años, estado de aceptación/publicación, departamento, carrera,
+        tipo de revista, línea de investigación y tamaño máximo.
+      operationId: listWorks
+      parameters:
+        - $ref: "#/components/parameters/WorksQueryAcademicId"
+        - $ref: "#/components/parameters/WorksQuerySearch"
+        - $ref: "#/components/parameters/WorksQueryYearFrom"
+        - $ref: "#/components/parameters/WorksQueryYearTo"
+        - $ref: "#/components/parameters/WorksQueryIsAccepted"
+        - $ref: "#/components/parameters/WorksQueryIsPublished"
+        - $ref: "#/components/parameters/WorksQueryDepartmentId"
+        - $ref: "#/components/parameters/WorksQueryCareerId"
+        - $ref: "#/components/parameters/WorksQueryJournalKind"
+        - $ref: "#/components/parameters/WorksQueryResearchLineId"
+        - $ref: "#/components/parameters/WorksQuerySize"
+      responses:
+        "200":
+          description: Listado de works obtenido exitosamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/WorkView"
+        "400":
+          description: Error de validación en los parámetros de consulta
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+
+  /works/academic/{id}:
+    get:
+      tags:
+        - Obras
+      summary: Listar works de un académico
+      description: >
+        Obtiene un listado de works de un académico específico. Acepta los
+        mismos filtros que el listado general; el filtro por académico se
+        fuerza desde el path.
+      operationId: listWorksByAcademic
+      parameters:
+        - name: id
+          in: path
+          description: UUID del académico
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: e5f6a7b8-c9d0-1234-ef56-789012345678
+        - $ref: "#/components/parameters/WorksQuerySearch"
+        - $ref: "#/components/parameters/WorksQueryYearFrom"
+        - $ref: "#/components/parameters/WorksQueryYearTo"
+        - $ref: "#/components/parameters/WorksQueryIsAccepted"
+        - $ref: "#/components/parameters/WorksQueryIsPublished"
+        - $ref: "#/components/parameters/WorksQueryDepartmentId"
+        - $ref: "#/components/parameters/WorksQueryCareerId"
+        - $ref: "#/components/parameters/WorksQueryJournalKind"
+        - $ref: "#/components/parameters/WorksQueryResearchLineId"
+        - $ref: "#/components/parameters/WorksQuerySize"
+      responses:
+        "200":
+          description: Listado de works del académico obtenido exitosamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/WorkView"
+        "400":
+          description: Error de validación en los parámetros de consulta
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+
+  /works/{id}:
+    get:
+      tags:
+        - Obras
+      summary: Obtener work por ID
+      description: Obtiene un work específico con sus datos resueltos.
+      operationId: getWork
+      parameters:
+        - name: id
+          in: path
+          description: UUID del work
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: f1a2b3c4-d5e6-7890-1234-abcdefabcdef
+      responses:
+        "200":
+          description: Work encontrado
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/WorkView"
+        "404":
+          description: Work no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    put:
+      tags:
+        - Obras
+      summary: Actualizar overrides de un work
+      description: >
+        Actualiza los overrides (campos corregidos manualmente) de un work.
+        El valor `null` limpia el override correspondiente; la ausencia del
+        campo no modifica nada.
+      operationId: updateWorkOverrides
+      parameters:
+        - name: id
+          in: path
+          description: UUID del work
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: f1a2b3c4-d5e6-7890-1234-abcdefabcdef
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkOverridesInput"
+      responses:
+        "200":
+          description: Overrides actualizados
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+        "400":
+          description: Error de validación en los datos de entrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+        "401":
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Work no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - CookieAuth: []
+
+    delete:
+      tags:
+        - Obras
+      summary: Limpiar overrides de un work
+      description: Elimina todos los overrides de un work.
+      operationId: clearWorkOverrides
+      parameters:
+        - name: id
+          in: path
+          description: UUID del work
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: f1a2b3c4-d5e6-7890-1234-abcdefabcdef
+      responses:
+        "200":
+          description: Overrides eliminados
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+        "401":
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Work no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - CookieAuth: []
+
+  /works/{id}/authorships/{orcid}/affiliations:
+    put:
+      tags:
+        - Obras
+      summary: Actualizar afiliaciones de una autoría
+      description: >
+        Actualiza las afiliaciones de una autoría específica de un work,
+        identificada por su ORCID.
+      operationId: updateAuthorshipAffiliations
+      parameters:
+        - name: id
+          in: path
+          description: UUID del work
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: f1a2b3c4-d5e6-7890-1234-abcdefabcdef
+        - name: orcid
+          in: path
+          description: ORCID de la autoría (XXXXXXXX-XXXX-XXXX-XXXX)
+          required: true
+          schema:
+            type: string
+          example: "0000-0002-1234-5678"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthorshipAffiliationsInput"
+      responses:
+        "200":
+          description: Afiliaciones actualizadas
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+        "400":
+          description: Error de validación en los datos de entrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+        "401":
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Work no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: La autoría no pertenece al work
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - CookieAuth: []
+
+  # ============================================================================
+  # STATS
+  # ============================================================================
+  /stats/works:
+    get:
+      tags:
+        - Estadísticas
+      summary: Estadísticas globales de works
+      description: >
+        Obtiene un resumen global de la producción: totales por tipo de
+        revista, series por departamento y línea de investigación, y los
+        principales publicadores.
+      operationId: getWorksStats
+      parameters:
+        - $ref: "#/components/parameters/StatsJournalKind"
+        - $ref: "#/components/parameters/StatsDepartmentId"
+        - $ref: "#/components/parameters/StatsYearFrom"
+        - $ref: "#/components/parameters/StatsYearTo"
+      responses:
+        "200":
+          description: Estadísticas obtenidas exitosamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/WorksStatsResponse"
+        "400":
+          description: Error de validación en los parámetros de consulta
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+
+  /stats/department/{id}:
+    get:
+      tags:
+        - Estadísticas
+      summary: Estadísticas de un departamento
+      description: Obtiene el detalle de producción de un departamento.
+      operationId: getDepartmentStats
+      parameters:
+        - name: id
+          in: path
+          description: UUID del departamento
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: b2c3d4e5-f6a7-8901-bcde-f12345678901
+        - $ref: "#/components/parameters/StatsYearFrom"
+        - $ref: "#/components/parameters/StatsYearTo"
+        - $ref: "#/components/parameters/StatsOption"
+        - $ref: "#/components/parameters/StatsJournalKind"
+      responses:
+        "200":
+          description: Estadísticas del departamento obtenidas exitosamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/DepartmentDetailResponse"
+        "400":
+          description: Error de validación en los parámetros de consulta
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+        "404":
+          description: Departamento no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /stats/academic/{id}:
+    get:
+      tags:
+        - Estadísticas
+      summary: Estadísticas de un académico
+      description: >
+        Obtiene la distribución de la producción de un académico por línea
+        de investigación y tipo de revista, junto con su contribución
+        relativa.
+      operationId: getAcademicStats
+      parameters:
+        - name: id
+          in: path
+          description: UUID del académico
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: e5f6a7b8-c9d0-1234-ef56-789012345678
+        - $ref: "#/components/parameters/StatsYearFrom"
+        - $ref: "#/components/parameters/StatsYearTo"
+      responses:
+        "200":
+          description: Estadísticas del académico obtenidas exitosamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/AcademicStatsResponse"
+        "400":
+          description: Error de validación en los parámetros de consulta
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+        "404":
+          description: Académico no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /stats/research-line/{id}:
+    get:
+      tags:
+        - Estadísticas
+      summary: Estadísticas de una línea de investigación
+      description: Obtiene el detalle de producción de una línea de investigación.
+      operationId: getResearchLineStats
+      parameters:
+        - name: id
+          in: path
+          description: UUID de la línea de investigación
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: 9a8b7c6d-5e4f-3210-9876-fedcbaabcdef
+        - $ref: "#/components/parameters/StatsYearFrom"
+        - $ref: "#/components/parameters/StatsYearTo"
+      responses:
+        "200":
+          description: Estadísticas de la línea obtenidas exitosamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/ResearchLineStatsResponse"
+        "400":
+          description: Error de validación en los parámetros de consulta
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+        "404":
+          description: Línea de investigación no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /stats/productivity:
+    get:
+      tags:
+        - Estadísticas
+      summary: Productividad
+      description: >
+        Obtiene la evolución de la productividad (publicaciones por jornada)
+        con filtros por grado, alcance, ámbito de JCE, departamento, línea,
+        mes y rango de años.
+      operationId: getProductivity
+      parameters:
+        - name: degree
+          in: query
+          description: Filtrar por grado académico
+          required: false
+          schema:
+            $ref: "#/components/schemas/ProductivityDegree"
+        - name: scope
+          in: query
+          description: Alcance del análisis
+          required: false
+          schema:
+            $ref: "#/components/schemas/ProductivityScope"
+        - name: jceScope
+          in: query
+          description: Ámbito de JCE a considerar
+          required: false
+          schema:
+            $ref: "#/components/schemas/ProductivityJceScope"
+        - name: departmentId
+          in: query
+          description: Filtrar por departamento (UUID)
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: researchLineId
+          in: query
+          description: Filtrar por línea de investigación (UUID)
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: month
+          in: query
+          description: Filtrar por mes (1-12)
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+        - $ref: "#/components/parameters/StatsYearFrom"
+        - $ref: "#/components/parameters/StatsYearTo"
+      responses:
+        "200":
+          description: Productividad obtenida exitosamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/ProductivityResponse"
+        "400":
+          description: Error de validación en los parámetros de consulta
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+
+  # ============================================================================
+  # COLLABORATIONS
+  # ============================================================================
+  /collaborations/{academic_id}:
+    get:
+      tags:
+        - Colaboraciones
+      summary: Grafo de colaboraciones de un académico
+      description: >
+        Obtiene el grafo de colaboraciones de un académico: nodos (académicos
+        vinculados), aristas (obras compartidas) y recomendaciones basadas en
+        coincidencias de tópicos y keywords.
+      operationId: getCollaborations
+      parameters:
+        - name: academic_id
+          in: path
+          description: UUID del académico
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: e5f6a7b8-c9d0-1234-ef56-789012345678
+        - name: score_threshold
+          in: query
+          description: Umbral de score de coincidencia (0.0 a 1.0)
+          required: false
+          schema:
+            type: number
+            format: double
+            minimum: 0
+            maximum: 1
+        - name: min_coincidences
+          in: query
+          description: Mínimo de coincidencias por work (1 a 10)
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 10
+      responses:
+        "200":
+          description: Grafo de colaboraciones obtenido exitosamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/CollaborationGraph"
+        "400":
+          description: Error de validación en los parámetros de consulta
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+        "404":
+          description: Académico no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # ============================================================================
+  # WORKS CLASSIFICATION
+  # ============================================================================
+  /works-classification/domains:
+    get:
+      tags:
+        - Clasificación de Obras
+      summary: Listar dominios
+      description: Obtiene un listado de dominios de la clasificación OpenAlex.
+      operationId: listDomains
+      parameters:
+        - $ref: "#/components/parameters/ClassificationQuery"
+      responses:
+        "200":
+          description: Listado de dominios obtenido exitosamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Domain"
+        "400":
+          description: Error de validación en los parámetros de consulta
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+
+  /works-classification/fields:
+    get:
+      tags:
+        - Clasificación de Obras
+      summary: Listar campos
+      description: Obtiene un listado de campos de la clasificación OpenAlex.
+      operationId: listFields
+      parameters:
+        - $ref: "#/components/parameters/ClassificationQuery"
+      responses:
+        "200":
+          description: Listado de campos obtenido exitosamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Field"
+        "400":
+          description: Error de validación en los parámetros de consulta
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+
+  /works-classification/subfields:
+    get:
+      tags:
+        - Clasificación de Obras
+      summary: Listar subcampos
+      description: >
+        Obtiene un listado de subcampos de la clasificación OpenAlex,
+        incluyendo su línea de investigación asociada (si tiene).
+      operationId: listSubfields
+      parameters:
+        - $ref: "#/components/parameters/ClassificationQuery"
+      responses:
+        "200":
+          description: Listado de subcampos obtenido exitosamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Subfield"
+        "400":
+          description: Error de validación en los parámetros de consulta
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+
+  /works-classification/topics:
+    get:
+      tags:
+        - Clasificación de Obras
+      summary: Listar tópicos
+      description: Obtiene un listado de tópicos de la clasificación OpenAlex.
+      operationId: listTopics
+      parameters:
+        - $ref: "#/components/parameters/ClassificationQuery"
+      responses:
+        "200":
+          description: Listado de tópicos obtenido exitosamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Topic"
+        "400":
+          description: Error de validación en los parámetros de consulta
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+
+  /works-classification/keywords:
+    get:
+      tags:
+        - Clasificación de Obras
+      summary: Listar keywords
+      description: Obtiene un listado de keywords de la clasificación OpenAlex.
+      operationId: listKeywords
+      parameters:
+        - $ref: "#/components/parameters/ClassificationQuery"
+      responses:
+        "200":
+          description: Listado de keywords obtenido exitosamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Keyword"
+        "400":
+          description: Error de validación en los parámetros de consulta
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+
+  /works-classification/research-lines:
+    get:
+      tags:
+        - Clasificación de Obras
+      summary: Listar líneas de investigación
+      description: Obtiene un listado de todas las líneas de investigación.
+      operationId: listResearchLines
+      responses:
+        "200":
+          description: Listado de líneas de investigación obtenido exitosamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/ResearchLine"
+
+  /works-classification/research-line-mappings:
+    put:
+      tags:
+        - Clasificación de Obras
+      summary: Mapear un subcampo a una línea de investigación
+      description: >
+        Asigna una línea de investigación a un subcampo identificado por su
+        openalex ID. El cuerpo de la respuesta está vacío.
+      operationId: updateResearchLineMapping
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateMappingBody"
+      responses:
+        "200":
+          description: Mapping actualizado correctamente
+        "404":
+          description: Subcampo no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /works-classification/research-line-mappings/{subfield_openalex_id}:
+    delete:
+      tags:
+        - Clasificación de Obras
+      summary: Quitar mapeo de un subcampo
+      description: >
+        Elimina la asignación de línea de investigación de un subcampo
+        identificado por su openalex ID. El cuerpo de la respuesta está vacío.
+      operationId: deleteResearchLineMapping
+      parameters:
+        - name: subfield_openalex_id
+          in: path
+          description: OpenAlex ID del subcampo
+          required: true
+          schema:
+            type: string
+          example: S123456789
+      responses:
+        "200":
+          description: Mapping eliminado correctamente
+        "404":
+          description: Subcampo no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  securitySchemes:
+    CookieAuth:
+      type: apiKey
+      in: cookie
+      name: ACAD_MGR_ACCESS_TOKEN
+      description: >
+        Cookie HTTP-only que contiene el JWT de acceso.
+        Se obtiene automáticamente al iniciar sesión.
+
+  parameters:
+    # ------------------------------------------------------------------
+    # GetWorksQuery
+    # ------------------------------------------------------------------
+    WorksQueryAcademicId:
+      name: academicId
+      in: query
+      description: UUID del académico para filtrar works
+      required: false
+      schema:
+        type: string
+        format: uuid
+    WorksQuerySearch:
+      name: search
+      in: query
+      description: Búsqueda por texto en el título
+      required: false
+      schema:
+        type: string
+    WorksQueryYearFrom:
+      name: yearFrom
+      in: query
+      description: Año inicial del rango
+      required: false
+      schema:
+        type: integer
+        minimum: 1900
+        maximum: 2100
+    WorksQueryYearTo:
+      name: yearTo
+      in: query
+      description: Año final del rango
+      required: false
+      schema:
+        type: integer
+        minimum: 1900
+        maximum: 2100
+    WorksQueryIsAccepted:
+      name: isAccepted
+      in: query
+      description: Filtrar por estado de aceptación
+      required: false
+      schema:
+        type: boolean
+    WorksQueryIsPublished:
+      name: isPublished
+      in: query
+      description: Filtrar por estado de publicación
+      required: false
+      schema:
+        type: boolean
+    WorksQueryDepartmentId:
+      name: departmentId
+      in: query
+      description: UUID del departamento para filtrar works
+      required: false
+      schema:
+        type: string
+        format: uuid
+    WorksQueryCareerId:
+      name: careerId
+      in: query
+      description: UUID de la carrera para filtrar works
+      required: false
+      schema:
+        type: string
+        format: uuid
+    WorksQueryJournalKind:
+      name: journalKind
+      in: query
+      description: Filtrar por tipo de revista
+      required: false
+      schema:
+        $ref: "#/components/schemas/JournalKind"
+    WorksQueryResearchLineId:
+      name: researchLineId
+      in: query
+      description: UUID de la línea de investigación para filtrar works
+      required: false
+      schema:
+        type: string
+        format: uuid
+    WorksQuerySize:
+      name: size
+      in: query
+      description: Tamaño máximo del resultado (1 a 1000)
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 1000
+
+    # ------------------------------------------------------------------
+    # Stats query params
+    # ------------------------------------------------------------------
+    StatsJournalKind:
+      name: journalKind
+      in: query
+      description: Filtrar por tipo de revista
+      required: false
+      schema:
+        $ref: "#/components/schemas/JournalKind"
+    StatsDepartmentId:
+      name: departmentId
+      in: query
+      description: UUID del departamento para filtrar
+      required: false
+      schema:
+        type: string
+        format: uuid
+    StatsYearFrom:
+      name: yearFrom
+      in: query
+      description: Año inicial del rango
+      required: false
+      schema:
+        type: integer
+        minimum: 1900
+        maximum: 2100
+    StatsYearTo:
+      name: yearTo
+      in: query
+      description: Año final del rango
+      required: false
+      schema:
+        type: integer
+        minimum: 1900
+        maximum: 2100
+    StatsOption:
+      name: option
+      in: query
+      description: Filtrar por opción académica
+      required: false
+      schema:
+        $ref: "#/components/schemas/AcademicOption"
+
+    # ------------------------------------------------------------------
+    # WorkClassificationQueryDto
+    # ------------------------------------------------------------------
+    ClassificationQuery:
+      name: query
+      in: query
+      description: |
+        Parámetros de consulta para la clasificación:
+        `domainId`, `fieldId`, `subfieldId`, `topicId`, `openalexId`,
+        `search` y `limit`.
+      required: false
+      style: form
+      explode: true
+      schema:
+        $ref: "#/components/schemas/WorkClassificationQueryDto"
+
+  schemas:
+    # ==========================================================================
+    # ENUMS
+    # ==========================================================================
+    JournalKind:
+      description: Tipo de revista donde se publicó el work
+      type: string
+      enum:
+        - wos
+        - scopus
+      example: wos
+
+    AcademicOption:
+      description: Opción académica (docencia/investigación)
+      type: string
+      enum:
+        - teaching
+        - research
+      example: research
+
+    WorkType:
+      description: Tipo del work (clasificación OpenAlex)
+      type: string
+      enum:
+        - article
+        - book
+        - book-chapter
+        - book-review
+        - conference-abstract
+        - conference-paper
+        - data-paper
+        - dissertation
+        - editorial
+        - erratum
+        - letter
+        - libguide
+        - other
+        - paratext
+        - peer-review
+        - preprint
+        - reference-entry
+        - report
+        - retraction
+        - review
+        - software
+        - software-paper
+        - standard
+        - supplementary-materials
+      example: article
+
+    AuthorshipPosition:
+      description: Posición del autor en la autoría
+      type: string
+      enum:
+        - first
+        - middle
+        - last
+      example: first
+
+    ProductivityDegree:
+      description: Grado académico para filtrar productividad
+      type: string
+      enum:
+        - all
+        - magister
+        - doctor
+      example: all
+
+    ProductivityScope:
+      description: Alcance del análisis de productividad
+      type: string
+      enum:
+        - faculty
+        - department
+        - researchLine
+      example: faculty
+
+    ProductivityJceScope:
+      description: Ámbito de JCE a considerar en el análisis
+      type: string
+      enum:
+        - doctor
+        - all
+      example: doctor
+
+    RecommendationWorkSide:
+      description: Lado de la recomendación (work focal o candidato)
+      type: string
+      enum:
+        - focus
+        - candidate
+      example: focus
+
+    RecommendationMatchType:
+      description: Tipo de coincidencia entre works
+      type: string
+      enum:
+        - topic
+        - keyword
+      example: topic
+
+    # ==========================================================================
+    # WORKS
+    # ==========================================================================
+    WorkView:
+      description: Vista detallada de un work con sus datos resueltos
+      type: object
+      required:
+        - id
+        - openalexId
+        - title
+        - lang
+        - isAccepted
+        - isPublished
+        - updatedAt
+        - overrides
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: UUID único del work
+          example: f1a2b3c4-d5e6-7890-1234-abcdefabcdef
+        openalexId:
+          type: string
+          description: Identificador del work en OpenAlex
+          example: W123456789
+        title:
+          type: string
+          description: Título del work (resuelto, incluye override)
+          example: "Machine learning in higher education: a review"
+        abstractText:
+          type: string
+          nullable: true
+          description: Resumen del work
+        doi:
+          type: string
+          nullable: true
+          description: DOI del work
+          example: "10.1000/xyz123"
+        publicationDate:
+          type: string
+          format: date
+          nullable: true
+          description: Fecha de publicación
+        publicationYear:
+          type: integer
+          nullable: true
+          description: Año de publicación
+        ty:
+          $ref: "#/components/schemas/WorkType"
+        lang:
+          type: string
+          description: Código de idioma
+          example: en
+        isAccepted:
+          type: boolean
+          description: Indica si el work fue aceptado
+        isPublished:
+          type: boolean
+          description: Indica si el work fue publicado
+        sourceId:
+          type: string
+          format: uuid
+          nullable: true
+          description: UUID de la fuente/revista
+        updatedAt:
+          type: string
+          format: date-time
+          description: Fecha de última actualización
+        overrides:
+          $ref: "#/components/schemas/WorkOverrides"
+        journalKind:
+          type: string
+          nullable: true
+          description: Tipo de revista de la fuente
+          enum:
+            - wos
+            - scopus
+        researchLineId:
+          type: string
+          format: uuid
+          nullable: true
+          description: UUID de la línea de investigación del subcampo
+        researchLineName:
+          type: string
+          nullable: true
+          description: Nombre de la línea de investigación del subcampo
+        source:
+          allOf:
+            - $ref: "#/components/schemas/SourceView"
+          description: Fuente/revista asociada (si aplica)
+        authorships:
+          type: array
+          description: Autorías del work (si se incluyeron)
+          items:
+            $ref: "#/components/schemas/Authorship"
+        topics:
+          type: array
+          description: Tópicos vinculados al work (si se incluyeron)
+          items:
+            $ref: "#/components/schemas/TopicView"
+        keywords:
+          type: array
+          description: Keywords vinculadas al work (si se incluyeron)
+          items:
+            $ref: "#/components/schemas/KeywordView"
+
+    WorkOverrides:
+      description: Correcciones manuales aplicadas a los campos de un work
+      type: object
+      properties:
+        title:
+          type: string
+          nullable: true
+          description: Título corregido
+        abstractText:
+          type: string
+          nullable: true
+          description: Resumen corregido
+        doi:
+          type: string
+          nullable: true
+          description: DOI corregido
+        publicationYear:
+          type: integer
+          nullable: true
+          description: Año de publicación corregido
+        isAccepted:
+          type: boolean
+          nullable: true
+          description: Estado de aceptación corregido
+        isPublished:
+          type: boolean
+          nullable: true
+          description: Estado de publicación corregido
+        researchLineId:
+          type: string
+          format: uuid
+          nullable: true
+          description: Línea de investigación asignada manualmente
+        correspondingOrcid:
+          type: string
+          nullable: true
+          description: ORCID del autor de correspondencia
+
+    WorkOverridesInput:
+      description: >
+        Entrada para actualizar overrides de un work. Cada campo usa la
+        semántica de doble opción: si el campo no se envía, no se modifica;
+        si se envía como `null`, el override se limpia; si se envía un valor,
+        se asigna.
+      type: object
+      properties:
+        title:
+          type: string
+          nullable: true
+          description: Nuevo título o `null` para limpiar
+        abstractText:
+          type: string
+          nullable: true
+          description: Nuevo resumen o `null` para limpiar
+        doi:
+          type: string
+          nullable: true
+          description: Nuevo DOI o `null` para limpiar
+        publicationYear:
+          type: integer
+          nullable: true
+          description: Nuevo año o `null` para limpiar
+        isAccepted:
+          type: boolean
+          nullable: true
+          description: Nuevo estado o `null` para limpiar
+        isPublished:
+          type: boolean
+          nullable: true
+          description: Nuevo estado o `null` para limpiar
+        researchLineId:
+          type: string
+          format: uuid
+          nullable: true
+          description: Nueva línea de investigación o `null` para limpiar
+        correspondingOrcid:
+          type: string
+          nullable: true
+          description: Nuevo ORCID de correspondencia o `null` para limpiar
+
+    AuthorshipAffiliationsInput:
+      description: Datos de entrada para actualizar afiliaciones de una autoría
+      type: object
+      required:
+        - affiliations
+      properties:
+        affiliations:
+          type: array
+          description: Lista de afiliaciones de la autoría
+          items:
+            type: string
+          example:
+            - "Universidad Católica de Temuco"
+            - "Universidad de Chile"
+
+    SourceView:
+      description: Vista de una fuente/revista
+      type: object
+      required:
+        - id
+        - openalexId
+        - name
+        - ty
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: UUID de la fuente
+          example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+        openalexId:
+          type: string
+          description: Identificador de la fuente en OpenAlex
+          example: S123456789
+        name:
+          type: string
+          description: Nombre de la fuente/revista
+          example: "Journal of Higher Education"
+        ty:
+          type: string
+          description: Tipo de la fuente
+          example: journal
+        issn:
+          type: string
+          nullable: true
+          description: ISSN de la revista
+          example: "1234-5678"
+        kind:
+          type: string
+          nullable: true
+          description: Tipo de revista
+          enum:
+            - wos
+            - scopus
+
+    Authorship:
+      description: Autoría de un work
+      type: object
+      required:
+        - workId
+        - orcid
+        - name
+        - isExternal
+        - isCorresponding
+        - affiliations
+        - position
+      properties:
+        workId:
+          type: string
+          format: uuid
+          description: UUID del work
+        orcid:
+          type: string
+          description: ORCID del autor
+          example: "0000-0002-1234-5678"
+        name:
+          type: string
+          description: Nombre del autor
+          example: "Juan Carlos López"
+        isExternal:
+          type: boolean
+          description: Indica si el autor es externo a la universidad
+        isCorresponding:
+          type: boolean
+          description: Indica si el autor es de correspondencia
+        affiliations:
+          type: array
+          description: Afiliaciones del autor
+          items:
+            type: string
+        position:
+          $ref: "#/components/schemas/AuthorshipPosition"
+        academicId:
+          type: string
+          format: uuid
+          nullable: true
+          description: UUID del académico interno vinculado (si existe)
+
+    TopicView:
+      description: Tópico vinculado a un work con su jerarquía OpenAlex
+      type: object
+      required:
+        - topicId
+        - name
+        - score
+        - subfieldId
+        - subfieldName
+        - fieldId
+        - fieldName
+        - domainId
+        - domainName
+      properties:
+        topicId:
+          type: string
+          format: uuid
+          description: UUID del tópico
+        name:
+          type: string
+          description: Nombre del tópico
+          example: "Educational Technology"
+        score:
+          type: number
+          format: double
+          description: Score de coincidencia
+          example: 0.85
+        subfieldId:
+          type: string
+          format: uuid
+          description: UUID del subcampo
+        subfieldName:
+          type: string
+          description: Nombre del subcampo
+        fieldId:
+          type: string
+          format: uuid
+          description: UUID del campo
+        fieldName:
+          type: string
+          description: Nombre del campo
+        domainId:
+          type: string
+          format: uuid
+          description: UUID del dominio
+        domainName:
+          type: string
+          description: Nombre del dominio
+
+    KeywordView:
+      description: Keyword vinculada a un work
+      type: object
+      required:
+        - keywordId
+        - name
+        - score
+      properties:
+        keywordId:
+          type: string
+          format: uuid
+          description: UUID de la keyword
+        name:
+          type: string
+          description: Nombre de la keyword
+          example: "machine learning"
+        score:
+          type: number
+          format: double
+          description: Score de coincidencia
+          example: 0.72
+
+    SyncResultView:
+      description: Resumen del resultado de la sincronización de obras
+      type: object
+      required:
+        - academicId
+        - orcidWorks
+        - worksWithoutDoi
+        - notFoundInOpenalex
+        - worksCreated
+        - authorshipsInserted
+        - authorshipsUnlinked
+        - topicsLinked
+        - keywordsLinked
+        - errors
+      properties:
+        academicId:
+          type: string
+          format: uuid
+          description: UUID del académico sincronizado
+          example: e5f6a7b8-c9d0-1234-ef56-789012345678
+        orcidWorks:
+          type: integer
+          description: Cantidad de obras encontradas en ORCID
+          example: 24
+        worksWithoutDoi:
+          type: integer
+          description: Obras sin DOI (no buscadas en OpenAlex)
+          example: 2
+        notFoundInOpenalex:
+          type: integer
+          description: Obras no encontradas en OpenAlex
+          example: 1
+        worksCreated:
+          type: integer
+          description: Obras creadas en el sistema
+          example: 21
+        authorshipsInserted:
+          type: integer
+          description: Autorías insertadas
+          example: 21
+        authorshipsUnlinked:
+          type: integer
+          description: Autorías desvinculadas
+          example: 0
+        topicsLinked:
+          type: integer
+          description: Tópicos vinculados
+          example: 18
+        keywordsLinked:
+          type: integer
+          description: Keywords vinculadas
+          example: 15
+        errors:
+          type: array
+          description: Errores ocurridos durante la sincronización
+          items:
+            type: string
+
+    # ==========================================================================
+    # STATS
+    # ==========================================================================
+    YearValue:
+      description: Valor de una serie temporal para un año
+      type: object
+      required:
+        - year
+        - value
+      properties:
+        year:
+          type: integer
+          description: Año
+          example: 2023
+        value:
+          type: integer
+          description: Valor (cantidad de works)
+          example: 12
+
+    TimeSeriesStat:
+      description: Serie temporal agrupada por una clave
+      type: object
+      required:
+        - key
+        - values
+      properties:
+        id:
+          type: string
+          nullable: true
+          description: Identificador opcional de la agrupación
+        key:
+          type: string
+          description: Clave de la serie (ej. tipo de revista)
+          example: wos
+        values:
+          type: array
+          items:
+            $ref: "#/components/schemas/YearValue"
+
+    ScopeSeries:
+      description: Serie de un alcance (departamento o línea) por tipo de revista
+      type: object
+      required:
+        - name
+        - total
+        - wos
+        - scopus
+      properties:
+        id:
+          type: string
+          format: uuid
+          nullable: true
+          description: UUID del alcance
+        name:
+          type: string
+          description: Nombre del alcance
+          example: Ciencias Matemáticas y Físicas
+        total:
+          type: integer
+          description: Total de works
+          example: 42
+        wos:
+          type: array
+          description: Serie temporal de works WoS
+          items:
+            $ref: "#/components/schemas/YearValue"
+        scopus:
+          type: array
+          description: Serie temporal de works Scopus
+          items:
+            $ref: "#/components/schemas/YearValue"
+
+    ScopeTotal:
+      description: Total de works de un alcance
+      type: object
+      required:
+        - name
+        - total
+      properties:
+        id:
+          type: string
+          format: uuid
+          nullable: true
+          description: UUID del alcance
+        name:
+          type: string
+          description: Nombre del alcance
+          example: Ciencias Matemáticas y Físicas
+        total:
+          type: integer
+          description: Total de works
+          example: 42
+
+    FacultySummary:
+      description: Resumen global de la producción de la facultad
+      type: object
+      required:
+        - totalWorks
+        - wosCount
+        - scopusCount
+      properties:
+        totalWorks:
+          type: integer
+          description: Total de works
+          example: 150
+        wosCount:
+          type: integer
+          description: Cantidad de works indexados en WoS
+          example: 60
+        scopusCount:
+          type: integer
+          description: Cantidad de works indexados en Scopus
+          example: 90
+
+    TopPublisher:
+      description: Publicador destacado
+      type: object
+      required:
+        - academicId
+        - name
+        - total
+        - scopus
+        - wos
+        - unindexed
+        - option
+      properties:
+        academicId:
+          type: string
+          format: uuid
+          description: UUID del académico
+        name:
+          type: string
+          description: Nombre del académico
+          example: "Juan Carlos López"
+        total:
+          type: integer
+          description: Total de works
+          example: 25
+        scopus:
+          type: integer
+          description: Works Scopus
+          example: 15
+        wos:
+          type: integer
+          description: Works WoS
+          example: 10
+        unindexed:
+          type: integer
+          description: Works sin indexar
+          example: 0
+        option:
+          type: string
+          description: Opción académica
+          example: research
+
+    WorksStatsResponse:
+      description: Estadísticas globales de works
+      type: object
+      required:
+        - facultySummary
+        - byJournalKind
+        - byDepartment
+        - byResearchLine
+        - topPublishers
+      properties:
+        facultySummary:
+          $ref: "#/components/schemas/FacultySummary"
+        byJournalKind:
+          type: array
+          description: Series temporales por tipo de revista
+          items:
+            $ref: "#/components/schemas/TimeSeriesStat"
+        byDepartment:
+          type: array
+          description: Series por departamento
+          items:
+            $ref: "#/components/schemas/ScopeSeries"
+        byResearchLine:
+          type: array
+          description: Series por línea de investigación
+          items:
+            $ref: "#/components/schemas/ScopeSeries"
+        topPublishers:
+          type: array
+          description: Principales publicadores
+          items:
+            $ref: "#/components/schemas/TopPublisher"
+
+    DepartmentDetailResponse:
+      description: Detalle de producción de un departamento
+      type: object
+      required:
+        - department
+        - totalWorks
+        - scopusCount
+        - wosCount
+        - teachingCount
+        - researchCount
+        - byJournalKind
+        - topPublishers
+      properties:
+        department:
+          type: string
+          description: Nombre del departamento
+          example: Ciencias Matemáticas y Físicas
+        totalWorks:
+          type: integer
+          description: Total de works
+          example: 42
+        scopusCount:
+          type: integer
+          description: Works Scopus
+          example: 25
+        wosCount:
+          type: integer
+          description: Works WoS
+          example: 17
+        teachingCount:
+          type: integer
+          description: Works de académicos opción docencia
+          example: 10
+        researchCount:
+          type: integer
+          description: Works de académicos opción investigación
+          example: 32
+        byJournalKind:
+          type: array
+          description: Series temporales por tipo de revista
+          items:
+            $ref: "#/components/schemas/TimeSeriesStat"
+        topPublishers:
+          type: array
+          description: Principales publicadores del departamento
+          items:
+            $ref: "#/components/schemas/TopPublisher"
+
+    ResearchLineStat:
+      description: Distribución de la producción de un académico por línea
+      type: object
+      required:
+        - researchLineId
+        - name
+        - count
+      properties:
+        researchLineId:
+          type: string
+          format: uuid
+          description: UUID de la línea de investigación
+        name:
+          type: string
+          description: Nombre de la línea
+          example: "Inteligencia Artificial"
+        count:
+          type: integer
+          description: Cantidad de works
+          example: 8
+
+    AcademicContribution:
+      description: Contribución de un académico respecto a su contexto
+      type: object
+      required:
+        - academicWorks
+        - facultyWorks
+        - departmentWorks
+        - dominantLineWorks
+        - lineTotalWorks
+      properties:
+        academicWorks:
+          type: integer
+          description: Works del académico
+          example: 12
+        facultyWorks:
+          type: integer
+          description: Works de toda la facultad
+          example: 150
+        departmentWorks:
+          type: integer
+          description: Works del departamento
+          example: 42
+        departmentName:
+          type: string
+          nullable: true
+          description: Nombre del departamento
+          example: Ciencias Matemáticas y Físicas
+        dominantLineWorks:
+          type: integer
+          description: Works del académico en su línea dominante
+          example: 8
+        lineTotalWorks:
+          type: integer
+          description: Total de works de la línea dominante
+          example: 20
+
+    AcademicStatsResponse:
+      description: Estadísticas de producción de un académico
+      type: object
+      required:
+        - byResearchLine
+        - byJournalKind
+        - contribution
+      properties:
+        byResearchLine:
+          type: array
+          description: Distribución por línea de investigación
+          items:
+            $ref: "#/components/schemas/ResearchLineStat"
+        dominantResearchLineId:
+          type: string
+          format: uuid
+          nullable: true
+          description: UUID de la línea dominante
+        byJournalKind:
+          type: array
+          description: Series temporales por tipo de revista
+          items:
+            $ref: "#/components/schemas/TimeSeriesStat"
+        contribution:
+          $ref: "#/components/schemas/AcademicContribution"
+
+    ResearchLineStatsResponse:
+      description: Detalle de producción de una línea de investigación
+      type: object
+      required:
+        - name
+        - totalWorks
+        - wosCount
+        - scopusCount
+        - byJournalKind
+        - byDepartment
+        - topPublishers
+      properties:
+        name:
+          type: string
+          description: Nombre de la línea
+          example: "Inteligencia Artificial"
+        totalWorks:
+          type: integer
+          description: Total de works
+          example: 20
+        wosCount:
+          type: integer
+          description: Works WoS
+          example: 9
+        scopusCount:
+          type: integer
+          description: Works Scopus
+          example: 11
+        byJournalKind:
+          type: array
+          description: Series temporales por tipo de revista
+          items:
+            $ref: "#/components/schemas/TimeSeriesStat"
+        byDepartment:
+          type: array
+          description: Totales por departamento
+          items:
+            $ref: "#/components/schemas/ScopeTotal"
+        topPublishers:
+          type: array
+          description: Principales publicadores de la línea
+          items:
+            $ref: "#/components/schemas/TopPublisher"
+
+    ProductivityYearValue:
+      description: Valor de productividad anual
+      type: object
+      required:
+        - year
+        - value
+        - pubs
+      properties:
+        year:
+          type: integer
+          description: Año
+          example: 2023
+        value:
+          type: number
+          format: double
+          description: Productividad (publicaciones por jornada)
+          example: 1.4
+        pubs:
+          type: integer
+          description: Cantidad de publicaciones
+          example: 14
+
+    ProductivitySeries:
+      description: Serie temporal de productividad
+      type: object
+      required:
+        - key
+        - values
+      properties:
+        key:
+          type: string
+          description: Clave de la serie
+          example: magister
+        values:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProductivityYearValue"
+
+    ProductivityResponse:
+      description: Resultado del análisis de productividad
+      type: object
+      required:
+        - jce
+        - academicCount
+        - trend
+      properties:
+        jce:
+          type: number
+          format: double
+          description: Jornada promedio considerada
+          example: 1.0
+        academicCount:
+          type: integer
+          description: Cantidad de académicos considerados
+          example: 85
+        trend:
+          type: array
+          description: Series temporales de productividad
+          items:
+            $ref: "#/components/schemas/ProductivitySeries"
+
+    # ==========================================================================
+    # COLLABORATIONS
+    # ==========================================================================
+    CollaborationGraph:
+      description: Grafo de colaboraciones de un académico
+      type: object
+      required:
+        - academicId
+        - nodes
+        - edges
+        - recommendations
+      properties:
+        academicId:
+          type: string
+          format: uuid
+          description: UUID del académico focal
+        nodes:
+          type: array
+          description: Nodos del grafo (académicos vinculados)
+          items:
+            $ref: "#/components/schemas/CollaborationNode"
+        edges:
+          type: array
+          description: Aristas del grafo (obras compartidas)
+          items:
+            $ref: "#/components/schemas/CollaborationEdge"
+        recommendations:
+          type: array
+          description: Recomendaciones de colaboración
+          items:
+            $ref: "#/components/schemas/CollaborationRecommendation"
+
+    CollaborationNode:
+      description: Nodo del grafo de colaboraciones
+      type: object
+      required:
+        - id
+        - name
+        - department
+        - totalWorks
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: UUID del académico
+        name:
+          type: string
+          description: Nombre completo del académico
+          example: "María Fernanda Soto"
+        department:
+          type: string
+          description: Nombre del departamento
+          example: Ciencias Matemáticas y Físicas
+        totalWorks:
+          type: integer
+          description: Total de works del académico
+          example: 18
+
+    CollaborationEdge:
+      description: Arista del grafo de colaboraciones
+      type: object
+      required:
+        - sourceId
+        - targetId
+        - weight
+        - works
+      properties:
+        sourceId:
+          type: string
+          format: uuid
+          description: UUID del académico fuente
+        targetId:
+          type: string
+          format: uuid
+          description: UUID del académico destino
+        weight:
+          type: integer
+          description: Cantidad de obras compartidas
+          example: 3
+        works:
+          type: array
+          description: Obras compartidas
+          items:
+            $ref: "#/components/schemas/WorkRef"
+
+    WorkRef:
+      description: Referencia ligera a un work
+      type: object
+      required:
+        - id
+        - title
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: UUID del work
+        title:
+          type: string
+          description: Título del work
+          example: "Machine learning in higher education"
+        publication_year:
+          type: integer
+          nullable: true
+          description: Año de publicación
+          example: 2023
+
+    CollaborationRecommendation:
+      description: Recomendación de colaboración
+      type: object
+      required:
+        - academicId
+        - name
+        - names
+        - paternalSurname
+        - maternalSurname
+        - department
+        - totalWorks
+        - weight
+        - works
+        - focusWorks
+      properties:
+        academicId:
+          type: string
+          format: uuid
+          description: UUID del académico candidato
+        name:
+          type: string
+          description: Nombre completo del candidato
+          example: "Pedro Antonio Rojas"
+        names:
+          type: string
+          description: Nombres del candidato
+          example: "Pedro Antonio"
+        paternalSurname:
+          type: string
+          description: Apellido paterno del candidato
+          example: Rojas
+        maternalSurname:
+          type: string
+          description: Apellido materno del candidato
+          example: Fuentes
+        department:
+          type: string
+          description: Nombre del departamento del candidato
+          example: Ciencias Matemáticas y Físicas
+        totalWorks:
+          type: integer
+          description: Total de works del candidato
+          example: 22
+        weight:
+          type: integer
+          description: Peso de la recomendación
+          example: 4
+        works:
+          type: array
+          description: Works del candidato coincidentes
+          items:
+            $ref: "#/components/schemas/RecommendationWork"
+        focusWorks:
+          type: array
+          description: Works del académico focal coincidentes
+          items:
+            $ref: "#/components/schemas/RecommendationWork"
+
+    RecommendationWork:
+      description: Work involucrado en una recomendación
+      type: object
+      required:
+        - workId
+        - title
+        - side
+        - shared
+      properties:
+        workId:
+          type: string
+          format: uuid
+          description: UUID del work
+        title:
+          type: string
+          description: Título del work
+          example: "Deep learning for climate modeling"
+        publicationYear:
+          type: integer
+          nullable: true
+          description: Año de publicación
+          example: 2022
+        side:
+          $ref: "#/components/schemas/RecommendationWorkSide"
+        shared:
+          type: array
+          description: Elementos compartidos (tópicos/keywords)
+          items:
+            $ref: "#/components/schemas/RecommendationSharedItem"
+
+    RecommendationSharedItem:
+      description: Elemento compartido entre dos works
+      type: object
+      required:
+        - type
+        - id
+        - name
+        - score
+      properties:
+        type:
+          $ref: "#/components/schemas/RecommendationMatchType"
+        id:
+          type: string
+          format: uuid
+          description: UUID del tópico o keyword
+        name:
+          type: string
+          description: Nombre del tópico o keyword
+          example: "Neural Networks"
+        score:
+          type: number
+          format: double
+          description: Score de coincidencia
+          example: 0.9
+
+    # ==========================================================================
+    # CLASSIFICATION
+    # ==========================================================================
+    Domain:
+      description: Dominio de la clasificación OpenAlex
+      type: object
+      required:
+        - id
+        - openalexId
+        - name
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: UUID del dominio
+        openalexId:
+          type: string
+          description: Identificador del dominio en OpenAlex
+          example: D123456789
+        name:
+          type: string
+          description: Nombre del dominio
+          example: "Social Sciences"
+
+    Field:
+      description: Campo de la clasificación OpenAlex
+      type: object
+      required:
+        - id
+        - openalexId
+        - name
+        - domainId
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: UUID del campo
+        openalexId:
+          type: string
+          description: Identificador del campo en OpenAlex
+          example: F123456789
+        name:
+          type: string
+          description: Nombre del campo
+          example: "Education"
+        domainId:
+          type: string
+          format: uuid
+          description: UUID del dominio padre
+          example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+
+    Subfield:
+      description: Subcampo de la clasificación OpenAlex
+      type: object
+      required:
+        - id
+        - openalexId
+        - name
+        - fieldId
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: UUID del subcampo
+        openalexId:
+          type: string
+          description: Identificador del subcampo en OpenAlex
+          example: S123456789
+        name:
+          type: string
+          description: Nombre del subcampo
+          example: "Educational Technology"
+        fieldId:
+          type: string
+          format: uuid
+          description: UUID del campo padre
+          example: b2c3d4e5-f6a7-8901-bcde-f12345678901
+        researchLineId:
+          type: string
+          format: uuid
+          nullable: true
+          description: UUID de la línea de investigación asociada (si tiene)
+          example: 9a8b7c6d-5e4f-3210-9876-fedcbaabcdef
+
+    ResearchLine:
+      description: Línea de investigación de la universidad
+      type: object
+      required:
+        - id
+        - name
+        - slug
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: UUID de la línea
+        name:
+          type: string
+          description: Nombre de la línea
+          example: "Inteligencia Artificial"
+        slug:
+          type: string
+          description: Slug de la línea
+          example: inteligencia-artificial
+
+    Topic:
+      description: Tópico de la clasificación OpenAlex
+      type: object
+      required:
+        - id
+        - openalexId
+        - name
+        - subfieldId
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: UUID del tópico
+        openalexId:
+          type: string
+          description: Identificador del tópico en OpenAlex
+          example: T123456789
+        name:
+          type: string
+          description: Nombre del tópico
+          example: "Machine Learning in Education"
+        subfieldId:
+          type: string
+          format: uuid
+          description: UUID del subcampo padre
+          example: c3d4e5f6-a7b8-9012-cdef-123456789012
+
+    Keyword:
+      description: Keyword de la clasificación OpenAlex
+      type: object
+      required:
+        - id
+        - openalexId
+        - name
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: UUID de la keyword
+        openalexId:
+          type: string
+          description: Identificador de la keyword en OpenAlex
+          example: K123456789
+        name:
+          type: string
+          description: Nombre de la keyword
+          example: "machine learning"
+
+    WorkClassificationQueryDto:
+      description: Parámetros de consulta para la clasificación
+      type: object
+      properties:
+        domainId:
+          type: string
+          format: uuid
+          description: Filtrar por dominio
+          example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+        fieldId:
+          type: string
+          format: uuid
+          description: Filtrar por campo
+          example: b2c3d4e5-f6a7-8901-bcde-f12345678901
+        subfieldId:
+          type: string
+          format: uuid
+          description: Filtrar por subcampo
+          example: c3d4e5f6-a7b8-9012-cdef-123456789012
+        topicId:
+          type: string
+          format: uuid
+          description: Filtrar por tópico
+          example: d4e5f6a7-b8c9-0123-def4-567890123456
+        openalexId:
+          type: string
+          description: Filtrar por OpenAlex ID
+          maxLength: 255
+          example: S123456789
+        search:
+          type: string
+          description: Búsqueda por texto
+          maxLength: 255
+          example: educ
+        limit:
+          type: integer
+          description: Límite de resultados
+          example: 50
+
+    UpdateMappingBody:
+      description: Datos de entrada para mapear un subcampo a una línea
+      type: object
+      required:
+        - subfieldOpenalexId
+        - researchLineId
+      properties:
+        subfieldOpenalexId:
+          type: string
+          description: OpenAlex ID del subcampo
+          example: S123456789
+        researchLineId:
+          type: string
+          format: uuid
+          description: UUID de la línea de investigación
+          example: 9a8b7c6d-5e4f-3210-9876-fedcbaabcdef
+
+    # ==========================================================================
+    # COMMON RESPONSE ENVELOPE
+    # ==========================================================================
+    ApiResponse:
+      description: Envelope estándar de respuesta del API
+      type: object
+      required:
+        - success
+        - code
+        - message
+        - timestamp
+      properties:
+        success:
+          type: boolean
+          description: Indica si la operación fue exitosa
+          example: true
+        code:
+          type: integer
+          description: Código de estado HTTP
+          example: 200
+        message:
+          type: string
+          description: Mensaje descriptivo de la operación
+          example: "OK"
+        timestamp:
+          type: string
+          format: date-time
+          description: Marca de tiempo de la respuesta (RFC3339)
+          example: "2026-06-21T18:45:00Z"
+
+    # ==========================================================================
+    # COMMON ERROR SCHEMAS
+    # ==========================================================================
+    ErrorResponse:
+      description: Error estándar del API
+      type: object
+      required:
+        - success
+        - code
+        - message
+        - timestamp
+      properties:
+        success:
+          type: boolean
+          example: false
+        code:
+          type: integer
+          description: Código de estado HTTP
+          example: 404
+        message:
+          type: string
+          description: Mensaje descriptivo del error
+          example: "Work not found"
+        timestamp:
+          type: string
+          format: date-time
+          description: Marca de tiempo de la respuesta (RFC3339)
+          example: "2026-06-21T18:45:00Z"
+        error:
+          description: Detalle adicional del error (opcional)
+          example: "Not Found"
+
+    ValidationError:
+      description: Error de validación en los datos de entrada
+      type: object
+      required:
+        - success
+        - code
+        - message
+        - timestamp
+        - errors
+      properties:
+        success:
+          type: boolean
+          example: false
+        code:
+          type: integer
+          description: Código de estado HTTP
+          example: 400
+        message:
+          type: string
+          description: Mensaje de error general
+          example: "Validation error"
+        timestamp:
+          type: string
+          format: date-time
+          description: Marca de tiempo de la respuesta (RFC3339)
+          example: "2026-06-21T18:45:00Z"
+        errors:
+          type: object
+          description: Errores de validación agrupados por campo
+          additionalProperties:
+            type: array
+            items:
+              type: object
+              required:
+                - code
+                - message
+              properties:
+                code:
+                  type: string
+                  description: Código del error de validación
+                  example: range
+                message:
+                  type: string
+                  description: Descripción del error de validación
+                  example: "El score de coincidencia debe estar entre 0 y 1"

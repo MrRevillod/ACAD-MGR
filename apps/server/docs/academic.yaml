@@ -11,6 +11,9 @@ info:
       - **Opciones de Categoría** (`/category-options`)
       - **Grados Académicos** (`/degrees`)
       - **Académicos** (`/academics`)
+
+    Todos los responses del API usan un envelope estándar:
+    `{ success, code, message, timestamp, data? }`.
   version: "0.1.0"
 
 servers:
@@ -60,9 +63,22 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/AcademicCategory"
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/AcademicCategory"
+        "401":
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - CookieAuth: []
 
     post:
       tags:
@@ -82,13 +98,24 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AcademicCategory"
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/AcademicCategory"
         "400":
           description: Error de validación en los datos de entrada
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ValidationError"
+        "401":
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
       security:
         - CookieAuth: []
 
@@ -114,17 +141,26 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AcademicCategory"
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/AcademicCategory"
+        "401":
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         "404":
           description: Categoría no encontrada
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-              example:
-                status: 404
-                message: "Categoría académica no encontrada"
-                error: "Not Found"
+      security:
+        - CookieAuth: []
 
   # ============================================================================
   # CATEGORY OPTIONS
@@ -152,9 +188,22 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/AcademicCategoryOption"
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/AcademicCategoryOption"
+        "401":
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - CookieAuth: []
 
     post:
       tags:
@@ -176,13 +225,24 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AcademicCategoryOption"
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/AcademicCategoryOption"
         "400":
           description: Error de validación en los datos de entrada
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ValidationError"
+        "401":
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
       security:
         - CookieAuth: []
 
@@ -208,44 +268,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AcademicCategoryOption"
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/AcademicCategoryOption"
+        "401":
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         "404":
           description: Opción no encontrada
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - CookieAuth: []
 
   # ============================================================================
   # DEGREES
   # ============================================================================
   /degrees:
-    get:
-      tags:
-        - Grados Académicos
-      summary: Listar grados académicos
-      description: >
-        Obtiene un listado de todos los grados académicos.
-        Soporta filtro opcional por académico.
-      operationId: listDegrees
-      parameters:
-        - name: academic_id
-          in: query
-          description: UUID del académico para filtrar grados
-          required: false
-          schema:
-            type: string
-            format: uuid
-      responses:
-        "200":
-          description: Listado de grados obtenido exitosamente
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Degree"
-
     post:
       tags:
         - Grados Académicos
@@ -264,46 +311,75 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Degree"
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/Degree"
         "400":
           description: Error de validación en los datos de entrada
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ValidationError"
-      security:
-        - CookieAuth: []
-
-  /degrees/{id}:
-    get:
-      tags:
-        - Grados Académicos
-      summary: Obtener grado por ID
-      description: Obtiene un grado académico específico mediante su UUID.
-      operationId: getDegree
-      parameters:
-        - name: id
-          in: path
-          description: UUID del grado académico
-          required: true
-          schema:
-            type: string
-            format: uuid
-          example: d4e5f6a7-b8c9-0123-def4-567890123456
-      responses:
-        "200":
-          description: Grado encontrado
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Degree"
-        "404":
-          description: Grado no encontrado
+        "401":
+          description: No autorizado
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - CookieAuth: []
 
+  /degrees/academic/{id}:
+    get:
+      tags:
+        - Grados Académicos
+      summary: Listar grados de un académico
+      description: >
+        Obtiene un listado de todos los grados académicos de un académico
+        específico.
+      operationId: listDegreesByAcademic
+      parameters:
+        - name: id
+          in: path
+          description: UUID del académico
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: e5f6a7b8-c9d0-1234-ef56-789012345678
+      responses:
+        "200":
+          description: Listado de grados obtenido exitosamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Degree"
+        "401":
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Académico no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - CookieAuth: []
+
+  /degrees/{id}:
     patch:
       tags:
         - Grados Académicos
@@ -334,13 +410,24 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Degree"
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/Degree"
         "400":
           description: Error de validación en los datos de entrada
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ValidationError"
+        "401":
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         "404":
           description: Grado no encontrado
           content:
@@ -362,7 +449,7 @@ paths:
         Obtiene un listado detallado de todos los académicos con sus datos
         resueltos (departamento, carrera, categoría, opción, planta,
         nacionalidad, puesto de trabajo). Soporta búsqueda por texto y
-        ordenamiento por distintos campos.
+        filtros por departamento, carrera, categoría, planta y opción.
       operationId: listAcademics
       parameters:
         - name: search
@@ -372,27 +459,23 @@ paths:
           required: false
           schema:
             type: string
-        - name: sort
-          in: query
-          description: Campo por el cual ordenar los resultados (ASC)
-          required: false
-          schema:
-            $ref: "#/components/schemas/AcademicSortField"
-        - name: department_id
-          in: query
-          description: Filtrar por departamento (UUID)
-          required: false
-          schema:
-            type: string
-            format: uuid
-        - name: career_id
+            minLength: 1
+            maxLength: 255
+        - name: careerId
           in: query
           description: Filtrar por carrera (UUID)
           required: false
           schema:
             type: string
             format: uuid
-        - name: category_id
+        - name: departmentId
+          in: query
+          description: Filtrar por departamento (UUID)
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: categoryId
           in: query
           description: Filtrar por categoría académica (UUID)
           required: false
@@ -417,9 +500,22 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/AcademicView"
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/AcademicView"
+        "401":
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - CookieAuth: []
 
     post:
       tags:
@@ -441,15 +537,131 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AcademicView"
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/AcademicView"
         "400":
           description: Error de validación en los datos de entrada
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ValidationError"
+        "401":
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
       security:
         - CookieAuth: []
+
+  /academics/public:
+    get:
+      tags:
+        - Académicos
+      summary: Listar académicos (público)
+      description: >
+        Obtiene un listado público de académicos sin datos laborales
+        sensibles (categoría, JCE, horas, etc.). Soporta los mismos
+        filtros que el listado interno.
+      operationId: listPublicAcademics
+      parameters:
+        - name: search
+          in: query
+          description: >
+            Búsqueda por RUT, nombres, apellidos o email (ILIKE).
+          required: false
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 255
+        - name: careerId
+          in: query
+          description: Filtrar por carrera (UUID)
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: departmentId
+          in: query
+          description: Filtrar por departamento (UUID)
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: categoryId
+          in: query
+          description: Filtrar por categoría académica (UUID)
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: planta
+          in: query
+          description: Filtrar por tipo de planta
+          required: false
+          schema:
+            $ref: "#/components/schemas/AcademicPlanta"
+        - name: option
+          in: query
+          description: Filtrar por opción académica
+          required: false
+          schema:
+            $ref: "#/components/schemas/AcademicOption"
+      responses:
+        "200":
+          description: Listado de académicos obtenido exitosamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/AcademicPublicView"
+
+  /academics/public/{id}:
+    get:
+      tags:
+        - Académicos
+      summary: Obtener académico público por ID
+      description: >
+        Obtiene un académico específico con datos públicos (sin datos
+        laborales sensibles).
+      operationId: getPublicAcademic
+      parameters:
+        - name: id
+          in: path
+          description: UUID del académico
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: e5f6a7b8-c9d0-1234-ef56-789012345678
+      responses:
+        "200":
+          description: Académico encontrado
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/AcademicPublicView"
+        "404":
+          description: Académico no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
   /academics/{id}:
     get:
@@ -458,7 +670,7 @@ paths:
       summary: Obtener académico por ID
       description: >
         Obtiene un académico específico con todos sus datos resueltos
-        con sus datos asociados (departamento, carrera, categoría, etc.).
+        (departamento, carrera, categoría, etc.).
       operationId: getAcademic
       parameters:
         - name: id
@@ -475,13 +687,208 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AcademicView"
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/AcademicView"
+        "401":
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         "404":
           description: Académico no encontrado
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - CookieAuth: []
+
+    patch:
+      tags:
+        - Académicos
+      summary: Actualizar académico
+      description: >
+        Actualiza uno o más campos de un académico existente. Solo se
+        actualizan los campos proporcionados (PATCH parcial).
+      operationId: updateAcademic
+      parameters:
+        - name: id
+          in: path
+          description: UUID del académico
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: e5f6a7b8-c9d0-1234-ef56-789012345678
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateAcademicDto"
+      responses:
+        "200":
+          description: Académico actualizado exitosamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/AcademicView"
+        "400":
+          description: Error de validación en los datos de entrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+        "401":
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Académico no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - CookieAuth: []
+
+  /academics/{id}/update-profile-request:
+    post:
+      tags:
+        - Académicos
+      summary: Solicitar actualización de perfil
+      description: >
+        Solicita que un académico actualice su perfil mediante un link
+        enviado por correo. Requiere el código de autorización asociado.
+      operationId: updateAcademicProfileRequest
+      parameters:
+        - name: id
+          in: path
+          description: UUID del académico
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: e5f6a7b8-c9d0-1234-ef56-789012345678
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProfileUpdateRequestDto"
+      responses:
+        "200":
+          description: Solicitud procesada
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/AcademicView"
+        "400":
+          description: Error de validación en los datos de entrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+        "404":
+          description: Académico no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /academics/{id}/edit-codes/send:
+    post:
+      tags:
+        - Académicos
+      summary: Enviar códigos de edición
+      description: >
+        Envía por correo los códigos de autorización que permiten a un
+        académico editar su perfil.
+      operationId: sendAcademicEditCodes
+      parameters:
+        - name: id
+          in: path
+          description: UUID del académico
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: e5f6a7b8-c9d0-1234-ef56-789012345678
+      responses:
+        "200":
+          description: Códigos enviados
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/AcademicView"
+        "401":
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Académico no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - CookieAuth: []
+
+  /academics/edit-codes/mass:
+    post:
+      tags:
+        - Académicos
+      summary: Enviar códigos de edición masivos
+      description: >
+        Envía por correo los códigos de autorización a todos los académicos.
+        Retorna la cantidad de correos enviados.
+      operationId: sendEditCodesMass
+      responses:
+        "200":
+          description: Códigos enviados
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: integer
+                        description: Cantidad de correos enviados
+                        example: 120
+        "401":
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - CookieAuth: []
 
   /academics/import:
     post:
@@ -491,8 +898,8 @@ paths:
       description: >
         Importa académicos masivamente desde un archivo CSV.
         Cada fila se procesa como una operación independiente.
-        Los campos opcionales vacíos se rellenan con valores por defecto
-        (ORCID, país, fecha del grado, universidad, nombre del título).
+        Retorna la cantidad de filas importadas, actualizadas y los errores
+        por fila.
       operationId: importAcademics
       requestBody:
         required: true
@@ -513,9 +920,142 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ImportResult"
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/ImportResult"
         "400":
           description: Error al procesar el archivo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - CookieAuth: []
+
+  /academics/profile/update/validate:
+    post:
+      tags:
+        - Académicos
+      summary: Validar token de actualización de perfil
+      description: >
+        Valida un token de un solo uso y retorna los datos públicos del
+        académico asociado.
+      operationId: validateProfileUpdateToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ValidateTokenDto"
+      responses:
+        "200":
+          description: Token válido
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/AcademicPublicView"
+        "400":
+          description: Error de validación en los datos de entrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+        "401":
+          description: Token inválido o expirado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /academics/profile/update:
+    post:
+      tags:
+        - Académicos
+      summary: Actualizar perfil mediante token
+      description: >
+        Actualiza el perfil de un académico usando un token de un solo uso.
+        Solo se actualizan los campos proporcionados.
+      operationId: updateProfileFromToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CombinedSelfUpdateDto"
+      responses:
+        "200":
+          description: Perfil actualizado
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/AcademicView"
+        "400":
+          description: Error de validación en los datos de entrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+        "401":
+          description: Token inválido o expirado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /academics/profile/update/sync-works:
+    post:
+      tags:
+        - Académicos
+      summary: Sincronizar obras mediante token
+      description: >
+        Sincroniza las obras de un académico desde ORCID/OpenAlex usando un
+        token de un solo uso. Retorna el resumen de la sincronización.
+      operationId: syncWorksByToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SyncByTokenDto"
+      responses:
+        "200":
+          description: Sincronización completada
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/SyncResultView"
+        "400":
+          description: Error de validación en los datos de entrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+        "401":
+          description: Token inválido o expirado
           content:
             application/json:
               schema:
@@ -555,9 +1095,10 @@ components:
       description: Tipo de grado académico
       type: string
       enum:
-        - base
-        - advanced
-      example: base
+        - professional
+        - magister
+        - doctor
+      example: magister
 
     Sex:
       description: Sexo del académico
@@ -567,17 +1108,6 @@ components:
         - M
         - O
       example: H
-
-    AcademicSortField:
-      description: Campo de ordenamiento para listar académicos
-      type: string
-      enum:
-        - names
-        - paternal_surname
-        - maternal_surname
-        - joined_at
-        - birth_date
-      example: paternal_surname
 
     # ==========================================================================
     # ACADEMIC CATEGORY
@@ -668,7 +1198,7 @@ components:
           type: number
           format: double
           nullable: true
-          description: Horas asignadas a esta opción (opcional, se validarán contra los valores existentes si se proporcionan)
+          description: Horas asignadas a esta opción (opcional)
           example: 12
 
     # ==========================================================================
@@ -767,9 +1297,8 @@ components:
     UpdateDegreeDto:
       description: >
         Datos de entrada para actualizar parcialmente un grado académico.
-        Todos los campos son opcionales; solo se actualizan los
-        campos proporcionados. El tipo de grado (kind) no es modificable
-        después de la creación.
+        Todos los campos son opcionales; solo se actualizan los campos
+        proporcionados.
       type: object
       properties:
         name:
@@ -795,6 +1324,8 @@ components:
           minLength: 2
           maxLength: 2
           example: CL
+        kind:
+          $ref: "#/components/schemas/DegreeKind"
 
     # ==========================================================================
     # ACADEMIC VIEW
@@ -820,7 +1351,6 @@ components:
         - category
         - planta
         - option
-        - acadCategoryHours
         - annualDiscountHours
         - nationality
         - city
@@ -849,9 +1379,9 @@ components:
           example: jlopez@uct.cl
         orcid:
           type: string
-          description: ORCID ID (formato XXXX-XXXX-XXXX-XXXX)
+          description: ORCID ID (URL https://orcid.org/XXXX-XXXX-XXXX-XXXX)
           nullable: true
-          example: "0000-0002-1234-5678"
+          example: "https://orcid.org/0000-0002-1234-5678"
         sex:
           $ref: "#/components/schemas/Sex"
         birthDate:
@@ -913,6 +1443,81 @@ components:
           description: Ciudad de residencia
           example: Temuco
 
+    AcademicPublicView:
+      description: >
+        Vista pública de un académico sin datos laborales sensibles
+        (categoría, JCE, horas, etc.).
+      type: object
+      required:
+        - id
+        - names
+        - paternalSurname
+        - maternalSurname
+        - email
+        - sex
+        - birthDate
+        - joinedAt
+        - department
+        - nationality
+        - city
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: UUID único del académico
+          example: e5f6a7b8-c9d0-1234-ef56-789012345678
+        names:
+          type: string
+          description: Nombres del académico
+          example: Juan Carlos
+        paternalSurname:
+          type: string
+          description: Apellido paterno
+          example: López
+        maternalSurname:
+          type: string
+          description: Apellido materno
+          example: Martínez
+        email:
+          type: string
+          format: email
+          description: Correo electrónico institucional
+          example: jlopez@uct.cl
+        orcid:
+          type: string
+          description: ORCID ID (URL https://orcid.org/XXXX-XXXX-XXXX-XXXX)
+          nullable: true
+          example: "https://orcid.org/0000-0002-1234-5678"
+        sex:
+          $ref: "#/components/schemas/Sex"
+        birthDate:
+          type: string
+          format: date
+          description: Fecha de nacimiento
+          example: "1980-03-15"
+        joinedAt:
+          type: string
+          format: date
+          description: Fecha de ingreso a la universidad
+          example: "2010-05-01"
+        department:
+          type: string
+          description: Nombre del departamento al que pertenece
+          example: Ciencias Matemáticas y Físicas
+        career:
+          type: string
+          description: Nombre de la carrera asociada
+          nullable: true
+          example: Ingeniería Civil en Informática
+        nationality:
+          type: string
+          description: Nombre del país de nacionalidad
+          example: Chile
+        city:
+          type: string
+          description: Ciudad de residencia
+          example: Temuco
+
     # ==========================================================================
     # CREATE ACADEMIC DTO
     # ==========================================================================
@@ -925,13 +1530,13 @@ components:
         - paternalSurname
         - maternalSurname
         - email
-        - orcid
         - sex
         - birthDate
         - joinedAt
+        - workPositionId
         - departmentId
-        - jce
         - acadCategoryOptionsId
+        - jce
         - annualDiscountHours
         - nationalityCode
         - city
@@ -966,9 +1571,11 @@ components:
           example: jlopez@uct.cl
         orcid:
           type: string
-          description: "ORCID ID (formato: XXXX-XXXX-XXXX-XXXX)"
-          pattern: '^\d{4}-\d{4}-\d{4}-\d{3}[\dX]$'
-          example: "0000-0002-1234-5678"
+          description: >
+            ORCID ID como URL completa: https://orcid.org/XXXX-XXXX-XXXX-XXXX
+          nullable: true
+          pattern: '^https://orcid\.org/\d{4}-\d{4}-\d{4}-\d{3}[\dX]$'
+          example: "https://orcid.org/0000-0002-1234-5678"
         sex:
           $ref: "#/components/schemas/Sex"
         birthDate:
@@ -987,13 +1594,7 @@ components:
           type: string
           format: uuid
           description: UUID de un cargo laboral existente
-          nullable: true
           example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
-        workPositionNew:
-          type: string
-          description: Nombre del nuevo cargo laboral (se añade automáticamente si no existe)
-          nullable: true
-          example: Docente
         departmentId:
           type: string
           format: uuid
@@ -1021,6 +1622,7 @@ components:
           type: number
           format: double
           description: Horas de descuento anuales
+          minimum: 0
           example: 120.0
         nationalityCode:
           type: string
@@ -1036,6 +1638,212 @@ components:
           example: Temuco
 
     # ==========================================================================
+    # UPDATE ACADEMIC DTO
+    # ==========================================================================
+    UpdateAcademicDto:
+      description: >
+        Datos de entrada para actualizar parcialmente un académico. Todos
+        los campos son opcionales; solo se actualizan los proporcionados.
+      type: object
+      properties:
+        names:
+          type: string
+          description: Nombres del académico
+          minLength: 1
+          maxLength: 255
+          example: Juan Carlos
+        paternalSurname:
+          type: string
+          description: Apellido paterno
+          minLength: 1
+          maxLength: 255
+          example: López
+        maternalSurname:
+          type: string
+          description: Apellido materno
+          minLength: 1
+          maxLength: 255
+          example: Martínez
+        orcid:
+          type: string
+          description: >
+            ORCID ID como URL completa: https://orcid.org/XXXX-XXXX-XXXX-XXXX
+          nullable: true
+          pattern: '^https://orcid\.org/\d{4}-\d{4}-\d{4}-\d{3}[\dX]$'
+          example: "https://orcid.org/0000-0002-1234-5678"
+        sex:
+          $ref: "#/components/schemas/Sex"
+        birthDate:
+          type: string
+          format: date
+          description: "Fecha de nacimiento (no puede ser futura)"
+          example: "1980-03-15"
+        joinedAt:
+          type: string
+          format: date
+          description: >
+            Fecha de ingreso a la universidad. No puede ser futura
+            ni anterior a la fundación de la UCT (1959-09-08).
+          example: "2010-05-01"
+        workPositionId:
+          type: string
+          format: uuid
+          description: UUID de un cargo laboral existente
+          nullable: true
+          example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+        departmentId:
+          type: string
+          format: uuid
+          description: UUID del departamento al que pertenece
+          nullable: true
+          example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+        careerId:
+          type: string
+          format: uuid
+          description: UUID de la carrera asociada
+          nullable: true
+          example: c3d4e5f6-a7b8-9012-cdef-123456789012
+        acadCategoryOptionsId:
+          type: string
+          format: uuid
+          description: UUID de la opción de categoría académica
+          nullable: true
+          example: b2c3d4e5-f6a7-8901-bcde-f12345678901
+        jce:
+          type: number
+          format: double
+          description: Jornada de trabajo (0.0 a 1.0)
+          minimum: 0
+          maximum: 1
+          example: 0.5
+        annualDiscountHours:
+          type: number
+          format: double
+          description: Horas de descuento anuales
+          minimum: 0
+          example: 120.0
+        nationalityCode:
+          type: string
+          description: Código ISO 3166-1 alpha-2 del país de nacionalidad
+          minLength: 2
+          maxLength: 2
+          example: CL
+        city:
+          type: string
+          description: Ciudad de residencia
+          minLength: 1
+          maxLength: 255
+          example: Temuco
+
+    # ==========================================================================
+    # SELF UPDATE ACADEMIC DTO
+    # ==========================================================================
+    SelfUpdateAcademicDto:
+      description: >
+        Datos que un académico puede actualizar sobre su propio perfil
+        mediante un link de un solo uso. Todos los campos son opcionales.
+      type: object
+      properties:
+        names:
+          type: string
+          description: Nombres del académico
+          minLength: 1
+          maxLength: 255
+          example: Juan Carlos
+        paternalSurname:
+          type: string
+          description: Apellido paterno
+          minLength: 1
+          maxLength: 255
+          example: López
+        maternalSurname:
+          type: string
+          description: Apellido materno
+          minLength: 1
+          maxLength: 255
+          example: Martínez
+        orcid:
+          type: string
+          description: >
+            ORCID ID como URL completa: https://orcid.org/XXXX-XXXX-XXXX-XXXX
+          nullable: true
+          pattern: '^https://orcid\.org/\d{4}-\d{4}-\d{4}-\d{3}[\dX]$'
+          example: "https://orcid.org/0000-0002-1234-5678"
+        sex:
+          $ref: "#/components/schemas/Sex"
+        birthDate:
+          type: string
+          format: date
+          description: "Fecha de nacimiento (no puede ser futura)"
+          example: "1980-03-15"
+        nationalityCode:
+          type: string
+          description: Código ISO 3166-1 alpha-2 del país de nacionalidad
+          minLength: 2
+          maxLength: 2
+          example: CL
+        city:
+          type: string
+          description: Ciudad de residencia
+          minLength: 1
+          maxLength: 255
+          example: Temuco
+
+    # ==========================================================================
+    # TOKEN DTOs
+    # ==========================================================================
+    ValidateTokenDto:
+      description: Token de un solo uso para validación de perfil
+      type: object
+      required:
+        - token
+      properties:
+        token:
+          type: string
+          description: Token de un solo uso
+          minLength: 1
+          example: a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8
+
+    ProfileUpdateRequestDto:
+      description: Código de autorización para solicitar actualización de perfil
+      type: object
+      required:
+        - code
+      properties:
+        code:
+          type: string
+          description: Código de autorización
+          minLength: 1
+          example: "A1B2C3D4"
+
+    SyncByTokenDto:
+      description: Token de un solo uso para sincronización de obras
+      type: object
+      required:
+        - token
+      properties:
+        token:
+          type: string
+          description: Token de un solo uso
+          example: a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8
+
+    CombinedSelfUpdateDto:
+      description: >
+        Token de un solo uso junto con los datos a actualizar del perfil.
+      type: object
+      required:
+        - token
+        - data
+      properties:
+        token:
+          type: string
+          description: Token de un solo uso
+          minLength: 1
+          example: a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8
+        data:
+          $ref: "#/components/schemas/SelfUpdateAcademicDto"
+
+    # ==========================================================================
     # IMPORT RESULT
     # ==========================================================================
     ImportResult:
@@ -1043,12 +1851,17 @@ components:
       type: object
       required:
         - imported
+        - updated
         - errors
       properties:
         imported:
           type: integer
           description: Cantidad de académicos importados exitosamente
           example: 95
+        updated:
+          type: integer
+          description: Cantidad de académicos actualizados exitosamente
+          example: 12
         errors:
           type: array
           description: Errores ocurridos durante la importación
@@ -1075,38 +1888,142 @@ components:
             - "Departamento 'Inexistente' no encontrado"
 
     # ==========================================================================
+    # SYNC RESULT VIEW (duplicado desde research para uso en academics)
+    # ==========================================================================
+    SyncResultView:
+      description: Resumen del resultado de la sincronización de obras
+      type: object
+      required:
+        - academicId
+        - orcidWorks
+        - worksWithoutDoi
+        - notFoundInOpenalex
+        - worksCreated
+        - authorshipsInserted
+        - authorshipsUnlinked
+        - topicsLinked
+        - keywordsLinked
+        - errors
+      properties:
+        academicId:
+          type: string
+          format: uuid
+          description: UUID del académico sincronizado
+          example: e5f6a7b8-c9d0-1234-ef56-789012345678
+        orcidWorks:
+          type: integer
+          description: Cantidad de obras encontradas en ORCID
+          example: 24
+        worksWithoutDoi:
+          type: integer
+          description: Obras sin DOI (no buscadas en OpenAlex)
+          example: 2
+        notFoundInOpenalex:
+          type: integer
+          description: Obras no encontradas en OpenAlex
+          example: 1
+        worksCreated:
+          type: integer
+          description: Obras creadas en el sistema
+          example: 21
+        authorshipsInserted:
+          type: integer
+          description: Autorías insertadas
+          example: 21
+        authorshipsUnlinked:
+          type: integer
+          description: Autorías desvinculadas
+          example: 0
+        topicsLinked:
+          type: integer
+          description: Tópicos vinculados
+          example: 18
+        keywordsLinked:
+          type: integer
+          description: Palabras clave vinculadas
+          example: 15
+        errors:
+          type: array
+          description: Errores ocurridos durante la sincronización
+          items:
+            type: string
+
+    # ==========================================================================
+    # COMMON RESPONSE ENVELOPE
+    # ==========================================================================
+    ApiResponse:
+      description: Envelope estándar de respuesta del API
+      type: object
+      required:
+        - success
+        - code
+        - message
+        - timestamp
+      properties:
+        success:
+          type: boolean
+          description: Indica si la operación fue exitosa
+          example: true
+        code:
+          type: integer
+          description: Código de estado HTTP
+          example: 200
+        message:
+          type: string
+          description: Mensaje descriptivo de la operación
+          example: "OK"
+        timestamp:
+          type: string
+          format: date-time
+          description: Marca de tiempo de la respuesta (RFC3339)
+          example: "2026-06-21T18:45:00Z"
+
+    # ==========================================================================
     # COMMON ERROR SCHEMAS
     # ==========================================================================
     ErrorResponse:
       description: Error estándar del API
       type: object
       required:
-        - status
+        - success
+        - code
         - message
-        - error
+        - timestamp
       properties:
-        status:
+        success:
+          type: boolean
+          example: false
+        code:
           type: integer
           description: Código de estado HTTP
           example: 404
         message:
           type: string
           description: Mensaje descriptivo del error
-          example: "Categoría académica no encontrada"
-        error:
+          example: "Académico no encontrado"
+        timestamp:
           type: string
-          description: Tipo de error
+          format: date-time
+          description: Marca de tiempo de la respuesta (RFC3339)
+          example: "2026-06-21T18:45:00Z"
+        error:
+          description: Detalle adicional del error (opcional)
           example: "Not Found"
 
     ValidationError:
       description: Error de validación en los datos de entrada
       type: object
       required:
-        - status
+        - success
+        - code
         - message
+        - timestamp
         - errors
       properties:
-        status:
+        success:
+          type: boolean
+          example: false
+        code:
           type: integer
           description: Código de estado HTTP
           example: 400
@@ -1114,17 +2031,27 @@ components:
           type: string
           description: Mensaje de error general
           example: "Validation error"
+        timestamp:
+          type: string
+          format: date-time
+          description: Marca de tiempo de la respuesta (RFC3339)
+          example: "2026-06-21T18:45:00Z"
         errors:
-          type: array
-          description: Lista de errores de validación por campo
-          items:
-            type: object
-            properties:
-              field:
-                type: string
-                description: Nombre del campo con error
-                example: rut
-              message:
-                type: string
-                description: Descripción del error de validación
-                example: "El RUT debe tener el formato XXXXXXXX-X"
+          type: object
+          description: Errores de validación agrupados por campo
+          additionalProperties:
+            type: array
+            items:
+              type: object
+              required:
+                - code
+                - message
+              properties:
+                code:
+                  type: string
+                  description: Código del error de validación
+                  example: regex
+                message:
+                  type: string
+                  description: Descripción del error de validación
+                  example: "El RUT debe tener el formato XXXXXXXX-X"

@@ -12,6 +12,10 @@ info:
     La autenticación se realiza mediante cookies HTTP-only con JWT.
     El access token (`ACAD_MGR_ACCESS_TOKEN`) tiene corta duración y se renueva
     mediante el refresh token (`ACAD_MGR_REFRESH_TOKEN`).
+
+    Todos los responses del API usan un envelope estándar:
+    `{ success, code, message, timestamp, data? }`. En este módulo los tokens
+    **no** viajan en el cuerpo: se almacenan en cookies HTTP-only.
   version: "0.1.0"
 
 servers:
@@ -34,9 +38,9 @@ paths:
         - Autenticación
       summary: Iniciar sesión
       description: >
-        Autentica un usuario con email y contraseña.
-        Retorna los datos del usuario junto con un access token y refresh token.
-        Los tokens se almacenan automáticamente en cookies HTTP-only.
+        Autentica un usuario con email y contraseña. Retorna los datos del
+        usuario en el cuerpo; el access token y refresh token se almacenan
+        automáticamente en cookies HTTP-only.
       operationId: login
       requestBody:
         required: true
@@ -50,10 +54,17 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/LoginResponse"
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/UserView"
           headers:
             Set-Cookie:
-              description: Cookies ACAD_MGR_ACCESS_TOKEN y ACAD_MGR_REFRESH_TOKEN
+              description: >
+                Cookies `ACAD_MGR_ACCESS_TOKEN` (JWT de acceso, corto plazo)
+                y `ACAD_MGR_REFRESH_TOKEN` (JWT de renovación, largo plazo).
               schema:
                 type: string
         "400":
@@ -62,6 +73,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ValidationError"
+        "401":
+          description: Credenciales inválidas
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
       security: []
 
   # ============================================================================
@@ -74,8 +91,8 @@ paths:
       summary: Renovar access token
       description: >
         Renueva el access token utilizando el refresh token almacenado en la
-        cookie `ACAD_MGR_REFRESH_TOKEN`. Retorna un nuevo access token y lo
-        actualiza en la cookie correspondiente.
+        cookie `ACAD_MGR_REFRESH_TOKEN`. Actualiza la cookie de acceso.
+        El cuerpo de la respuesta no contiene datos (el nuevo token va en la cookie).
       operationId: refresh
       responses:
         "200":
@@ -83,7 +100,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/RefreshResponse"
+                $ref: "#/components/schemas/ApiResponse"
           headers:
             Set-Cookie:
               description: Cookie ACAD_MGR_ACCESS_TOKEN actualizada
@@ -115,11 +132,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "Sesión cerrada correctamente"
+                $ref: "#/components/schemas/ApiResponse"
         "401":
           description: No autorizado (token inválido o sesión expirada)
           content:
@@ -162,9 +175,14 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/UserView"
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/UserView"
         "401":
           description: No autorizado
           content:
@@ -194,23 +212,196 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/UserView"
-        "409":
-          description: El email ya está registrado
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-              example:
-                status: 409
-                message: "El email ya está registrado"
-                error: "Conflict"
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/UserView"
         "400":
           description: Error de validación en los datos de entrada
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ValidationError"
+        "409":
+          description: El email ya está registrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - CookieAuth: []
+
+  # ============================================================================
+  # USERS - GET BY ID
+  # ============================================================================
+  /users/{id}:
+    get:
+      tags:
+        - Usuarios
+      summary: Obtener usuario por ID
+      description: Obtiene un usuario específico mediante su UUID.
+      operationId: getUser
+      parameters:
+        - name: id
+          in: path
+          description: UUID del usuario
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+      responses:
+        "200":
+          description: Usuario encontrado
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/UserView"
+        "401":
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Usuario no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - CookieAuth: []
+
+    put:
+      tags:
+        - Usuarios
+      summary: Actualizar usuario
+      description: >
+        Actualiza parcialmente un usuario. Todos los campos son opcionales;
+        solo se actualizan los campos proporcionados. Si se envía `password`,
+        debe cumplir con los requisitos de seguridad mínimos.
+      operationId: updateUser
+      parameters:
+        - name: id
+          in: path
+          description: UUID del usuario
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUserDto"
+      responses:
+        "200":
+          description: Usuario actualizado exitosamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/UserView"
+        "400":
+          description: Error de validación en los datos de entrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+        "404":
+          description: Usuario no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: El email ya está registrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - CookieAuth: []
+
+    delete:
+      tags:
+        - Usuarios
+      summary: Eliminar usuario
+      description: Elimina un usuario del sistema.
+      operationId: deleteUser
+      parameters:
+        - name: id
+          in: path
+          description: UUID del usuario
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+      responses:
+        "200":
+          description: Usuario eliminado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+        "401":
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Usuario no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - CookieAuth: []
+
+  # ============================================================================
+  # USERS - ME
+  # ============================================================================
+  /users/me:
+    get:
+      tags:
+        - Usuarios
+      summary: Obtener usuario actual
+      description: >
+        Obtiene los datos del usuario autenticado mediante su sesión activa.
+      operationId: getMe
+      responses:
+        "200":
+          description: Datos del usuario autenticado
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/UserView"
+        "401":
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
       security:
         - CookieAuth: []
 
@@ -278,68 +469,17 @@ components:
       properties:
         email:
           type: string
-          format: email
           description: Correo electrónico del usuario
+          minLength: 1
+          maxLength: 255
           example: admin@example.com
         password:
           type: string
           format: password
           description: Contraseña del usuario
+          minLength: 1
+          maxLength: 255
           example: "MyStr0ng!Pass"
-
-    # ==========================================================================
-    # LOGIN RESPONSE
-    # ==========================================================================
-    LoginResponse:
-      description: Respuesta de inicio de sesión exitoso
-      type: object
-      required:
-        - user
-        - accessToken
-        - accessTokenExp
-        - refreshToken
-        - refreshTokenExp
-      properties:
-        user:
-          $ref: "#/components/schemas/UserView"
-        accessToken:
-          type: string
-          description: JWT de acceso (corto plazo)
-          example: eyJhbGciOiJIUzI1NiIs...
-        accessTokenExp:
-          type: string
-          format: date-time
-          description: Fecha de expiración del access token
-          example: "2026-06-21T19:00:00Z"
-        refreshToken:
-          type: string
-          description: JWT de renovación (largo plazo)
-          example: eyJhbGciOiJIUzI1NiIs...
-        refreshTokenExp:
-          type: string
-          format: date-time
-          description: Fecha de expiración del refresh token
-          example: "2026-07-21T18:00:00Z"
-
-    # ==========================================================================
-    # REFRESH RESPONSE
-    # ==========================================================================
-    RefreshResponse:
-      description: Respuesta de renovación de token
-      type: object
-      required:
-        - accessToken
-        - accessTokenExp
-      properties:
-        accessToken:
-          type: string
-          description: Nuevo JWT de acceso
-          example: eyJhbGciOiJIUzI1NiIs...
-        accessTokenExp:
-          type: string
-          format: date-time
-          description: Nueva fecha de expiración
-          example: "2026-06-21T19:30:00Z"
 
     # ==========================================================================
     # CREATE USER DTO
@@ -377,17 +517,83 @@ components:
           $ref: "#/components/schemas/UserRole"
 
     # ==========================================================================
+    # UPDATE USER DTO
+    # ==========================================================================
+    UpdateUserDto:
+      description: >
+        Datos de entrada para actualizar un usuario. Todos los campos son
+        opcionales; solo se actualizan los campos proporcionados.
+      type: object
+      properties:
+        name:
+          type: string
+          description: Nombre completo del usuario
+          minLength: 1
+          maxLength: 255
+          example: Nuevo Nombre
+        email:
+          type: string
+          format: email
+          description: Correo electrónico del usuario
+          example: nuevo@example.com
+        role:
+          $ref: "#/components/schemas/UserRole"
+        password:
+          type: string
+          format: password
+          description: >
+            Nueva contraseña. Debe tener al menos 8 caracteres, incluyendo
+            una mayúscula, una minúscula, un número y un carácter especial.
+          minLength: 8
+          maxLength: 255
+          example: "MyStr0ng!Pass"
+
+    # ==========================================================================
+    # COMMON RESPONSE ENVELOPE
+    # ==========================================================================
+    ApiResponse:
+      description: Envelope estándar de respuesta del API
+      type: object
+      required:
+        - success
+        - code
+        - message
+        - timestamp
+      properties:
+        success:
+          type: boolean
+          description: Indica si la operación fue exitosa
+          example: true
+        code:
+          type: integer
+          description: Código de estado HTTP
+          example: 200
+        message:
+          type: string
+          description: Mensaje descriptivo de la operación
+          example: "OK"
+        timestamp:
+          type: string
+          format: date-time
+          description: Marca de tiempo de la respuesta (RFC3339)
+          example: "2026-06-21T18:45:00Z"
+
+    # ==========================================================================
     # COMMON ERROR SCHEMAS
     # ==========================================================================
     ErrorResponse:
       description: Error estándar del API
       type: object
       required:
-        - status
+        - success
+        - code
         - message
-        - error
+        - timestamp
       properties:
-        status:
+        success:
+          type: boolean
+          example: false
+        code:
           type: integer
           description: Código de estado HTTP
           example: 401
@@ -395,20 +601,29 @@ components:
           type: string
           description: Mensaje descriptivo del error
           example: "Las credenciales de acceso son inválidas"
-        error:
+        timestamp:
           type: string
-          description: Tipo de error
-          example: "Unauthorized"
+          format: date-time
+          description: Marca de tiempo de la respuesta (RFC3339)
+          example: "2026-06-21T18:45:00Z"
+        error:
+          description: Detalle adicional del error (opcional)
+          example: "Invalid credentials"
 
     ValidationError:
       description: Error de validación en los datos de entrada
       type: object
       required:
-        - status
+        - success
+        - code
         - message
+        - timestamp
         - errors
       properties:
-        status:
+        success:
+          type: boolean
+          example: false
+        code:
           type: integer
           description: Código de estado HTTP
           example: 400
@@ -416,17 +631,31 @@ components:
           type: string
           description: Mensaje de error general
           example: "Validation error"
+        timestamp:
+          type: string
+          format: date-time
+          description: Marca de tiempo de la respuesta (RFC3339)
+          example: "2026-06-21T18:45:00Z"
         errors:
-          type: array
-          description: Lista de errores de validación por campo
-          items:
-            type: object
-            properties:
-              field:
-                type: string
-                description: Nombre del campo con error
-                example: email
-              message:
-                type: string
-                description: Descripción del error de validación
-                example: "El atributo 'email' debe ser un correo electrónico válido"
+          type: object
+          description: Errores de validación agrupados por campo
+          additionalProperties:
+            type: array
+            items:
+              type: object
+              required:
+                - code
+                - message
+              properties:
+                code:
+                  type: string
+                  description: Código del error de validación
+                  example: invalid
+                message:
+                  type: string
+                  description: Descripción del error de validación
+                  example: "El atributo 'email' debe ser un correo electrónico válido"
+          example:
+            email:
+              - code: invalid
+                message: "El atributo 'email' debe ser un correo electrónico válido"

@@ -13,6 +13,9 @@ info:
 
     Los endpoints de listado soportan filtros opcionales mediante query parameters.
     Todos los IDs de tipo UUID se generan automáticamente en el servidor.
+
+    Todos los responses del API usan un envelope estándar:
+    `{ success, code, message, timestamp, data? }`.
   version: "0.1.0"
 
 servers:
@@ -57,9 +60,22 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Faculty"
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Faculty"
+        "401":
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - CookieAuth: []
 
     post:
       tags:
@@ -79,13 +95,24 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Faculty"
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/Faculty"
         "400":
           description: Error de validación en los datos de entrada
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ValidationError"
+        "401":
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
       security:
         - CookieAuth: []
 
@@ -111,17 +138,26 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Faculty"
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/Faculty"
+        "401":
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         "404":
           description: Facultad no encontrada
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-              example:
-                status: 404
-                message: "Faculty not found"
-                error: "Not Found"
+      security:
+        - CookieAuth: []
 
   # ============================================================================
   # DEPARTMENTS
@@ -157,9 +193,14 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Department"
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Department"
 
     post:
       tags:
@@ -179,13 +220,24 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Department"
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/Department"
         "400":
           description: Error de validación en los datos de entrada
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ValidationError"
+        "401":
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
       security:
         - CookieAuth: []
 
@@ -211,7 +263,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Department"
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/Department"
         "404":
           description: Departamento no encontrado
           content:
@@ -253,9 +310,14 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Career"
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Career"
 
     post:
       tags:
@@ -275,13 +337,24 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Career"
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/Career"
         "400":
           description: Error de validación en los datos de entrada
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ValidationError"
+        "401":
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
       security:
         - CookieAuth: []
 
@@ -307,7 +380,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Career"
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/Career"
         "404":
           description: Carrera no encontrada
           content:
@@ -325,7 +403,7 @@ paths:
       summary: Listar cargos laborales
       description: >
         Obtiene un listado de todos los cargos laborales académicos.
-        Soporta filtros opcionales por código y/o nombre.
+        Soporta filtro opcional por nombre.
       operationId: listWorkPositions
       parameters:
         - name: name
@@ -342,9 +420,22 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/AcademicWorkPosition"
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/AcademicWorkPosition"
+        "401":
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - CookieAuth: []
 
     post:
       tags:
@@ -364,45 +455,26 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AcademicWorkPosition"
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/AcademicWorkPosition"
         "400":
           description: Error de validación en los datos de entrada
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ValidationError"
-      security:
-        - CookieAuth: []
-
-  /work-positions/{id}:
-    get:
-      tags:
-        - Cargos Laborales
-      summary: Obtener cargo laboral por ID
-      description: Obtiene un cargo laboral específico mediante su UUID.
-      operationId: getWorkPosition
-      parameters:
-        - name: id
-          in: path
-          description: UUID del cargo laboral
-          required: true
-          schema:
-            type: string
-            format: uuid
-          example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
-      responses:
-        "200":
-          description: Cargo laboral encontrado
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/AcademicWorkPosition"
-        "404":
-          description: Cargo laboral no encontrado
+        "401":
+          description: No autorizado
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - CookieAuth: []
 
 components:
   securitySchemes:
@@ -580,17 +652,51 @@ components:
           example: Jefe(a) de Carrera
 
     # ==========================================================================
+    # COMMON RESPONSE ENVELOPE
+    # ==========================================================================
+    ApiResponse:
+      description: Envelope estándar de respuesta del API
+      type: object
+      required:
+        - success
+        - code
+        - message
+        - timestamp
+      properties:
+        success:
+          type: boolean
+          description: Indica si la operación fue exitosa
+          example: true
+        code:
+          type: integer
+          description: Código de estado HTTP
+          example: 200
+        message:
+          type: string
+          description: Mensaje descriptivo de la operación
+          example: "OK"
+        timestamp:
+          type: string
+          format: date-time
+          description: Marca de tiempo de la respuesta (RFC3339)
+          example: "2026-06-21T18:45:00Z"
+
+    # ==========================================================================
     # COMMON ERROR SCHEMAS
     # ==========================================================================
     ErrorResponse:
       description: Error estándar del API
       type: object
       required:
-        - status
+        - success
+        - code
         - message
-        - error
+        - timestamp
       properties:
-        status:
+        success:
+          type: boolean
+          example: false
+        code:
           type: integer
           description: Código de estado HTTP
           example: 404
@@ -598,20 +704,29 @@ components:
           type: string
           description: Mensaje descriptivo del error
           example: "Career not found"
-        error:
+        timestamp:
           type: string
-          description: Tipo de error
+          format: date-time
+          description: Marca de tiempo de la respuesta (RFC3339)
+          example: "2026-06-21T18:45:00Z"
+        error:
+          description: Detalle adicional del error (opcional)
           example: "Not Found"
 
     ValidationError:
       description: Error de validación en los datos de entrada
       type: object
       required:
-        - status
+        - success
+        - code
         - message
+        - timestamp
         - errors
       properties:
-        status:
+        success:
+          type: boolean
+          example: false
+        code:
           type: integer
           description: Código de estado HTTP
           example: 400
@@ -619,17 +734,27 @@ components:
           type: string
           description: Mensaje de error general
           example: "Validation error"
+        timestamp:
+          type: string
+          format: date-time
+          description: Marca de tiempo de la respuesta (RFC3339)
+          example: "2026-06-21T18:45:00Z"
         errors:
-          type: array
-          description: Lista de errores de validación por campo
-          items:
-            type: object
-            properties:
-              field:
-                type: string
-                description: Nombre del campo con error
-                example: name
-              message:
-                type: string
-                description: Descripción del error de validación
-                example: "El nombre de la carrera debe tener entre 1 y 255 caracteres"
+          type: object
+          description: Errores de validación agrupados por campo
+          additionalProperties:
+            type: array
+            items:
+              type: object
+              required:
+                - code
+                - message
+              properties:
+                code:
+                  type: string
+                  description: Código del error de validación
+                  example: length
+                message:
+                  type: string
+                  description: Descripción del error de validación
+                  example: "El nombre de la carrera debe tener entre 1 y 255 caracteres"

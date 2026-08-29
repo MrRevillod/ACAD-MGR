@@ -1,0 +1,239 @@
+openapi: "3.0.3"
+
+info:
+  title: "ORCID ACAD MGR API - Config Module"
+  description: |
+    API para la gestión de la configuración global del sistema.
+
+    Proporciona operaciones de:
+      - **Configuración** (`/config`)
+
+    Todos los responses del API usan un envelope estándar:
+    `{ success, code, message, timestamp, data? }`.
+  version: "0.1.0"
+
+servers:
+  - url: /api
+    description: API Gateway
+
+tags:
+  - name: Configuración
+    description: Gestión de la configuración global del sistema
+
+paths:
+  /config:
+    get:
+      tags:
+        - Configuración
+      summary: Obtener configuración
+      description: Obtiene la configuración global actual del sistema.
+      operationId: getConfig
+      responses:
+        "200":
+          description: Configuración obtenida exitosamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/AppConfigResponse"
+        "401":
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - CookieAuth: []
+
+    patch:
+      tags:
+        - Configuración
+      summary: Actualizar configuración
+      description: >
+        Actualiza la configuración global del sistema. Solo se actualizan
+        los campos proporcionados.
+      operationId: updateConfig
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateAppConfigDto"
+      responses:
+        "200":
+          description: Configuración actualizada exitosamente
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/AppConfigResponse"
+        "400":
+          description: Error de validación en los datos de entrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+        "401":
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+        - CookieAuth: []
+
+components:
+  securitySchemes:
+    CookieAuth:
+      type: apiKey
+      in: cookie
+      name: ACAD_MGR_ACCESS_TOKEN
+      description: >
+        Cookie HTTP-only que contiene el JWT de acceso.
+        Se obtiene automáticamente al iniciar sesión.
+
+  schemas:
+    # ==========================================================================
+    # APP CONFIG
+    # ==========================================================================
+    AppConfigResponse:
+      description: Configuración global del sistema
+      type: object
+      required:
+        - jceMax
+      properties:
+        jceMax:
+          type: number
+          format: double
+          description: Valor máximo permitido para la jornada (JCE)
+          minimum: 1.0
+          example: 1.0
+
+    UpdateAppConfigDto:
+      description: Datos de entrada para actualizar la configuración global
+      type: object
+      required:
+        - jceMax
+      properties:
+        jceMax:
+          type: number
+          format: double
+          description: Valor máximo permitido para la jornada (JCE)
+          minimum: 1.0
+          example: 1.0
+
+    # ==========================================================================
+    # COMMON RESPONSE ENVELOPE
+    # ==========================================================================
+    ApiResponse:
+      description: Envelope estándar de respuesta del API
+      type: object
+      required:
+        - success
+        - code
+        - message
+        - timestamp
+      properties:
+        success:
+          type: boolean
+          description: Indica si la operación fue exitosa
+          example: true
+        code:
+          type: integer
+          description: Código de estado HTTP
+          example: 200
+        message:
+          type: string
+          description: Mensaje descriptivo de la operación
+          example: "OK"
+        timestamp:
+          type: string
+          format: date-time
+          description: Marca de tiempo de la respuesta (RFC3339)
+          example: "2026-06-21T18:45:00Z"
+
+    # ==========================================================================
+    # COMMON ERROR SCHEMAS
+    # ==========================================================================
+    ErrorResponse:
+      description: Error estándar del API
+      type: object
+      required:
+        - success
+        - code
+        - message
+        - timestamp
+      properties:
+        success:
+          type: boolean
+          example: false
+        code:
+          type: integer
+          description: Código de estado HTTP
+          example: 401
+        message:
+          type: string
+          description: Mensaje descriptivo del error
+          example: "Unauthorized"
+        timestamp:
+          type: string
+          format: date-time
+          description: Marca de tiempo de la respuesta (RFC3339)
+          example: "2026-06-21T18:45:00Z"
+        error:
+          description: Detalle adicional del error (opcional)
+          example: "Unauthorized"
+
+    ValidationError:
+      description: Error de validación en los datos de entrada
+      type: object
+      required:
+        - success
+        - code
+        - message
+        - timestamp
+        - errors
+      properties:
+        success:
+          type: boolean
+          example: false
+        code:
+          type: integer
+          description: Código de estado HTTP
+          example: 400
+        message:
+          type: string
+          description: Mensaje de error general
+          example: "Validation error"
+        timestamp:
+          type: string
+          format: date-time
+          description: Marca de tiempo de la respuesta (RFC3339)
+          example: "2026-06-21T18:45:00Z"
+        errors:
+          type: object
+          description: Errores de validación agrupados por campo
+          additionalProperties:
+            type: array
+            items:
+              type: object
+              required:
+                - code
+                - message
+              properties:
+                code:
+                  type: string
+                  description: Código del error de validación
+                  example: range
+                message:
+                  type: string
+                  description: Descripción del error de validación
+                  example: "El valor máximo de JCE debe ser mayor que 0"

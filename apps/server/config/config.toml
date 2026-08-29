@@ -12,7 +12,7 @@ router-prefix = "/api"
 title = "ORCID ACAD MGR API"
 version = "0.1.0"
 description = "API documentation for the ORCID ACAD MGR Server"
-spec-file-paths = ["docs/university.yaml", "docs/academic.yaml", "docs/auth.yaml"]
+spec-file-paths = ["docs/university.yaml", "docs/academic.yaml", "docs/auth.yaml", "docs/config.yaml", "docs/research.yaml"]
 
 [postgres-db]
 user = "${POSTGRES_USER}"
