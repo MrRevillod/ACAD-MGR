@@ -116,10 +116,12 @@ export interface ResearchLineStatsResponse {
 
 export type ProductivityDegree = "all" | "magister" | "doctor"
 export type ProductivityScope = "faculty" | "department" | "researchLine"
+export type ProductivityJceScope = "doctor" | "all"
 
 export interface ProductivityQuery {
 	degree?: ProductivityDegree
 	scope?: ProductivityScope
+	jceScope?: ProductivityJceScope
 	departmentId?: string
 	researchLineId?: string
 	month?: number
@@ -130,6 +132,7 @@ export interface ProductivityQuery {
 export interface ProductivityYearValue {
 	year: number
 	value: number
+	pubs: number
 }
 
 export interface ProductivitySeries {
@@ -139,5 +142,6 @@ export interface ProductivitySeries {
 
 export interface ProductivityResponse {
 	jce: number
+	academicCount: number
 	trend: ProductivitySeries[]
 }

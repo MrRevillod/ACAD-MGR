@@ -3,19 +3,18 @@
 
 	import { ArrowRight, Building2, ChartBar, Gauge, Info, Layers } from "@lucide/svelte"
 
-	import { degreePhrases } from "../productivity-labels"
+	import { buildProductivityDescription } from "../productivity-labels"
 	import { withScopeColors } from "./scope-colors"
 	import BarsList from "./bars-list.svelte"
 	import IndexationToggle from "./indexation-toggle.svelte"
 	import MultiTrend from "./multi-trend.svelte"
-	import ProductivityChart from "./productivity-chart.svelte"
-	import ProductivityFilters from "./productivity-filters.svelte"
 	import ProductivityHelpDialog from "./productivity-help-dialog.svelte"
+	import ProductivityPanel from "./productivity-panel.svelte"
 	import StatsSection from "./stats-section.svelte"
 	import TrendLine from "./trend-line.svelte"
 
-	import type { ProductivityDegree } from "../dtos"
-	import type { ProductivitySectionProps } from "./productivity-chart.svelte"
+	import type { ProductivityDegree, ProductivityJceScope } from "../dtos"
+	import type { ProductivitySectionProps } from "../productivity-labels"
 
 	interface Props {
 		data: WorksStatsResponse
@@ -31,12 +30,16 @@
 		return productivity.degree
 	}
 
-	let selectedDegree = $state<string>(initialDegree())
-	let month = $state("1")
-	let indexation = $state<"all" | "wos" | "scopus">("all")
+	let selectedDegree = $state<ProductivityDegree>(initialDegree())
+
+	function initialJceScope() {
+		return productivity.jceScope ?? "doctor"
+	}
+
+	let selectedJceScope = $state<ProductivityJceScope>(initialJceScope())
 
 	const productivityDescription = $derived(
-		`${degreePhrases[selectedDegree as ProductivityDegree]} ÷ Σ JCE (Doctor) ${productivity.denominator}, por año.`,
+		buildProductivityDescription(selectedDegree, selectedJceScope, productivity.denominator),
 	)
 
 	let showProductivityInfo = $state(false)
@@ -103,7 +106,7 @@
 		action={deptToggleAction}
 		description="Total de publicaciones por departamento en el rango seleccionado. Usa el selector para comparar la tendencia entre WoS y Scopus."
 	>
-		<div class="grid grid-cols-1 items-start gap-8 lg:grid-cols-[320px_1fr]">
+		<div class="grid grid-cols-1 items-center gap-8 lg:grid-cols-[320px_1fr]">
 			<BarsList data={departments} hrefFor={deptHref} />
 			<MultiTrend items={departments} bind:kind={deptKind} />
 		</div>
@@ -117,7 +120,7 @@
 		action={lineToggleAction}
 		description="Total de publicaciones por línea de investigación en el rango seleccionado. Usa el selector para comparar la tendencia entre WoS y Scopus."
 	>
-		<div class="grid grid-cols-1 items-start gap-8 lg:grid-cols-[320px_1fr]">
+		<div class="grid grid-cols-1 items-center gap-8 lg:grid-cols-[320px_1fr]">
 			<BarsList data={lines} hrefFor={lineHref} />
 			<MultiTrend items={lines} bind:kind={lineKind} />
 		</div>
@@ -131,19 +134,15 @@
 		barAction={productivityInfoAction}
 		description={productivityDescription}
 	>
-		<div class="grid grid-cols-1 items-start gap-8 lg:grid-cols-[20%_1fr]">
-			<ProductivityFilters bind:degree={selectedDegree} bind:month bind:indexation />
-			<ProductivityChart
-				degree={selectedDegree as ProductivityDegree}
-				scope={productivity.scope}
-				departmentId={productivity.departmentId}
-				researchLineId={productivity.researchLineId}
-				month={Number(month)}
-				yearFrom={productivity.yearFrom}
-				yearTo={productivity.yearTo}
-				{indexation}
-			/>
-		</div>
+		<ProductivityPanel
+			bind:degree={selectedDegree}
+			bind:jceScope={selectedJceScope}
+			scope={productivity.scope}
+			departmentId={productivity.departmentId}
+			researchLineId={productivity.researchLineId}
+			yearFrom={productivity.yearFrom}
+			yearTo={productivity.yearTo}
+		/>
 	</StatsSection>
 </div>
 

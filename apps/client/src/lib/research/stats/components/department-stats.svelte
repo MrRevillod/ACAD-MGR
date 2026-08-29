@@ -3,16 +3,15 @@
 
 	import { ChartBar, Gauge, Info, Trophy } from "@lucide/svelte"
 
-	import { degreePhrases } from "../productivity-labels"
-	import ProductivityChart from "./productivity-chart.svelte"
-	import ProductivityFilters from "./productivity-filters.svelte"
+	import { buildProductivityDescription } from "../productivity-labels"
 	import ProductivityHelpDialog from "./productivity-help-dialog.svelte"
+	import ProductivityPanel from "./productivity-panel.svelte"
 	import StatsSection from "./stats-section.svelte"
 	import TopPublishersTable from "./top-publishers-table.svelte"
 	import TrendLine from "./trend-line.svelte"
 
-	import type { ProductivityDegree } from "../dtos"
-	import type { ProductivitySectionProps } from "./productivity-chart.svelte"
+	import type { ProductivityDegree, ProductivityJceScope } from "../dtos"
+	import type { ProductivitySectionProps } from "../productivity-labels"
 
 	interface Props {
 		data: DepartmentDetail
@@ -26,14 +25,17 @@
 		return productivity.degree
 	}
 
-	let selectedDegree = $state<string>(initialDegree())
-	let month = $state("1")
+	let selectedDegree = $state<ProductivityDegree>(initialDegree())
+
+	function initialJceScope() {
+		return productivity.jceScope ?? "doctor"
+	}
+
+	let selectedJceScope = $state<ProductivityJceScope>(initialJceScope())
 
 	const productivityDescription = $derived(
-		`${degreePhrases[selectedDegree as ProductivityDegree]} ÷ Σ JCE (Doctor) ${productivity.denominator}, por año.`,
+		buildProductivityDescription(selectedDegree, selectedJceScope, productivity.denominator),
 	)
-
-	let indexation = $state<"all" | "wos" | "scopus">("all")
 
 	let showProductivityInfo = $state(false)
 
@@ -43,7 +45,7 @@
 {#snippet departmentInfoAction()}
 	<button
 		type="button"
-		class="flex size-9 shrink-0 items-center justify-center rounded-lg text-corp-gray transition-colors hover:bg-corp-gray/5 hover:text-corp-ink"
+		class="flex size-10 shrink-0 items-center justify-center rounded-lg text-corp-gray transition-colors hover:bg-corp-gray/5 hover:text-corp-ink"
 		title="Cómo se calcula este indicador"
 		aria-label="Cómo se calcula este indicador"
 		onclick={() => (showProductivityInfo = true)}
@@ -126,19 +128,15 @@
 			barAction={departmentInfoAction}
 			description={productivityDescription}
 		>
-			<div class="grid grid-cols-1 items-start gap-8 lg:grid-cols-[20%_1fr]">
-				<ProductivityFilters bind:degree={selectedDegree} bind:month bind:indexation />
-				<ProductivityChart
-					degree={selectedDegree as ProductivityDegree}
-					scope={productivity.scope}
-					departmentId={productivity.departmentId}
-					researchLineId={productivity.researchLineId}
-					month={Number(month)}
-					yearFrom={productivity.yearFrom}
-					yearTo={productivity.yearTo}
-					{indexation}
-				/>
-			</div>
+			<ProductivityPanel
+				bind:degree={selectedDegree}
+				bind:jceScope={selectedJceScope}
+				scope={productivity.scope}
+				departmentId={productivity.departmentId}
+				researchLineId={productivity.researchLineId}
+				yearFrom={productivity.yearFrom}
+				yearTo={productivity.yearTo}
+			/>
 		</StatsSection>
 	</div>
 </div>

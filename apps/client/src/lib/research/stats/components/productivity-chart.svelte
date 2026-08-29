@@ -1,55 +1,19 @@
 <script lang="ts">
 	import { CircleAlert, Loader } from "@lucide/svelte"
-	import { LineChart } from "layerchart"
+	import { LineChart, Tooltip } from "layerchart"
 
-	import { useProductivityQuery } from "../queries"
-
-	import type { ProductivityIndexation } from "../productivity-labels"
-	import type { ProductivityDegree, ProductivityScope } from "../dtos"
-
-	export interface ProductivitySectionProps {
-		denominator: string
-		degree: ProductivityDegree
-		scope: ProductivityScope
-		departmentId?: string
-		researchLineId?: string
-		yearFrom: number
-		yearTo: number
-	}
+	import type { ProductivityResponse } from "../dtos"
+	import type { ProductivityIndexation, ProductivityPrecision } from "../productivity-labels"
 
 	export interface ProductivityChartProps {
-		degree: ProductivityDegree
-		scope: ProductivityScope
-		departmentId?: string
-		researchLineId?: string
-		month: number
-		yearFrom: number
-		yearTo: number
+		data?: ProductivityResponse
+		isPending: boolean
+		isError: boolean
 		indexation: ProductivityIndexation
+		precision: ProductivityPrecision
 	}
 
-	let {
-		degree,
-		scope,
-		departmentId,
-		researchLineId,
-		month,
-		yearFrom,
-		yearTo,
-		indexation,
-	}: ProductivityChartProps = $props()
-
-	const queryParams = $derived({
-		degree,
-		scope,
-		...(departmentId ? { departmentId } : {}),
-		...(researchLineId ? { researchLineId } : {}),
-		month,
-		yearFrom,
-		yearTo,
-	})
-
-	const productivity = useProductivityQuery(() => queryParams)
+	let { data, isPending, isError, indexation, precision }: ProductivityChartProps = $props()
 
 	const series = $derived.by(() => {
 		const key = { all: "total", wos: "wos", scopus: "scopus" }[indexation]
@@ -73,18 +37,17 @@
 	})
 
 	const allYears = $derived(
-		[
-			...new Set(
-				(productivity.data?.trend ?? []).flatMap((s) => s.values.map((v) => v.year)),
-			),
-		].sort((a, b) => a - b),
+		[...new Set((data?.trend ?? []).flatMap((s) => s.values.map((v) => v.year)))].sort(
+			(a, b) => a - b,
+		),
 	)
 
 	const wideData = $derived(
 		allYears.map((year) => {
 			const row: Record<string, number> = { year }
-			for (const s of productivity.data?.trend ?? []) {
+			for (const s of data?.trend ?? []) {
 				row[s.key] = s.values.find((v) => v.year === year)?.value ?? 0
+				row[`pubs_${s.key}`] = s.values.find((v) => v.year === year)?.pubs ?? 0
 			}
 			return row
 		}),
@@ -109,20 +72,38 @@
 
 	const yMax = $derived(yTicks[yTicks.length - 1] ?? 1)
 
-	const yTickFmt = $derived.by(() => {
-		const step = yTicks[1] - yTicks[0]
-		const decimals = step >= 1 ? 0 : Math.max(0, Math.ceil(-Math.log10(step) - 1e-9))
-		return (d: number) => d.toFixed(decimals)
+	const truncate = $derived.by(() => {
+		if (precision === "auto") {
+			return (d: number) => d
+		}
+		const f = 10 ** Number(precision)
+		return (d: number) => Math.trunc(d * f) / f
 	})
+
+	const yTickFmt = $derived.by(() => {
+		if (precision === "auto") {
+			const step = yTicks[1] - yTicks[0]
+			const decimals = step >= 1 ? 0 : Math.max(0, Math.ceil(-Math.log10(step) - 1e-9))
+			return (d: number) => d.toFixed(decimals)
+		}
+		const decimals = Number(precision)
+		return (d: number) => truncate(d).toFixed(decimals)
+	})
+
+	const valueFmt = $derived.by(() => {
+		if (precision === "auto") return (d: number) => String(d)
+		return (d: number) => truncate(d).toFixed(Number(precision))
+	})
+
 	const minYear = $derived(allYears[0] ?? 0)
 	const maxYear = $derived(allYears[allYears.length - 1] ?? 0)
 </script>
 
-{#if productivity.isPending}
+{#if isPending}
 	<div class="flex items-center justify-center py-16">
 		<Loader class="size-6 animate-spin text-corp-gray" />
 	</div>
-{:else if productivity.isError || !productivity.data}
+{:else if isError || !data}
 	<div class="flex flex-col items-center justify-center py-16 text-center">
 		<CircleAlert class="size-8 text-red-500" />
 		<p class="mt-3 text-sm text-corp-gray">Error al cargar la productividad.</p>
@@ -146,15 +127,45 @@
 			xAxis: { ticks: allYears.length, format: (d: number) => String(d) },
 			yAxis: { ticks: yTicks, format: yTickFmt },
 		}}
-	/>
-	<p class="mt-1 text-xs text-corp-gray">
-		{indexation === "all"
-			? "Publicaciones de todo el alcance ÷ Σ JCE (Doctor)."
-			: indexation === "wos"
-				? "Publicaciones indexadas en WoS ÷ Σ JCE (Doctor)."
-				: "Publicaciones indexadas en Scopus ÷ Σ JCE (Doctor)."}
-	</p>
-	<p class="mt-3 text-sm text-corp-gray">
-		Σ JCE (Doctor) del alcance: {productivity.data.jce} h.
-	</p>
+	>
+		{#snippet tooltip()}
+			<Tooltip.Root>
+				{#snippet children({ data: row })}
+					{@const s = series[0]}
+					{@const pubs = row[`pubs_${s.key}`] ?? 0}
+					{@const jce = data?.jce ?? 0}
+					<Tooltip.List>
+						<Tooltip.Item label={s.label} color={s.color} valueAlign="right">
+							<span class="inline-flex items-center gap-1.5">
+								<span class="flex flex-col items-center leading-none">
+									<span>{pubs} publicaciones</span>
+									<span class="my-0.5 w-7 grow border-t border-current"></span>
+									<span>{jce} horas de jornada</span>
+								</span>
+								<span class="text-corp-gray">
+									= {valueFmt(row[s.key])} pub. por hora
+								</span>
+							</span>
+						</Tooltip.Item>
+					</Tooltip.List>
+					<Tooltip.Header
+						value={row.year}
+						classes={{ root: "productivity-tooltip-year" }}
+					/>
+				{/snippet}
+			</Tooltip.Root>
+		{/snippet}
+	</LineChart>
 {/if}
+
+<style>
+	:global(.lc-tooltip-header.productivity-tooltip-year) {
+		border-bottom: none;
+		margin-bottom: 0;
+		padding-bottom: 0;
+		border-top: 1px solid
+			color-mix(in oklab, var(--color-surface-content, currentColor) 20%, transparent);
+		margin-top: 8px;
+		padding-top: 4px;
+	}
+</style>

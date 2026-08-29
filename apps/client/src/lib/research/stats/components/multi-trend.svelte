@@ -71,6 +71,7 @@
 			legend={false}
 			points={true}
 			props={{
+				tooltip: { header: { format: "none" } },
 				xAxis: { ticks: allYears.length, format: (d: number) => String(d) },
 				yAxis: { ticks: yTicks, format: (d: number) => String(d) },
 			}}

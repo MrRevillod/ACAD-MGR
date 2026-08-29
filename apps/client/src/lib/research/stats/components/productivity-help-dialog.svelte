@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Gauge, Percent, Sigma, SlidersHorizontal } from "@lucide/svelte"
+	import { Gauge, Sigma, SlidersHorizontal } from "@lucide/svelte"
 
 	import Dialog from "$shared/components/ui/dialog.svelte"
 
@@ -12,58 +12,33 @@
 
 <Dialog
 	bind:open
-	title="Indicador: Productividad por jornada completa"
-	description="Qué mide este gráfico y cómo leer sus valores y filtros."
+	title="Productividad por jornada completa (JCE)"
+	description="Qué muestra este gráfico y cómo se calcula."
 	class="max-w-2xl"
 >
 	<div class="space-y-5">
 		<section>
 			<h3 class="flex items-center gap-2 text-sm font-semibold text-[#1A1A1A]">
 				<Gauge class="size-4 text-corp-blue/60" />
-				Qué mide
+				Qué muestra este gráfico
 			</h3>
 			<p class="mt-2 text-sm leading-relaxed text-corp-gray">
-				El indicador es el ratio
-				<span class="font-medium text-corp-ink"> publicaciones ÷ Σ JCE (Doctor) </span>
-				del alcance seleccionado (facultad, departamento o línea de investigación). Muestra la
-				producción anual de publicaciones relativa a las horas de jornada completa de los académicos
-				con grado de doctor del alcance.
+				Relaciona las publicaciones de cada año con la jornada completa de los académicos
+				del alcance elegido (facultad, departamento o línea de investigación). Cada punto
+				indica cuántas publicaciones se producen por hora de jornada trabajada.
 			</p>
-		</section>
-
-		<section>
-			<h3 class="flex items-center gap-2 text-sm font-semibold text-[#1A1A1A]">
-				<Percent class="size-4 text-corp-blue/60" />
-				La división
-			</h3>
-			<p class="mt-2 text-sm leading-relaxed text-corp-gray">
-				Cada punto del gráfico equivale a
-				<span class="font-medium text-corp-ink">
-					publicaciones_del_año ÷ Σ JCE (Doctor)
-				</span>
-				, es decir, el número de publicaciones de ese año relativo a las horas de jornada completa
-				del alcance.
-			</p>
-			<ul class="mt-3 space-y-0.5 text-sm text-corp-gray">
-				<li class="flex items-start gap-2.5">
-					<span
-						class="mt-1.5 size-2.5 shrink-0 rounded-full bg-corp-gold"
-						aria-hidden="true"
-					></span>
-					<p>Si Σ JCE es 0, el ratio es 0 (guarda contra división por cero).</p>
-				</li>
-			</ul>
 		</section>
 
 		<section>
 			<h3 class="flex items-center gap-2 text-sm font-semibold text-[#1A1A1A]">
 				<Sigma class="size-4 text-corp-blue/60" />
-				La suma del denominador
+				Jornada Completa Equivalente (JCE)
 			</h3>
 			<p class="mt-2 text-sm leading-relaxed text-corp-gray">
-				El denominador <span class="font-medium text-corp-ink">Σ JCE (Doctor)</span> es la
-				suma de las horas <span class="font-medium text-corp-ink">JCE</span> de los académicos
-				con grado de doctor del alcance:
+				La JCE es la medida del tiempo de trabajo de los académicos: un académico de jornada
+				completa equivale a 1 JCE, y media jornada a 0,5. Para calcular el indicador se
+				suman las horas de jornada de los académicos considerados, según el filtro
+				<span class="font-medium text-corp-ink">Académicos para la JCE</span>:
 			</p>
 			<ul class="mt-2 space-y-0.5 text-sm text-corp-gray">
 				<li class="flex items-start gap-2.5">
@@ -72,7 +47,8 @@
 						aria-hidden="true"
 					></span>
 					<p>
-						<span class="font-medium text-corp-ink">Facultad</span> — todos los doctores.
+						<span class="font-medium text-corp-ink">Solo doctores</span> — solo los académicos
+						con grado de doctor del alcance.
 					</p>
 				</li>
 				<li class="flex items-start gap-2.5">
@@ -81,26 +57,13 @@
 						aria-hidden="true"
 					></span>
 					<p>
-						<span class="font-medium text-corp-ink">Departamento</span> — doctores de ese
-						departamento.
-					</p>
-				</li>
-				<li class="flex items-start gap-2.5">
-					<span
-						class="mt-1.5 size-2.5 shrink-0 rounded-full bg-corp-blue"
-						aria-hidden="true"
-					></span>
-					<p>
-						<span class="font-medium text-corp-ink">Línea</span> — doctores cuya línea dominante
-						es esa línea.
+						<span class="font-medium text-corp-ink"
+							>Todos los académicos del alcance</span
+						>
+						— doctores, magísteres y profesionales.
 					</p>
 				</li>
 			</ul>
-			<p class="mt-3 text-sm leading-relaxed text-corp-gray">
-				Refleja el roster actual de académicos y, por diseño,
-				<span class="font-medium text-corp-ink">no varía por año ni por mes</span>. Puedes
-				ver el total en horas bajo el gráfico.
-			</p>
 		</section>
 
 		<section>
@@ -115,8 +78,9 @@
 						aria-hidden="true"
 					></span>
 					<p>
-						<span class="font-medium text-corp-ink">Grado académico</span> — qué publicaciones
-						se cuentan en el numerador (todas, o las de autores con grado de doctor o magíster).
+						<span class="font-medium text-corp-ink">Publicaciones por grado</span> — qué publicaciones
+						se cuentan en el indicador: todas, o solo las de autores con grado de doctor o
+						magíster.
 					</p>
 				</li>
 				<li class="flex items-start gap-2.5">
@@ -125,9 +89,9 @@
 						aria-hidden="true"
 					></span>
 					<p>
-						<span class="font-medium text-corp-ink">Mes base (Σ JCE)</span> — mes de referencia
-						para el año del período (un período va de un mes base a su equivalente del año
-						siguiente).
+						<span class="font-medium text-corp-ink">Académicos para la JCE</span> — quiénes
+						aportan las horas de jornada al cálculo: solo doctores o todos los académicos
+						del alcance.
 					</p>
 				</li>
 				<li class="flex items-start gap-2.5">
@@ -136,12 +100,30 @@
 						aria-hidden="true"
 					></span>
 					<p>
-						<span class="font-medium text-corp-ink">Indexación</span> — línea mostrada:
-						<span class="font-medium text-corp-ink">Ambas</span> dibuja solo la
-						tendencia combinada de todas las publicaciones;
-						<span class="font-medium text-corp-ink">WoS</span>
-						o
-						<span class="font-medium text-corp-ink">Scopus</span> muestran solo esa indexación.
+						<span class="font-medium text-corp-ink">Mes de corte del año</span> — define cómo
+						se agrupan las publicaciones en años académicos: las publicadas antes de este
+						mes se cuentan en el año anterior (un año va de un mes de corte al equivalente
+						del año siguiente).
+					</p>
+				</li>
+				<li class="flex items-start gap-2.5">
+					<span
+						class="mt-1.5 size-2.5 shrink-0 rounded-full bg-corp-blue"
+						aria-hidden="true"
+					></span>
+					<p>
+						<span class="font-medium text-corp-ink">Indexación</span> — qué publicaciones
+						se muestran: ambas indexaciones, solo WoS o solo Scopus.
+					</p>
+				</li>
+				<li class="flex items-start gap-2.5">
+					<span
+						class="mt-1.5 size-2.5 shrink-0 rounded-full bg-corp-blue"
+						aria-hidden="true"
+					></span>
+					<p>
+						<span class="font-medium text-corp-ink">Decimales en el eje Y</span> — cuántos
+						decimales se muestran en los valores del gráfico, sin redondear.
 					</p>
 				</li>
 			</ul>
