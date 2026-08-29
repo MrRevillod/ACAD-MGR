@@ -180,8 +180,8 @@ impl StatsService {
 		let (jce, academic_count) = match query.scope {
 			Some(ProductivityScope::Faculty) | None => {
 				let (jce, count) = tokio::join!(
-					self.stats.sum_jce(None, jce_kind.clone()),
-					self.stats.count_jce(None, jce_kind.clone()),
+					self.stats.sum_jce(None, jce_kind),
+					self.stats.count_jce(None, jce_kind),
 				);
 				(jce?, count?)
 			}
@@ -191,8 +191,8 @@ impl StatsService {
 				};
 
 				let (jce, count) = tokio::join!(
-					self.stats.sum_jce(Some(department_id), jce_kind.clone()),
-					self.stats.count_jce(Some(department_id), jce_kind.clone()),
+					self.stats.sum_jce(Some(department_id), jce_kind),
+					self.stats.count_jce(Some(department_id), jce_kind),
 				);
 				(jce?, count?)
 			}
@@ -203,9 +203,9 @@ impl StatsService {
 
 				let (jce, count) = tokio::join!(
 					self.stats
-						.sum_jce_dominant_line(&research_line_id, jce_kind.clone()),
+						.sum_jce_dominant_line(&research_line_id, jce_kind),
 					self.stats
-						.count_jce_dominant_line(&research_line_id, jce_kind.clone()),
+						.count_jce_dominant_line(&research_line_id, jce_kind),
 				);
 				(jce?, count?)
 			}

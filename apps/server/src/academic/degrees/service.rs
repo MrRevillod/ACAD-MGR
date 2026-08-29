@@ -13,6 +13,12 @@ impl DegreesService {
 	}
 
 	pub async fn create(&self, input: CreateDegreeDto) -> AppResult<Degree> {
+		if is_superior_degree(input.kind)
+			&& self.degrees.count_superior(&input.academic_id).await? > 0
+		{
+			Err(AcademicError::DegreeSuperiorAlreadyExists)?;
+		}
+
 		let degree = Degree::builder()
 			.academic_id(input.academic_id)
 			.name(input.name)
@@ -32,6 +38,15 @@ impl DegreesService {
 			return Err(AcademicError::DegreeNotFound)?;
 		};
 
+		let new_kind = input.kind.unwrap_or(degree.kind);
+		if is_superior_degree(new_kind)
+			&& self
+				.degrees
+				.count_superior_excluding(&degree.academic_id, degree_id)
+				.await? > 0
+		{
+			Err(AcademicError::DegreeSuperiorAlreadyExists)?;
+		}
 		if let Some(name) = input.name {
 			degree.name = name;
 		}
@@ -56,4 +71,8 @@ impl DegreesService {
 
 		Ok(degree)
 	}
+}
+
+fn is_superior_degree(kind: DegreeKind) -> bool {
+	matches!(kind, DegreeKind::Magister | DegreeKind::Doctor)
 }

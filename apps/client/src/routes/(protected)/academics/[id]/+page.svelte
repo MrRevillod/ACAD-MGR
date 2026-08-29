@@ -75,14 +75,27 @@
 			| (Degree & { isPlaceholder: false })
 			| { kind: (typeof DegreeKindValue.KINDS)[number]; isPlaceholder: true }
 		>
-	>(() =>
-		DegreeKindValue.KINDS.map((kind) => {
-			const found = (degreesQuery.data ?? []).find((d) => d.kind.code === kind)
-			return found
-				? { ...found, isPlaceholder: false as const }
-				: { kind, isPlaceholder: true as const }
-		}),
-	)
+	>(() => {
+		const degrees = degreesQuery.data ?? []
+		const hasSuperior = degrees.some(
+			(d) => d.kind.code === "magister" || d.kind.code === "doctor",
+		)
+		const slots: Array<
+			| (Degree & { isPlaceholder: false })
+			| { kind: (typeof DegreeKindValue.KINDS)[number]; isPlaceholder: true }
+		> = []
+
+		for (const kind of DegreeKindValue.KINDS) {
+			const found = degrees.find((d) => d.kind.code === kind)
+			if (found) {
+				slots.push({ ...found, isPlaceholder: false as const })
+			} else if (!(hasSuperior && kind !== "professional")) {
+				slots.push({ kind, isPlaceholder: true as const })
+			}
+		}
+
+		return slots
+	})
 
 	const degreeKindMeta: Record<
 		string,
@@ -104,6 +117,15 @@
 			dot: "bg-corp-gold",
 		},
 	}
+
+	const takenSuperiorKind = $derived.by<(typeof DegreeKindValue.KINDS)[number] | null>(() => {
+		const current = editingDegree
+		if (!current) return null
+		const other = (degreesQuery.data ?? []).find(
+			(d) => d.id !== current.id && (d.kind.code === "magister" || d.kind.code === "doctor"),
+		)
+		return other ? (other.kind.code as (typeof DegreeKindValue.KINDS)[number]) : null
+	})
 
 	let showDegreeDialog = $state(false)
 	let editingDegree = $state<Degree | null>(null)
@@ -461,6 +483,7 @@
 	academicId={id}
 	degree={editingDegree}
 	{createKind}
+	{takenSuperiorKind}
 	bind:open={showDegreeDialog}
 	onClose={() => (showDegreeDialog = false)}
 />

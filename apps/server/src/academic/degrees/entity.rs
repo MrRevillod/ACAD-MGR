@@ -7,7 +7,7 @@ use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, Type};
 
-#[derive(Debug, Clone, Type, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Type, Serialize, Deserialize)]
 #[sqlx(type_name = "degree_kind", rename_all = "lowercase")]
 #[serde(rename_all = "lowercase")]
 pub enum DegreeKind {

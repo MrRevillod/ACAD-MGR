@@ -8,6 +8,7 @@
 
 	import { queryClient, useMutation } from "$shared/http/tanstack"
 	import { createForm, Field, Form, reset } from "@formisch/svelte"
+	import { toast } from "svelte-sonner"
 
 	import Dialog from "$lib/shared/components/ui/dialog.svelte"
 	import DatePicker from "$lib/shared/components/ui/form/date-picker.svelte"
@@ -20,6 +21,7 @@
 		academicId: string
 		degree?: Degree | null
 		createKind?: DegreeKind
+		takenSuperiorKind?: DegreeKind | null
 		open: boolean
 		onClose: () => void
 	}
@@ -28,6 +30,7 @@
 		academicId,
 		degree = null,
 		createKind = "professional",
+		takenSuperiorKind = null,
 		open = $bindable(),
 		onClose,
 	}: Props = $props()
@@ -67,6 +70,7 @@
 			void queryClient.invalidateQueries({ queryKey: ["degrees", academicId] })
 			open = false
 		},
+		onError: (e) => toast.error(e.message),
 	}))
 
 	const updateDeg = useMutation(() => ({
@@ -87,6 +91,7 @@
 			void queryClient.invalidateQueries({ queryKey: ["degrees", academicId] })
 			open = false
 		},
+		onError: (e) => toast.error(e.message),
 	}))
 
 	function handleSubmit(output: {
@@ -116,7 +121,11 @@
 	const pending = $derived(createDeg.isPending || updateDeg.isPending)
 
 	const kindOptions = $derived(
-		DegreeKindValue.KINDS.map((k) => ({ label: DegreeKindValue.LABELS[k], value: k })),
+		DegreeKindValue.KINDS.map((k) => ({
+			label: DegreeKindValue.LABELS[k],
+			value: k,
+			disabled: k !== "professional" && k === takenSuperiorKind,
+		})),
 	)
 </script>
 

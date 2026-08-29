@@ -32,6 +32,33 @@ impl DegreesRepository {
 		Ok(item)
 	}
 
+	pub async fn count_superior(&self, academic_id: &AcademicId) -> AppResult<i64> {
+		sqlx::query_scalar::<_, i64>(
+			"SELECT COUNT(*) FROM degrees
+			    WHERE academic_id = $1 AND kind IN ('magister', 'doctor')",
+		)
+		.bind(academic_id)
+		.fetch_one(self.database.pool())
+		.await
+		.map_err(Into::into)
+	}
+
+	pub async fn count_superior_excluding(
+		&self,
+		academic_id: &AcademicId,
+		degree_id: &DegreeId,
+	) -> AppResult<i64> {
+		sqlx::query_scalar::<_, i64>(
+			"SELECT COUNT(*) FROM degrees
+			    WHERE academic_id = $1 AND id <> $2 AND kind IN ('magister', 'doctor')",
+		)
+		.bind(academic_id)
+		.bind(degree_id)
+		.fetch_one(self.database.pool())
+		.await
+		.map_err(Into::into)
+	}
+
 	pub async fn save(&self, degree: &Degree) -> AppResult<()> {
 		sqlx::query(
 			"INSERT INTO degrees (id, academic_id, name, university, obtained_at, kind, country_code)
@@ -48,7 +75,7 @@ impl DegreesRepository {
 		.bind(&degree.name)
 		.bind(&degree.university)
 		.bind(degree.obtained_at)
-		.bind(&degree.kind)
+		.bind(degree.kind)
 		.bind(&degree.country_code)
 		.execute(self.database.pool())
 		.await?;
@@ -72,7 +99,7 @@ impl DegreesRepository {
 		.bind(&degree.name)
 		.bind(&degree.university)
 		.bind(degree.obtained_at)
-		.bind(&degree.kind)
+		.bind(degree.kind)
 		.bind(&degree.country_code)
 		.execute(&mut **tx)
 		.await?;

@@ -10,6 +10,7 @@
 	interface Item {
 		label: string
 		value: string
+		disabled?: boolean
 	}
 
 	interface Props extends Omit<Partial<FieldElementProps>, "onchange"> {
@@ -77,7 +78,7 @@
 	>
 		<option value="">{placeholder}</option>
 		{#each options as opt (opt.value)}
-			<option value={opt.value}>{opt.label}</option>
+			<option value={opt.value} disabled={opt.disabled}>{opt.label}</option>
 		{/each}
 	</select>
 
@@ -103,9 +104,10 @@
 				<SelectPrimitive.Viewport>
 					{#each options as item (item.value)}
 						<SelectPrimitive.Item
-							class="flex h-9 w-full cursor-pointer select-none items-center rounded-lg px-3 py-2 text-sm text-[#1A1A1A] outline-none transition-colors data-highlighted:bg-corp-blue/5 data-state-checked:bg-corp-blue/10"
+							class="flex h-9 w-full cursor-pointer select-none items-center rounded-lg px-3 py-2 text-sm text-[#1A1A1A] outline-none transition-colors data-highlighted:bg-corp-blue/5 data-state-checked:bg-corp-blue/10 data-disabled:cursor-not-allowed data-disabled:opacity-40"
 							value={item.value}
 							label={item.label}
+							disabled={item.disabled}
 						>
 							{#snippet children({ selected })}
 								<span class="flex-1">{item.label}</span>

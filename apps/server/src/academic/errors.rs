@@ -44,6 +44,13 @@ pub enum AcademicError {
 	#[error("Grado académico no encontrado")]
 	DegreeNotFound,
 
+	#[http(
+		code = 409,
+		message = "El académico ya tiene asignado un grado superior (magíster o doctor)"
+	)]
+	#[error("El académico ya tiene asignado un grado superior (magíster o doctor)")]
+	DegreeSuperiorAlreadyExists,
+
 	#[http(code = 409, message = "Ya existe un académico con el mismo RUT")]
 	#[error("Ya existe un académico con el mismo RUT")]
 	AcademicRutAlreadyExists,
