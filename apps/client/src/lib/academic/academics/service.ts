@@ -1,6 +1,7 @@
 import { http } from "$lib/shared/http/client"
 import { Academic } from "./entity"
 
+import type { WorkOverridesInput } from "$works/dtos"
 import type {
 	AcademicDTO,
 	PublicAcademicDTO,
@@ -132,6 +133,39 @@ class AcademicsService {
 			method: "POST",
 			url: "/academics/profile/update/sync-works",
 			data: { token },
+		})
+	}
+
+	public updateWorkOverridesByToken(
+		token: string,
+		workId: string,
+		data: WorkOverridesInput,
+	): Promise<void> {
+		return http.request<void>({
+			method: "PUT",
+			url: `/academics/profile/update/works/${workId}/overrides`,
+			data: { token, data },
+		})
+	}
+
+	public clearWorkOverridesByToken(token: string, workId: string): Promise<void> {
+		return http.request<void>({
+			method: "DELETE",
+			url: `/academics/profile/update/works/${workId}/overrides`,
+			data: { token },
+		})
+	}
+
+	public updateAuthorshipAffiliationsByToken(
+		token: string,
+		workId: string,
+		orcid: string,
+		affiliations: string[],
+	): Promise<void> {
+		return http.request<void>({
+			method: "PUT",
+			url: `/academics/profile/update/works/${workId}/authorships/${orcid}/affiliations`,
+			data: { token, affiliations },
 		})
 	}
 }

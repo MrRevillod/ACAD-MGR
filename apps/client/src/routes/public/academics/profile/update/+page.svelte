@@ -8,11 +8,14 @@
 	import { createForm, reset } from "@formisch/svelte"
 	import { useMutation, useQuery } from "$shared/http/tanstack"
 	import { Loader, CircleAlert, CircleCheck, RefreshCw, Send } from "@lucide/svelte"
+	import { fade } from "svelte/transition"
 
 	import { SexValue } from "$shared/value-objects/sex.value"
 	import { countryItems } from "$shared/countries"
 	import { academicService } from "$academics/service"
 	import { selfUpdateAcademicDTOSchema } from "$academics/dtos"
+	import WorkDetailEditor from "$works/components/work-detail-editor.svelte"
+	import PublicationsColumn from "$works/components/publications-column.svelte"
 
 	import Button from "$shared/components/ui/button.svelte"
 	import Select from "$shared/components/ui/form/select.svelte"
@@ -52,6 +55,8 @@
 		Object.entries(SexValue.LABELS).map(([value, label]) => ({ label, value })),
 	)
 
+	let selectedWorkId = $state<string | null>(null)
+
 	const updateMutation = useMutation(() => ({
 		mutationFn: (data: SelfUpdateDTO) => academicService.updateByToken(token, data),
 		onError: (error) => toast.error(error.message ?? "Error al actualizar el perfil"),
@@ -74,7 +79,7 @@
 	}))
 </script>
 
-<div class="mx-auto flex min-h-dvh max-w-2xl flex-col px-4 py-12">
+<div class="mx-auto flex h-full max-w-7xl flex-col overflow-y-auto px-4 py-8 sm:px-6 lg:px-8">
 	{#if !token}
 		<div class="flex flex-1 flex-col items-center justify-center text-center">
 			<CircleAlert class="size-10 text-red-500" />
@@ -109,12 +114,28 @@
 		</div>
 	{:else}
 		{@const acad = tokenQuery.data!}
-		<div class="mb-6 rounded-xl border border-corp-gray/20 bg-white p-6">
-			<div class="flex items-start justify-between gap-4">
-				<div>
-					<h1 class="text-lg font-semibold text-[#1A1A1A]">
-						Actualizar perfil académico
-					</h1>
+
+		{#if selectedWorkId}
+			{#key selectedWorkId}
+				<div transition:fade={{ duration: 150 }}>
+					<WorkDetailEditor
+						workId={selectedWorkId}
+						{token}
+						onBack={() => (selectedWorkId = null)}
+					/>
+				</div>
+			{/key}
+		{:else}
+			<div
+				class="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-corp-gray/20 bg-white px-5 py-4"
+			>
+				<div class="min-w-0">
+					<h1 class="text-lg font-semibold text-[#1A1A1A]">Edición de perfil</h1>
+					<p class="mt-0.5 truncate text-sm text-corp-gray">
+						{acad.names}
+						{acad.paternalSurname}
+						{acad.maternalSurname} · {acad.email}
+					</p>
 				</div>
 				<Button
 					variant="secondary"
@@ -131,141 +152,161 @@
 					{/if}
 				</Button>
 			</div>
-		</div>
 
-		<div class="rounded-xl border border-corp-gray/20 bg-white p-6">
-			<Form of={form} onsubmit={(output) => updateMutation.mutate(output as SelfUpdateDTO)}>
-				<div class="grid grid-cols-2 gap-x-6 gap-y-5">
-					<Field of={form} path={["names"]}>
-						{#snippet children(field)}
-							<TextInput
-								{...field.props}
-								input={field.input}
-								errors={field.errors}
-								type="text"
-								label="Nombres"
-							/>
-						{/snippet}
-					</Field>
+			<p class="mb-4 text-xs text-corp-gray">
+				Tus cambios en publicaciones se guardan al instante. Guarda el perfil al final para
+				no perder el enlace de edición.
+			</p>
 
-					<Field of={form} path={["paternalSurname"]}>
-						{#snippet children(field)}
-							<TextInput
-								{...field.props}
-								input={field.input}
-								errors={field.errors}
-								type="text"
-								label="Apellido paterno"
-							/>
-						{/snippet}
-					</Field>
-
-					<Field of={form} path={["maternalSurname"]}>
-						{#snippet children(field)}
-							<TextInput
-								{...field.props}
-								input={field.input}
-								errors={field.errors}
-								type="text"
-								label="Apellido materno"
-							/>
-						{/snippet}
-					</Field>
-
-					<div>
-						<p
-							class="mb-1.5 text-xs font-medium tracking-wide uppercase text-corp-gray"
-						>
-							Correo electrónico
-						</p>
-						<p
-							class="h-10 rounded-lg border border-corp-gray/20 bg-corp-gray/5 px-3 text-sm leading-10 text-corp-gray/60"
-						>
-							{acad.email}
-						</p>
-					</div>
-
-					<Field of={form} path={["orcid"]}>
-						{#snippet children(field)}
-							<TextInput
-								{...field.props}
-								input={field.input ?? ""}
-								errors={field.errors}
-								type="text"
-								label="ORCID"
-								placeholder="https://orcid.org/0000-0000-0000-0000"
-							/>
-						{/snippet}
-					</Field>
-
-					<Field of={form} path={["sex"]}>
-						{#snippet children(field)}
-							<Select
-								{...field.props}
-								input={field.input}
-								errors={field.errors}
-								label="Sexo"
-								options={sexOptions}
-							/>
-						{/snippet}
-					</Field>
-
-					<Field of={form} path={["birthDate"]}>
-						{#snippet children(field)}
-							<DatePicker
-								{...field.props}
-								input={field.input}
-								errors={field.errors}
-								label="Fecha de nacimiento"
-							/>
-						{/snippet}
-					</Field>
-
-					<Field of={form} path={["nationalityCode"]}>
-						{#snippet children(field)}
-							<Select
-								{...field.props}
-								input={field.input}
-								errors={field.errors}
-								label="Nacionalidad"
-								options={countryOptions}
-							/>
-						{/snippet}
-					</Field>
-
-					<div class="col-span-2">
-						<Field of={form} path={["city"]}>
-							{#snippet children(field)}
-								<TextInput
-									{...field.props}
-									input={field.input}
-									errors={field.errors}
-									type="text"
-									label="Ciudad"
-								/>
-							{/snippet}
-						</Field>
-					</div>
-				</div>
-
-				<div class="mt-8 flex justify-end gap-3 border-t border-corp-gray/20 pt-5">
-					<Button
-						variant="secondary"
-						onclick={() => goto(`/public/academics/${acad.id}`)}
+			<div class="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+				<div class="min-w-0 rounded-xl border border-corp-gray/20 bg-white p-6">
+					<Form
+						of={form}
+						onsubmit={(output) => updateMutation.mutate(output as SelfUpdateDTO)}
 					>
-						Cancelar
-					</Button>
-					<Button variant="primary" type="submit" disabled={updateMutation.isPending}>
-						{#if updateMutation.isPending}
-							<Loader class="size-4 animate-spin" />
-							Guardando...
-						{:else}
-							<Send class="size-4" />
-							Guardar cambios
-						{/if}
-					</Button>
+						<div class="grid grid-cols-2 gap-x-6 gap-y-5">
+							<Field of={form} path={["names"]}>
+								{#snippet children(field)}
+									<TextInput
+										{...field.props}
+										input={field.input}
+										errors={field.errors}
+										type="text"
+										label="Nombres"
+									/>
+								{/snippet}
+							</Field>
+
+							<Field of={form} path={["paternalSurname"]}>
+								{#snippet children(field)}
+									<TextInput
+										{...field.props}
+										input={field.input}
+										errors={field.errors}
+										type="text"
+										label="Apellido paterno"
+									/>
+								{/snippet}
+							</Field>
+
+							<Field of={form} path={["maternalSurname"]}>
+								{#snippet children(field)}
+									<TextInput
+										{...field.props}
+										input={field.input}
+										errors={field.errors}
+										type="text"
+										label="Apellido materno"
+									/>
+								{/snippet}
+							</Field>
+
+							<div>
+								<p
+									class="mb-1.5 text-xs font-medium tracking-wide uppercase text-corp-gray"
+								>
+									Correo electrónico
+								</p>
+								<p
+									class="h-10 rounded-lg border border-corp-gray/20 bg-corp-gray/5 px-3 text-sm leading-10 text-corp-gray/60"
+								>
+									{acad.email}
+								</p>
+							</div>
+
+							<Field of={form} path={["orcid"]}>
+								{#snippet children(field)}
+									<TextInput
+										{...field.props}
+										input={field.input ?? ""}
+										errors={field.errors}
+										type="text"
+										label="ORCID"
+										placeholder="https://orcid.org/0000-0000-0000-0000"
+									/>
+								{/snippet}
+							</Field>
+
+							<Field of={form} path={["sex"]}>
+								{#snippet children(field)}
+									<Select
+										{...field.props}
+										input={field.input}
+										errors={field.errors}
+										label="Sexo"
+										options={sexOptions}
+									/>
+								{/snippet}
+							</Field>
+
+							<Field of={form} path={["birthDate"]}>
+								{#snippet children(field)}
+									<DatePicker
+										{...field.props}
+										input={field.input}
+										errors={field.errors}
+										label="Fecha de nacimiento"
+									/>
+								{/snippet}
+							</Field>
+
+							<Field of={form} path={["nationalityCode"]}>
+								{#snippet children(field)}
+									<Select
+										{...field.props}
+										input={field.input}
+										errors={field.errors}
+										label="Nacionalidad"
+										options={countryOptions}
+									/>
+								{/snippet}
+							</Field>
+
+							<div class="col-span-2">
+								<Field of={form} path={["city"]}>
+									{#snippet children(field)}
+										<TextInput
+											{...field.props}
+											input={field.input}
+											errors={field.errors}
+											type="text"
+											label="Ciudad"
+										/>
+									{/snippet}
+								</Field>
+							</div>
+						</div>
+
+						<div class="mt-8 flex justify-end gap-3 border-t border-corp-gray/20 pt-5">
+							<Button
+								variant="secondary"
+								onclick={() => goto(`/public/academics/${acad.id}`)}
+							>
+								Cancelar
+							</Button>
+							<Button
+								variant="primary"
+								type="submit"
+								disabled={updateMutation.isPending}
+							>
+								{#if updateMutation.isPending}
+									<Loader class="size-4 animate-spin" />
+									Guardando...
+								{:else}
+									<Send class="size-4" />
+									Guardar cambios
+								{/if}
+							</Button>
+						</div>
+					</Form>
 				</div>
-			</Form>
-		</div>
+
+				<PublicationsColumn
+					academicId={acad.id}
+					{selectedWorkId}
+					onSelect={(id) => (selectedWorkId = id)}
+				/>
+			</div>
+		{/if}
 	{/if}
 </div>

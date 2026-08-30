@@ -7,6 +7,7 @@
 
 	import type { WorkDetail } from "$works/entity"
 
+	import { academicService } from "$academics/service"
 	import Select from "$shared/components/ui/select.svelte"
 	import TextInput from "$shared/components/ui/form/text-input.svelte"
 	import { FullName } from "$shared/value-objects/full-name.value"
@@ -53,6 +54,7 @@
 
 	interface Props {
 		work: WorkDetail
+		token?: string
 		submit?: (() => Promise<void>) | null
 		restore?: (() => Promise<void>) | null
 		isSaving?: boolean
@@ -61,6 +63,7 @@
 
 	let {
 		work,
+		token,
 		// eslint-disable-next-line no-useless-assignment -- `$bindable` writes are read by the parent
 		submit = $bindable(null),
 		// eslint-disable-next-line no-useless-assignment -- `$bindable` writes are read by the parent
@@ -163,14 +166,27 @@
 			}
 
 			if (Object.keys(data).length > 0) {
-				await updateMutation.mutateAsync({ id: work.id, data })
+				if (token) {
+					await academicService.updateWorkOverridesByToken(token, work.id, data)
+				} else {
+					await updateMutation.mutateAsync({ id: work.id, data })
+				}
 			}
 			for (const change of affiliationChanges) {
-				await affiliationsMutation.mutateAsync({
-					workId: work.id,
-					orcid: change.orcid,
-					affiliations: change.affiliations,
-				})
+				if (token) {
+					await academicService.updateAuthorshipAffiliationsByToken(
+						token,
+						work.id,
+						change.orcid,
+						change.affiliations,
+					)
+				} else {
+					await affiliationsMutation.mutateAsync({
+						workId: work.id,
+						orcid: change.orcid,
+						affiliations: change.affiliations,
+					})
+				}
 			}
 			onSaved()
 		} finally {
@@ -179,7 +195,11 @@
 	}
 
 	async function handleRestoreAll() {
-		await clearMutation.mutateAsync(work.id)
+		if (token) {
+			await academicService.clearWorkOverridesByToken(token, work.id)
+		} else {
+			await clearMutation.mutateAsync(work.id)
+		}
 		onSaved()
 	}
 </script>

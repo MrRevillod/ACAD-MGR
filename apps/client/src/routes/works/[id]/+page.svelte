@@ -20,6 +20,8 @@
 	import { page } from "$app/state"
 	import { goto } from "$app/navigation"
 
+	import { authStore } from "$auth/store.svelte"
+
 	import { DateValue } from "$shared/value-objects/date.value"
 	import { WORK_TYPE_LABELS } from "$works/dtos"
 
@@ -103,7 +105,7 @@
 							{isSaving ? "Guardando…" : "Guardar"}
 						</button>
 					</div>
-				{:else}
+				{:else if authStore.isAuthenticated}
 					<button
 						type="button"
 						onclick={() => (editing = true)}
