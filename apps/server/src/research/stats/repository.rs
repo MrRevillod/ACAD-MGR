@@ -18,8 +18,8 @@ impl StatsRepository {
 	) -> AppResult<Vec<JournalKindRow>> {
 		sqlx::query_as::<_, JournalKindRow>(
 			"SELECT COALESCE((w.overrides).publication_year, w.publication_year) AS year,
-		        COUNT(DISTINCT w.id) FILTER (WHERE ji.kind = 'wos')::bigint    AS wos,
-		        COUNT(DISTINCT w.id) FILTER (WHERE ji.kind = 'scopus')::bigint AS scopus
+		        COUNT(DISTINCT w.id) FILTER (WHERE COALESCE((w.overrides).journal_kind, ji.kind) = 'wos')::bigint    AS wos,
+		        COUNT(DISTINCT w.id) FILTER (WHERE COALESCE((w.overrides).journal_kind, ji.kind) = 'scopus')::bigint AS scopus
 		    FROM works w
 		    JOIN work_authorships wa ON w.id = wa.work_id AND wa.is_external = false
 		    JOIN academics a         ON a.orcid = wa.orcid
@@ -31,7 +31,7 @@ impl StatsRepository {
 		        AND ($2::smallint IS NULL
 		            OR COALESCE((w.overrides).publication_year, w.publication_year) <= $2)
 		        AND ($3::uuid IS NULL OR a.department_id = $3)
-		        AND ($4::journal_kind IS NULL OR ji.kind = $4)
+		        AND ($4::journal_kind IS NULL OR COALESCE((w.overrides).journal_kind, ji.kind) = $4)
 		    GROUP BY year
 		    ORDER BY year",
 		)
@@ -53,8 +53,8 @@ impl StatsRepository {
 		        d.id   AS department_id,
 		        d.name AS department,
 		        COUNT(DISTINCT w.id)::bigint AS count,
-		        COUNT(DISTINCT w.id) FILTER (WHERE ji.kind = 'wos')::bigint    AS wos,
-		        COUNT(DISTINCT w.id) FILTER (WHERE ji.kind = 'scopus')::bigint AS scopus
+		        COUNT(DISTINCT w.id) FILTER (WHERE COALESCE((w.overrides).journal_kind, ji.kind) = 'wos')::bigint    AS wos,
+		        COUNT(DISTINCT w.id) FILTER (WHERE COALESCE((w.overrides).journal_kind, ji.kind) = 'scopus')::bigint AS scopus
 		    FROM works w
 		    JOIN work_authorships wa ON w.id = wa.work_id AND wa.is_external = false
 		    JOIN academics a         ON a.orcid = wa.orcid
@@ -66,7 +66,7 @@ impl StatsRepository {
 		        AND ($2::smallint IS NULL
 		            OR COALESCE((w.overrides).publication_year, w.publication_year) <= $2)
 		        AND ($3::uuid IS NULL OR a.department_id = $3)
-		        AND ($4::journal_kind IS NULL OR ji.kind = $4)
+		        AND ($4::journal_kind IS NULL OR COALESCE((w.overrides).journal_kind, ji.kind) = $4)
 		    GROUP BY year, d.id, d.name
 		    ORDER BY d.name, year",
 		)
@@ -88,8 +88,8 @@ impl StatsRepository {
 		        rl.id   AS research_line_id,
 		        rl.name AS name,
 		        COUNT(DISTINCT w.id)::bigint AS count,
-		        COUNT(DISTINCT w.id) FILTER (WHERE ji.kind = 'wos')::bigint    AS wos,
-		        COUNT(DISTINCT w.id) FILTER (WHERE ji.kind = 'scopus')::bigint AS scopus
+		        COUNT(DISTINCT w.id) FILTER (WHERE COALESCE((w.overrides).journal_kind, ji.kind) = 'wos')::bigint    AS wos,
+		        COUNT(DISTINCT w.id) FILTER (WHERE COALESCE((w.overrides).journal_kind, ji.kind) = 'scopus')::bigint AS scopus
 		    FROM works w
 		    JOIN work_authorships wa ON w.id = wa.work_id AND wa.is_external = false
 		    JOIN academics a         ON a.orcid = wa.orcid
@@ -113,7 +113,7 @@ impl StatsRepository {
 		        AND ($2::smallint IS NULL
 		            OR COALESCE((w.overrides).publication_year, w.publication_year) <= $2)
 		        AND ($3::uuid IS NULL OR a.department_id = $3)
-		        AND ($4::journal_kind IS NULL OR ji.kind = $4)
+		        AND ($4::journal_kind IS NULL OR COALESCE((w.overrides).journal_kind, ji.kind) = $4)
 		        AND rl.slug <> 'sin-asignar'
 		    GROUP BY year, rl.id, rl.name
 		    ORDER BY rl.name, year",
@@ -130,8 +130,8 @@ impl StatsRepository {
 	pub async fn faculty_summary(&self, query: &WorksStatsQuery) -> AppResult<FacultySummaryRow> {
 		sqlx::query_as::<_, FacultySummaryRow>(
 			"SELECT COUNT(DISTINCT w.id)::bigint AS total,
-		        COUNT(DISTINCT w.id) FILTER (WHERE ji.kind = 'scopus')::bigint AS scopus,
-		        COUNT(DISTINCT w.id) FILTER (WHERE ji.kind = 'wos')::bigint    AS wos
+		        COUNT(DISTINCT w.id) FILTER (WHERE COALESCE((w.overrides).journal_kind, ji.kind) = 'scopus')::bigint AS scopus,
+		        COUNT(DISTINCT w.id) FILTER (WHERE COALESCE((w.overrides).journal_kind, ji.kind) = 'wos')::bigint    AS wos
 		    FROM works w
 		    JOIN work_authorships wa ON w.id = wa.work_id AND wa.is_external = false
 		    JOIN academics a         ON a.orcid = wa.orcid
@@ -142,7 +142,7 @@ impl StatsRepository {
 		        AND ($2::smallint IS NULL
 		            OR COALESCE((w.overrides).publication_year, w.publication_year) <= $2)
 		        AND ($3::uuid IS NULL OR a.department_id = $3)
-		        AND ($4::journal_kind IS NULL OR ji.kind = $4)",
+		        AND ($4::journal_kind IS NULL OR COALESCE((w.overrides).journal_kind, ji.kind) = $4)",
 		)
 		.bind(query.year_from.unwrap_or(1900))
 		.bind(query.year_to)
@@ -161,8 +161,8 @@ impl StatsRepository {
 		sqlx::query_as::<_, DeptSummaryRow>(
 			"SELECT d.name AS department,
 		        COUNT(DISTINCT w.id)::bigint AS total,
-		        COUNT(DISTINCT w.id) FILTER (WHERE ji.kind = 'scopus')::bigint  AS scopus,
-		        COUNT(DISTINCT w.id) FILTER (WHERE ji.kind = 'wos')::bigint     AS wos,
+		        COUNT(DISTINCT w.id) FILTER (WHERE COALESCE((w.overrides).journal_kind, ji.kind) = 'scopus')::bigint  AS scopus,
+		        COUNT(DISTINCT w.id) FILTER (WHERE COALESCE((w.overrides).journal_kind, ji.kind) = 'wos')::bigint     AS wos,
 		        COUNT(DISTINCT w.id) FILTER (WHERE aco.option = 'teaching')::bigint AS teaching,
 		        COUNT(DISTINCT w.id) FILTER (WHERE aco.option = 'research')::bigint AS research
 		    FROM departments d
@@ -178,7 +178,7 @@ impl StatsRepository {
 		    LEFT JOIN sources src    ON w.source_id = src.id
 		    LEFT JOIN journal_issn ji ON ji.issn = src.issn
 		    WHERE d.id = $1
-		        AND ($5::journal_kind IS NULL OR ji.kind = $5)
+		        AND ($5::journal_kind IS NULL OR COALESCE((w.overrides).journal_kind, ji.kind) = $5)
 		    GROUP BY d.id, d.name",
 		)
 		.bind(id)
@@ -200,9 +200,9 @@ impl StatsRepository {
 			"SELECT a.id AS academic_id,
 		        a.names || ' ' || a.paternal_surname || ' ' || a.maternal_surname AS name,
 		        COUNT(DISTINCT w.id)::bigint AS total,
-		        COUNT(DISTINCT w.id) FILTER (WHERE ji.kind = 'scopus')::bigint AS scopus,
-		        COUNT(DISTINCT w.id) FILTER (WHERE ji.kind = 'wos')::bigint    AS wos,
-		        COUNT(DISTINCT w.id) FILTER (WHERE ji.kind IS NULL)::bigint    AS unindexed,
+		        COUNT(DISTINCT w.id) FILTER (WHERE COALESCE((w.overrides).journal_kind, ji.kind) = 'scopus')::bigint AS scopus,
+		        COUNT(DISTINCT w.id) FILTER (WHERE COALESCE((w.overrides).journal_kind, ji.kind) = 'wos')::bigint    AS wos,
+		        COUNT(DISTINCT w.id) FILTER (WHERE COALESCE((w.overrides).journal_kind, ji.kind) IS NULL)::bigint    AS unindexed,
 		        aco.option::text AS option
 		    FROM works w
 		    JOIN work_authorships wa ON w.id = wa.work_id AND wa.is_external = false
@@ -217,7 +217,7 @@ impl StatsRepository {
 		        AND ($3::smallint IS NULL
 		            OR COALESCE((w.overrides).publication_year, w.publication_year) <= $3)
 		        AND ($4::academic_option IS NULL OR aco.option = $4)
-		        AND ($5::journal_kind IS NULL OR ji.kind = $5)
+		        AND ($5::journal_kind IS NULL OR COALESCE((w.overrides).journal_kind, ji.kind) = $5)
 		    GROUP BY a.id, a.names, a.paternal_surname, a.maternal_surname, aco.option
 		    ORDER BY total DESC
 		    LIMIT 20",
@@ -240,9 +240,9 @@ impl StatsRepository {
 			"SELECT a.id AS academic_id,
 		        a.names || ' ' || a.paternal_surname || ' ' || a.maternal_surname AS name,
 		        COUNT(DISTINCT w.id)::bigint AS total,
-		        COUNT(DISTINCT w.id) FILTER (WHERE ji.kind = 'scopus')::bigint AS scopus,
-		        COUNT(DISTINCT w.id) FILTER (WHERE ji.kind = 'wos')::bigint    AS wos,
-		        COUNT(DISTINCT w.id) FILTER (WHERE ji.kind IS NULL)::bigint    AS unindexed,
+		        COUNT(DISTINCT w.id) FILTER (WHERE COALESCE((w.overrides).journal_kind, ji.kind) = 'scopus')::bigint AS scopus,
+		        COUNT(DISTINCT w.id) FILTER (WHERE COALESCE((w.overrides).journal_kind, ji.kind) = 'wos')::bigint    AS wos,
+		        COUNT(DISTINCT w.id) FILTER (WHERE COALESCE((w.overrides).journal_kind, ji.kind) IS NULL)::bigint    AS unindexed,
 		        aco.option::text AS option
 		    FROM works w
 		    JOIN work_authorships wa ON w.id = wa.work_id AND wa.is_external = false
@@ -272,8 +272,8 @@ impl StatsRepository {
 	) -> AppResult<Vec<JournalKindRow>> {
 		sqlx::query_as::<_, JournalKindRow>(
 			"SELECT COALESCE((w.overrides).publication_year, w.publication_year) AS year,
-		        COUNT(DISTINCT w.id) FILTER (WHERE ji.kind = 'wos')::bigint    AS wos,
-		        COUNT(DISTINCT w.id) FILTER (WHERE ji.kind = 'scopus')::bigint AS scopus
+		        COUNT(DISTINCT w.id) FILTER (WHERE COALESCE((w.overrides).journal_kind, ji.kind) = 'wos')::bigint    AS wos,
+		        COUNT(DISTINCT w.id) FILTER (WHERE COALESCE((w.overrides).journal_kind, ji.kind) = 'scopus')::bigint AS scopus
 		    FROM works w
 		    JOIN work_authorships wa ON w.id = wa.work_id AND wa.is_external = false
 		    JOIN academics a ON a.orcid = wa.orcid AND a.department_id = $1
@@ -284,7 +284,7 @@ impl StatsRepository {
 		        AND ($3::smallint IS NULL
 		            OR COALESCE((w.overrides).publication_year, w.publication_year) <= $3)
 		        AND ($4::academic_option IS NULL OR aco.option = $4)
-		        AND ($5::journal_kind IS NULL OR ji.kind = $5)
+		        AND ($5::journal_kind IS NULL OR COALESCE((w.overrides).journal_kind, ji.kind) = $5)
 		    GROUP BY year
 		    ORDER BY year",
 		)
@@ -350,8 +350,8 @@ impl StatsRepository {
 	) -> AppResult<Vec<JournalKindRow>> {
 		sqlx::query_as::<_, JournalKindRow>(
 			"SELECT COALESCE((w.overrides).publication_year, w.publication_year) AS year,
-		        COUNT(DISTINCT w.id) FILTER (WHERE ji.kind = 'wos')::bigint    AS wos,
-		        COUNT(DISTINCT w.id) FILTER (WHERE ji.kind = 'scopus')::bigint AS scopus
+		        COUNT(DISTINCT w.id) FILTER (WHERE COALESCE((w.overrides).journal_kind, ji.kind) = 'wos')::bigint    AS wos,
+		        COUNT(DISTINCT w.id) FILTER (WHERE COALESCE((w.overrides).journal_kind, ji.kind) = 'scopus')::bigint AS scopus
 		    FROM works w
 		    JOIN work_authorships wa ON w.id = wa.work_id AND wa.is_external = false
 		    JOIN academics a ON a.orcid = wa.orcid AND a.id = $1
@@ -447,8 +447,8 @@ impl StatsRepository {
 		sqlx::query_as::<_, ResearchLineSummaryRow>(
 			"SELECT rl.name AS name,
 		        COUNT(DISTINCT w.id)::bigint AS total,
-		        COUNT(DISTINCT w.id) FILTER (WHERE ji.kind = 'scopus')::bigint AS scopus,
-		        COUNT(DISTINCT w.id) FILTER (WHERE ji.kind = 'wos')::bigint    AS wos
+		        COUNT(DISTINCT w.id) FILTER (WHERE COALESCE((w.overrides).journal_kind, ji.kind) = 'scopus')::bigint AS scopus,
+		        COUNT(DISTINCT w.id) FILTER (WHERE COALESCE((w.overrides).journal_kind, ji.kind) = 'wos')::bigint    AS wos
 		    FROM research_lines rl
 		    LEFT JOIN works w ON rl.id = COALESCE(
 		            (w.overrides).research_line_id,
@@ -492,8 +492,8 @@ impl StatsRepository {
 	) -> AppResult<Vec<JournalKindRow>> {
 		sqlx::query_as::<_, JournalKindRow>(
 			"SELECT COALESCE((w.overrides).publication_year, w.publication_year) AS year,
-		        COUNT(DISTINCT w.id) FILTER (WHERE ji.kind = 'wos')::bigint    AS wos,
-		        COUNT(DISTINCT w.id) FILTER (WHERE ji.kind = 'scopus')::bigint AS scopus
+		        COUNT(DISTINCT w.id) FILTER (WHERE COALESCE((w.overrides).journal_kind, ji.kind) = 'wos')::bigint    AS wos,
+		        COUNT(DISTINCT w.id) FILTER (WHERE COALESCE((w.overrides).journal_kind, ji.kind) = 'scopus')::bigint AS scopus
 		    FROM works w
 		    JOIN work_authorships wa ON w.id = wa.work_id AND wa.is_external = false
 		    JOIN academics a ON a.orcid = wa.orcid
@@ -574,9 +574,9 @@ impl StatsRepository {
 			"SELECT a.id AS academic_id,
 		        a.names || ' ' || a.paternal_surname || ' ' || a.maternal_surname AS name,
 		        COUNT(DISTINCT w.id)::bigint AS total,
-		        COUNT(DISTINCT w.id) FILTER (WHERE ji.kind = 'scopus')::bigint AS scopus,
-		        COUNT(DISTINCT w.id) FILTER (WHERE ji.kind = 'wos')::bigint    AS wos,
-		        COUNT(DISTINCT w.id) FILTER (WHERE ji.kind IS NULL)::bigint    AS unindexed,
+		        COUNT(DISTINCT w.id) FILTER (WHERE COALESCE((w.overrides).journal_kind, ji.kind) = 'scopus')::bigint AS scopus,
+		        COUNT(DISTINCT w.id) FILTER (WHERE COALESCE((w.overrides).journal_kind, ji.kind) = 'wos')::bigint    AS wos,
+		        COUNT(DISTINCT w.id) FILTER (WHERE COALESCE((w.overrides).journal_kind, ji.kind) IS NULL)::bigint    AS unindexed,
 		        aco.option::text AS option
 		    FROM works w
 		    JOIN work_authorships wa ON w.id = wa.work_id AND wa.is_external = false
@@ -625,8 +625,8 @@ impl StatsRepository {
 			        - CASE WHEN EXTRACT(MONTH FROM w.publication_date) < $1 THEN 1 ELSE 0 END)::smallint
 			       AS period,
 			        COUNT(DISTINCT w.id)::bigint AS total,
-			        COUNT(DISTINCT w.id) FILTER (WHERE ji.kind = 'wos')::bigint    AS wos,
-			        COUNT(DISTINCT w.id) FILTER (WHERE ji.kind = 'scopus')::bigint AS scopus
+			        COUNT(DISTINCT w.id) FILTER (WHERE COALESCE((w.overrides).journal_kind, ji.kind) = 'wos')::bigint    AS wos,
+			        COUNT(DISTINCT w.id) FILTER (WHERE COALESCE((w.overrides).journal_kind, ji.kind) = 'scopus')::bigint AS scopus
 			    FROM works w
 			    JOIN work_authorships wa ON w.id = wa.work_id AND wa.is_external = false
 			    JOIN academics a         ON a.orcid = wa.orcid

@@ -1340,6 +1340,13 @@ components:
           type: string
           nullable: true
           description: ORCID del autor de correspondencia
+        journalKind:
+          type: string
+          nullable: true
+          description: Indexación forzada (precede a la derivada por ISSN)
+          enum:
+            - wos
+            - scopus
 
     WorkOverridesInput:
       description: >
@@ -1382,6 +1389,13 @@ components:
           type: string
           nullable: true
           description: Nuevo ORCID de correspondencia o `null` para limpiar
+        journalKind:
+          type: string
+          nullable: true
+          description: Nueva indexación forzada o `null` para limpiar (vuelve a la derivada por ISSN)
+          enum:
+            - wos
+            - scopus
 
     AuthorshipAffiliationsInput:
       description: Datos de entrada para actualizar afiliaciones de una autoría

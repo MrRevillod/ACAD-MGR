@@ -45,6 +45,7 @@ pub struct WorkOverridesInput {
 	pub is_published: Option<Option<bool>>,
 	pub research_line_id: Option<Option<Uuid>>,
 	pub corresponding_orcid: Option<Option<String>>,
+	pub journal_kind: Option<Option<JournalKind>>,
 }
 
 #[derive(Debug, Deserialize, Validate)]

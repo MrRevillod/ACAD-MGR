@@ -2074,6 +2074,13 @@ components:
               type: string
               nullable: true
               description: Nuevo ORCID de correspondencia o `null` para limpiar
+            journalKind:
+              type: string
+              nullable: true
+              description: Nueva indexación forzada o `null` para limpiar (vuelve a la derivada por ISSN)
+              enum:
+                - wos
+                - scopus
 
     AffiliationsByTokenDto:
       description: >

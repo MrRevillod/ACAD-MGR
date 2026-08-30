@@ -16,7 +16,8 @@ impl WorksRepository {
 			"SELECT w.id, w.openalex_id, w.title, w.abstract_text, w.doi,
 			        w.publication_date, w.publication_year, w.ty, w.lang,
 			        w.is_accepted, w.is_published, w.source_id, w.updated_at, w.overrides,
-			        (SELECT ji.kind FROM journal_issn ji WHERE ji.issn = s.issn)
+			        COALESCE((w.overrides).journal_kind,
+			            (SELECT ji.kind FROM journal_issn ji WHERE ji.issn = s.issn))
 			            AS journal_kind,
 			        rl.id   AS research_line_id,
 			        rl.name AS research_line_name
@@ -76,7 +77,8 @@ impl WorksRepository {
 		        w.doi, w.publication_date, w.publication_year,
 		        w.ty, w.lang, w.is_accepted, w.is_published,
 		        w.source_id, w.updated_at, w.overrides,
-		        (SELECT ji.kind FROM journal_issn ji WHERE ji.issn = s.issn)
+		        COALESCE((w.overrides).journal_kind,
+		            (SELECT ji.kind FROM journal_issn ji WHERE ji.issn = s.issn))
 		            AS journal_kind,
 		        rl.id   AS research_line_id,
 		        rl.name AS research_line_name
@@ -167,7 +169,10 @@ impl WorksRepository {
 		}
 
 		if let Some(ref journal_kind) = query.journal_kind {
-			qb.push("    AND (SELECT ji.kind FROM journal_issn ji WHERE ji.issn = s.issn) = ");
+			qb.push(
+				"    AND COALESCE((w.overrides).journal_kind,
+			            (SELECT ji.kind FROM journal_issn ji WHERE ji.issn = s.issn)) = ",
+			);
 			qb.push_bind(journal_kind);
 		}
 

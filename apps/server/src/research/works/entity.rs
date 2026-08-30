@@ -1,4 +1,4 @@
-use crate::research::SourceId;
+use crate::research::{JournalKind, SourceId};
 use crate::shared::{Entity, Id};
 
 use bon::Builder;
@@ -20,6 +20,7 @@ pub struct WorkOverrides {
 	pub is_published: Option<bool>,
 	pub research_line_id: Option<Uuid>,
 	pub corresponding_orcid: Option<String>,
+	pub journal_kind: Option<JournalKind>,
 }
 
 pub type WorkId = Id<Work>;

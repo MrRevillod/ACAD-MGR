@@ -134,6 +134,10 @@ impl WorksService {
 			work.overrides.corresponding_orcid = v;
 		}
 
+		if let Some(v) = input.journal_kind {
+			work.overrides.journal_kind = v;
+		}
+
 		work.updated_at = chrono::Utc::now();
 		self.works.save(&work).await
 	}
