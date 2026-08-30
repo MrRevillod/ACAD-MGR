@@ -10,6 +10,7 @@ export interface WorkOverridesDTO {
 	isPublished?: boolean | null
 	researchLineId?: string | null
 	correspondingOrcid?: string | null
+	journalKind?: JournalKind | null
 }
 
 export interface WorkDTO {
@@ -125,6 +126,7 @@ export interface WorkOverridesInput {
 	isPublished?: boolean | null
 	researchLineId?: string | null
 	correspondingOrcid?: string | null
+	journalKind?: JournalKind | null
 }
 
 export interface SyncResult {

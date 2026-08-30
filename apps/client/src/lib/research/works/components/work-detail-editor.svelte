@@ -236,19 +236,57 @@
 												class="text-xs font-semibold uppercase tracking-widest text-corp-blue"
 												>Indexación:</span
 											>
-											{#if work.source.kind.code}
+											{#if work.journalKind.code}
 												<Badge
-													variant={work.source.kind.code === "scopus"
+													variant={work.journalKind.code === "scopus"
 														? "advanced"
 														: "base"}
 												>
-													{work.source.kind.toDisplay()}
+													{work.journalKind.toDisplay()}
 												</Badge>
 											{:else}
 												<span
 													class="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-semibold tracking-wide text-red-700 uppercase"
 												>
-													Desconocida
+													Sin indexar
+												</span>
+											{/if}
+											{#if work.isFieldOverridden("journalKind")}
+												<span class="text-[10px] italic text-corp-blue/60">
+													(editado)
+												</span>
+											{/if}
+										</div>
+									</section>
+								{:else if work.journalKind.code || work.isFieldOverridden("journalKind")}
+									<section
+										class="rounded-xl border border-corp-gray/20 bg-white p-4"
+									>
+										<h2
+											class="mb-2 flex items-center gap-1.5 text-xs font-semibold tracking-widest uppercase text-corp-blue"
+										>
+											<Tag class="size-3" />
+											Indexación
+										</h2>
+										<div class="flex items-center gap-2">
+											{#if work.journalKind.code}
+												<Badge
+													variant={work.journalKind.code === "scopus"
+														? "advanced"
+														: "base"}
+												>
+													{work.journalKind.toDisplay()}
+												</Badge>
+											{:else}
+												<span
+													class="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-semibold tracking-wide text-red-700 uppercase"
+												>
+													Sin indexar
+												</span>
+											{/if}
+											{#if work.isFieldOverridden("journalKind")}
+												<span class="text-[10px] italic text-corp-blue/60">
+													(editado)
 												</span>
 											{/if}
 										</div>

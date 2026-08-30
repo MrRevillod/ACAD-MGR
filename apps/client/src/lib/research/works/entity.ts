@@ -40,6 +40,7 @@ export class Work {
 		if (o.isAccepted != null) fields.push("isAccepted")
 		if (o.isPublished != null) fields.push("isPublished")
 		if (o.researchLineId != null) fields.push("researchLineId")
+		if (o.journalKind != null) fields.push("journalKind")
 		return fields
 	}
 

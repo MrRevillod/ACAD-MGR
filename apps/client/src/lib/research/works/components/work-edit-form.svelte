@@ -34,9 +34,21 @@
 		isAccepted: v.boolean(),
 		isPublished: v.boolean(),
 		researchLineId: v.nullable(v.pipe(v.string())),
+		journalKind: v.nullable(v.picklist(["wos", "scopus"])),
 	})
 
 	type EditData = v.InferInput<typeof editSchema>
+
+	const journalKindItems = [
+		{ value: "wos", label: "WoS" },
+		{ value: "scopus", label: "Scopus" },
+		{ value: "", label: "Automática (ISSN)" },
+	]
+
+	function parseJournalKind(value: string | null | undefined): "wos" | "scopus" | null {
+		if (value === "wos" || value === "scopus") return value
+		return null
+	}
 
 	interface AuthorDraft {
 		orcid: string
@@ -98,6 +110,7 @@
 				isAccepted: work.isAccepted,
 				isPublished: work.isPublished,
 				researchLineId: work.researchLineId ?? null,
+				journalKind: parseJournalKind(work.journalKind.code),
 			} satisfies EditData,
 		})
 		authorDrafts = authorships.map((a) => ({
@@ -145,6 +158,11 @@
 			const prevLine = work.researchLineId ?? null
 			if (nextLine !== prevLine) {
 				data.researchLineId = nextLine
+			}
+
+			const currentKind = work.journalKind.code || null
+			if (output.journalKind !== currentKind) {
+				data.journalKind = output.journalKind
 			}
 
 			const currentCorresponding = authorships.find((a) => a.isCorresponding)?.orcid ?? null
@@ -291,6 +309,31 @@
 									placeholder="Seleccionar"
 									class="w-full"
 								/>
+								{#if field.errors}
+									<p class="text-xs text-red-500">{field.errors[0]}</p>
+								{/if}
+							</div>
+						{/snippet}
+					</Field>
+				</section>
+
+				<section>
+					<Field of={form} path={["journalKind"]}>
+						{#snippet children(field)}
+							<div class="space-y-1">
+								<span class="block text-xs font-medium text-corp-gray"
+									>Indexación</span
+								>
+								<Select
+									items={journalKindItems}
+									value={field.input ?? ""}
+									onValueChange={(v) => field.onInput(parseJournalKind(v))}
+									placeholder="Seleccionar"
+									class="w-full"
+								/>
+								<p class="text-[11px] text-corp-gray">
+									Forzar WoS/Scopus o volver a la indexación automática del ISSN.
+								</p>
 								{#if field.errors}
 									<p class="text-xs text-red-500">{field.errors[0]}</p>
 								{/if}
