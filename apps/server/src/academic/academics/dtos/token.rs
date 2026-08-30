@@ -1,4 +1,5 @@
 use super::SelfUpdateAcademicDto;
+use crate::research::WorkOverridesInput;
 
 use serde::{Deserialize, Serialize};
 use validator::Validate;
@@ -31,4 +32,23 @@ pub struct CombinedSelfUpdateDto {
 
 	#[validate(nested)]
 	pub data: SelfUpdateAcademicDto,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkOverridesByTokenDto {
+	#[validate(length(min = 1, message = "El token es obligatorio"))]
+	pub token: String,
+
+	#[validate(nested)]
+	pub data: WorkOverridesInput,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct AffiliationsByTokenDto {
+	#[validate(length(min = 1, message = "El token es obligatorio"))]
+	pub token: String,
+
+	pub affiliations: Vec<String>,
 }

@@ -1,5 +1,5 @@
 use crate::research::{JournalKind, WorkId};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use validator::Validate;
 
@@ -34,7 +34,7 @@ pub struct WorkImportProcessStats {
 	pub keywords: usize,
 }
 
-#[derive(Debug, Validate, Deserialize)]
+#[derive(Debug, Clone, Serialize, Validate, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WorkOverridesInput {
 	pub title: Option<Option<String>>,

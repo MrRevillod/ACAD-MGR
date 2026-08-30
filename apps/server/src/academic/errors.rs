@@ -83,4 +83,11 @@ pub enum AcademicError {
 	)]
 	#[error("El enlace de actualización es inválido o ha expirado")]
 	InvalidOneTimeToken,
+
+	#[http(
+		code = 403,
+		message = "Solo el autor de esta publicación puede editarla"
+	)]
+	#[error("Solo el autor de esta publicación puede editarla")]
+	NotLocalAuthor,
 }

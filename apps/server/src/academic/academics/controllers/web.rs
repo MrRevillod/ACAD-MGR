@@ -1,6 +1,6 @@
 use crate::academic::*;
 use crate::auth::SessionCheck;
-use crate::research::SyncResultView;
+use crate::research::{SyncResultView, WorkId};
 
 use std::env::temp_dir;
 use std::sync::Arc;
@@ -150,5 +150,47 @@ impl AcademicsController {
 		let result = self.academics.sync_works_by_token(&dto.token).await?;
 
 		Ok(result)
+	}
+
+	#[put("/profile/update/works/{id}/overrides")]
+	pub async fn update_work_overrides_by_token(&self, req: Request) -> WebResult<JsonResponse> {
+		let work_id = req.param::<WorkId>("id")?;
+		let input = req.body_validator::<WorkOverridesByTokenDto>()?;
+		self.academics
+			.update_work_overrides_by_token(&input.token, work_id, input.data)
+			.await?;
+
+		Ok(JsonResponse::Ok().message("Overrides actualizados"))
+	}
+
+	#[delete("/profile/update/works/{id}/overrides")]
+	pub async fn clear_work_overrides_by_token(&self, req: Request) -> WebResult<JsonResponse> {
+		let work_id = req.param::<WorkId>("id")?;
+		let input = req.body_validator::<ValidateTokenDto>()?;
+		self.academics
+			.clear_work_overrides_by_token(&input.token, work_id)
+			.await?;
+
+		Ok(JsonResponse::Ok().message("Overrides eliminados"))
+	}
+
+	#[put("/profile/update/works/{id}/authorships/{orcid}/affiliations")]
+	pub async fn update_authorship_affiliations_by_token(
+		&self,
+		req: Request,
+	) -> WebResult<JsonResponse> {
+		let work_id = req.param::<WorkId>("id")?;
+		let orcid = req.param::<String>("orcid")?;
+		let input = req.body_validator::<AffiliationsByTokenDto>()?;
+		self.academics
+			.update_authorship_affiliations_by_token(
+				&input.token,
+				work_id,
+				orcid,
+				input.affiliations,
+			)
+			.await?;
+
+		Ok(JsonResponse::Ok().message("Afiliaciones actualizadas"))
 	}
 }

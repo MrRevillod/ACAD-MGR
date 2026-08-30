@@ -2,6 +2,7 @@ mod import;
 mod openalex;
 mod orcid;
 
+use crate::academic::AcademicId;
 use crate::research::*;
 use crate::shared::AppResult;
 
@@ -28,6 +29,20 @@ impl WorksService {
 		}
 
 		Ok(views)
+	}
+
+	pub async fn exists(&self, work_id: &WorkId) -> AppResult<bool> {
+		Ok(self.works.find_work(work_id).await?.is_some())
+	}
+
+	pub async fn is_local_author(
+		&self,
+		work_id: &WorkId,
+		academic_id: &AcademicId,
+	) -> AppResult<bool> {
+		self.authorships
+			.exists_local_author(work_id, academic_id)
+			.await
 	}
 
 	pub async fn find_by_id(&self, id: WorkId) -> AppResult<WorkView> {

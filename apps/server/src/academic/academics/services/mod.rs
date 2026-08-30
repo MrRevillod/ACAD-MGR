@@ -9,7 +9,9 @@ use crate::{
 	academic::*,
 	auth::AuthConfig,
 	config::ConfigService,
-	research::{SyncResultView, WorksImportService},
+	research::{
+		SyncResultView, WorkId, WorkOverridesInput, WorksError, WorksImportService, WorksService,
+	},
 	shared::{AppResult, JsonWebTokenService},
 	university::*,
 };
@@ -33,6 +35,7 @@ pub struct AcademicsService {
 	edit_codes: Arc<EditCodesService>,
 
 	works_import: Arc<WorksImportService>,
+	works: Arc<WorksService>,
 }
 
 impl AcademicsService {
@@ -412,5 +415,56 @@ impl AcademicsService {
 		let academic_id = self.validate_one_time_token(token).await?;
 
 		self.works_import.sync_works(academic_id).await
+	}
+
+	async fn ensure_can_edit_work(
+		&self,
+		work_id: &WorkId,
+		academic_id: &AcademicId,
+	) -> AppResult<()> {
+		if !self.works.exists(work_id).await? {
+			Err(WorksError::NotFound)?;
+		}
+
+		if !self.works.is_local_author(work_id, academic_id).await? {
+			Err(AcademicError::NotLocalAuthor)?;
+		}
+
+		Ok(())
+	}
+
+	pub async fn update_work_overrides_by_token(
+		&self,
+		token: &str,
+		work_id: WorkId,
+		input: WorkOverridesInput,
+	) -> AppResult<()> {
+		let academic_id = self.validate_one_time_token(token).await?;
+		self.ensure_can_edit_work(&work_id, &academic_id).await?;
+		self.works.update_overrides(work_id, input).await
+	}
+
+	pub async fn clear_work_overrides_by_token(
+		&self,
+		token: &str,
+		work_id: WorkId,
+	) -> AppResult<()> {
+		let academic_id = self.validate_one_time_token(token).await?;
+		self.ensure_can_edit_work(&work_id, &academic_id).await?;
+		self.works.clear_overrides(work_id).await
+	}
+
+	pub async fn update_authorship_affiliations_by_token(
+		&self,
+		token: &str,
+		work_id: WorkId,
+		orcid: String,
+		affiliations: Vec<String>,
+	) -> AppResult<()> {
+		let academic_id = self.validate_one_time_token(token).await?;
+		self.ensure_can_edit_work(&work_id, &academic_id).await?;
+		self.works
+			.update_authorship_affiliations(work_id, orcid, affiliations)
+			.await
 	}
 }

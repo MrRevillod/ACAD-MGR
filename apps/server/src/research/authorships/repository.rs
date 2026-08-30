@@ -1,3 +1,4 @@
+use crate::academic::AcademicId;
 use crate::research::*;
 use crate::shared::{AppResult, Database};
 
@@ -63,6 +64,26 @@ impl AuthorshipsRepository {
 			.await?;
 
 		Ok(result.rows_affected() as usize)
+	}
+
+	pub async fn exists_local_author(
+		&self,
+		work_id: &WorkId,
+		academic_id: &AcademicId,
+	) -> AppResult<bool> {
+		let exists = sqlx::query_scalar::<_, bool>(
+			"SELECT EXISTS(
+				SELECT 1 FROM work_authorships wa
+				JOIN academics a ON a.orcid = wa.orcid
+				WHERE wa.work_id = $1 AND a.id = $2
+			)",
+		)
+		.bind(work_id)
+		.bind(academic_id)
+		.fetch_one(self.database.pool())
+		.await?;
+
+		Ok(exists)
 	}
 
 	pub async fn update_affiliations(
