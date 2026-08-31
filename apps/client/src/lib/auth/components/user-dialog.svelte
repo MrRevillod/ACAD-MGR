@@ -21,9 +21,8 @@
 
 	let { user = null, open = $bindable(), onClose, onDelete }: Props = $props()
 
-	// svelte-ignore state_referenced_locally
-	const schema = user ? updateUserDTOSchema : createUserDTOSchema
-	const form = createForm({ schema })
+	const schema = $derived(user ? updateUserDTOSchema : createUserDTOSchema)
+	const form = $derived.by(() => createForm({ schema }))
 
 	$effect(() => {
 		if (!open) return
