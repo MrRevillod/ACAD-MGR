@@ -21,6 +21,8 @@
   show-line: true,
 ) = {
   align(center)[
+    #v(-2em)
+    #image("logo.png", width: 50%)
     #text(font: "P052", size: 18pt, weight: "bold")[#title]
     #v(-0.1cm)
     #text(font: "P052", size: 11pt, style: "italic", fill: luma(100))[#subtitle]
@@ -40,17 +42,16 @@
 
 #report-head(
   "Plataforma de Visualización y Gestión de Investigación",
-  "Reporte del Proyecto",
+  "Reporte de Proyecto y Proyección futura",
   show-line: true,
 )
 
 #v(6pt)
 
-#heading(numbering: none)[Resumen]
-
-Este documento presenta la plataforma de gestión de la producción científica de la Facultad de Ingeniería de la Universidad Católica de Temuco. Describe las capacidades implementadas, la proyección de su evolución futura y los aspectos técnicos de su implementación.
 
 #heading(numbering: none)[Introducción]
+
+Este documento presenta la plataforma de gestión de la producción científica de la Facultad de Ingeniería de la Universidad Católica de Temuco. Describe las capacidades implementadas, la proyección de su evolución futura y los aspectos técnicos de su implementación.
 
 Al comenzar el proyecto y el análisis de la situación, se identificó que la Facultad de Ingeniería carecía de un *sistema centralizado* para gestionar y analizar la producción científica de sus académicos. El requerimiento general consistió en construir una *plataforma web* que permitiera importar, clasificar y analizar las publicaciones académicas de los investigadores de la facultad, con el objetivo de reemplazar la gestión manual basada en planillas Excel.
 
@@ -66,8 +67,6 @@ El sistema está pensado para una sola unidad académica: la *Facultad de Ingeni
 - *10 carreras* distribuidas entre esos departamentos
 
 El diseño del modelo de datos refleja esta jerarquía institucional de forma explícita. La organización se representa con una cadena *facultad → departamento → carrera*, a la que se suman dos dimensiones propias del ámbito académico: el *cargo laboral* del académico y su *categorización académica* (planta permanente o adjunta, con una opción de docencia o investigación y horas asociadas).
-
-Este dato es relevante para el alcance: la plataforma *no está diseñada (por ahora) para múltiples facultades o para toda la universidad*, aunque su modelo de datos lo permitiría bajo ciertos cambios.
 
 #pagebreak()
 
@@ -147,8 +146,11 @@ La plataforma entrega un conjunto de vistas analíticas con gráficos y KPIs que
 - *A nivel de departamento:* resumen, top de publicadores y tendencia por tipo de indexación.
 - *A nivel de línea de investigación:* resumen, distribución por departamento y top de publicadores.
 - *A nivel de académico:* distribución por línea, línea dominante, tendencia anual y *contribución relativa*.
+- *A nivel de facultad, departamento y línea de investigación:* los indicadores y gráficos de *productividad por jornada completa equivalente (JCE)*.
 
 La *contribución relativa* es una de las vistas de mayor valor: muestra cuánto aporta un académico a su facultad, a su departamento y a su línea de investigación, mediante indicadores comparativos. Esto permite valorar el desempeño individual en el contexto de su unidad. Todas las vistas admiten filtros de rango de años, departamento y tipo de indexación.
+
+La plataforma complementa las estadísticas con un *indicador de productividad* que relaciona las publicaciones de cada año con la *jornada completa equivalente (JCE)* de los académicos del alcance, expresado en *publicaciones por hora de jornada*. Al trabajar sobre una base homogénea de tiempo de trabajo, el valor es comparable entre distintas unidades y distintos años, y reemplaza el cálculo manual que se realizaba en planillas. Se entregan tres series por año — *total*, *WoS* y *Scopus* —, filtrables por *grado académico* del autor (todas, doctores o magísteres, con una variante definida para cada vista), por *indexación* y por el *mes de corte* que define la agrupación en años académicos. El denominador corresponde a la jornada en horas de los académicos considerados: por defecto, los *doctores* del alcance, con la posibilidad de ampliarlo a *todos los académicos del alcance* (doctores, magísteres y profesionales). El panel muestra además la jornada acumulada y el número de académicos incluidos, y en el caso de una línea de investigación el denominador considera la *línea dominante* de cada académico.
 
 === Red de colaboraciones y recomendaciones
 
@@ -159,11 +161,10 @@ Sobre esta base, el sistema *recomienda potenciales colaboradores* que no perten
 === Vistas públicas y administrativas
 
 - *Vista pública:* directorio de académicos (con filtros de búsqueda, departamento y carrera) y perfil público de cada uno, organizado en pestañas de publicaciones, estadísticas y red de colaboración. No requiere iniciar sesión, por lo que sirve como carta de presentación de la producción científica de la facultad.
+
 - *Vista administrativa:* gestión completa de académicos, categorías, opciones, cargos, líneas de investigación, publicaciones y usuarios.
 
-=== Autenticación y gestión de usuarios
-
-El acceso administrativo está protegido con *inicio de sesión por correo y contraseña*, basado en tokens (JWT) gestionados mediante cookies y *sesiones revocables*. La gestión de usuarios permite crear, editar y eliminar cuentas de administración.
+El acceso administrativo está protegido con *inicio de sesión por correo y contraseña*.
 
 === Autoservicio de perfil por parte del académico
 
@@ -179,7 +180,3 @@ De este modo, la plataforma combina la automatización de la importación con la
 = Proyección a futuro
 
 Este apartado presenta las líneas de evolución previstas para la plataforma.
-
-= Apartado técnico e implementación
-
-Este apartado describe el stack, la arquitectura, la estructura del código y la base de datos del sistema.
