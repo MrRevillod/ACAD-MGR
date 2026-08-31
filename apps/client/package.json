@@ -10,7 +10,7 @@
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-		"lint": "prettier --check --config ../../.prettierrc --ignore-path ../../.prettierignore . && eslint .",
+		"lint": "svelte-kit sync && prettier --check --config ../../.prettierrc --ignore-path ../../.prettierignore . && eslint .",
 		"format": "prettier --write --config ../../.prettierrc --ignore-path ../../.prettierignore ."
 	},
 	"packageManager": "pnpm@11.6.0",
