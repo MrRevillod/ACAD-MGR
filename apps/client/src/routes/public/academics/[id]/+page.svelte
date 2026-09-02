@@ -22,12 +22,17 @@
 
 	const yearFromDefault = String(new Date().getFullYear() - 5)
 
-	const yearParamsSchema = v.object({
+	const filtersParamsSchema = v.object({
 		yearFrom: v.optional(v.fallback(v.string(), yearFromDefault), yearFromDefault),
 		yearTo: v.optional(v.fallback(v.string(), ""), ""),
+		researchLineId: v.optional(v.fallback(v.string(), ""), ""),
+		journalKind: v.optional(v.fallback(v.string(), ""), ""),
 	})
 
-	const yearParams = useSearchParams(yearParamsSchema, { debounce: 300, pushHistory: false })
+	const filtersParams = useSearchParams(filtersParamsSchema, {
+		debounce: 300,
+		pushHistory: false,
+	})
 
 	const tabParamsSchema = v.object({
 		tab: v.optional(
@@ -163,8 +168,10 @@
 							<WorksSection
 								{academic}
 								readonly
-								bind:yearFrom={yearParams.yearFrom}
-								bind:yearTo={yearParams.yearTo}
+								bind:yearFrom={filtersParams.yearFrom}
+								bind:yearTo={filtersParams.yearTo}
+								bind:researchLineId={filtersParams.researchLineId}
+								bind:journalKind={filtersParams.journalKind}
 							/>
 						{/if}
 					</div>

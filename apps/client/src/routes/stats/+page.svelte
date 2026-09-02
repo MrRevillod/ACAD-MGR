@@ -19,6 +19,7 @@
 	const searchParamsSchema = v.object({
 		yearFrom: v.optional(v.fallback(v.string(), defaultYearFrom), defaultYearFrom),
 		yearTo: v.optional(v.fallback(v.string(), defaultYearTo), defaultYearTo),
+		limit: v.optional(v.fallback(v.string(), "10"), "10"),
 	})
 
 	const params = useSearchParams(searchParamsSchema, {
@@ -29,6 +30,7 @@
 	const queryParams = $derived<StatsQuery>({
 		yearFrom: Number(params.yearFrom),
 		yearTo: Number(params.yearTo),
+		limit: Number(params.limit),
 	})
 
 	const statsQuery = useWorksStatsQuery(() => queryParams)
@@ -84,6 +86,7 @@
 		<div class="mt-4">
 			<StatsHub
 				data={statsQuery.data}
+				bind:limit={params.limit}
 				productivity={{
 					denominator: "de la facultad",
 					degree: "all",

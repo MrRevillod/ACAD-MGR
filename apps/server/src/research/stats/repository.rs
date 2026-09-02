@@ -195,6 +195,7 @@ impl StatsRepository {
 		&self,
 		id: &Uuid,
 		query: &DepartmentDetailQuery,
+		limit: i32,
 	) -> AppResult<Vec<TopPublisherRow>> {
 		sqlx::query_as::<_, TopPublisherRow>(
 			"SELECT a.id AS academic_id,
@@ -220,13 +221,14 @@ impl StatsRepository {
 		        AND ($5::journal_kind IS NULL OR COALESCE((w.overrides).journal_kind, ji.kind) = $5)
 		    GROUP BY a.id, a.names, a.paternal_surname, a.maternal_surname, aco.option
 		    ORDER BY total DESC
-		    LIMIT 20",
+		    LIMIT $6",
 		)
 		.bind(id)
 		.bind(query.year_from.unwrap_or(1900))
 		.bind(query.year_to)
 		.bind(query.option)
 		.bind(query.journal_kind)
+		.bind(limit)
 		.fetch_all(self.database.pool())
 		.await
 		.map_err(Into::into)
@@ -235,6 +237,7 @@ impl StatsRepository {
 	pub async fn top_publishers_faculty(
 		&self,
 		query: &WorksStatsQuery,
+		limit: i32,
 	) -> AppResult<Vec<TopPublisherRow>> {
 		sqlx::query_as::<_, TopPublisherRow>(
 			"SELECT a.id AS academic_id,
@@ -256,10 +259,11 @@ impl StatsRepository {
 		            OR COALESCE((w.overrides).publication_year, w.publication_year) <= $2)
 		    GROUP BY a.id, a.names, a.paternal_surname, a.maternal_surname, aco.option
 		    ORDER BY total DESC
-		    LIMIT 20",
+		    LIMIT $3",
 		)
 		.bind(query.year_from.unwrap_or(1900))
 		.bind(query.year_to)
+		.bind(limit)
 		.fetch_all(self.database.pool())
 		.await
 		.map_err(Into::into)
@@ -569,6 +573,7 @@ impl StatsRepository {
 		&self,
 		line_id: &Uuid,
 		query: &ResearchLineStatsQuery,
+		limit: i32,
 	) -> AppResult<Vec<TopPublisherRow>> {
 		sqlx::query_as::<_, TopPublisherRow>(
 			"SELECT a.id AS academic_id,
@@ -602,11 +607,12 @@ impl StatsRepository {
 		        ) = $1
 		    GROUP BY a.id, a.names, a.paternal_surname, a.maternal_surname, aco.option
 		    ORDER BY total DESC
-		    LIMIT 20",
+		    LIMIT $4",
 		)
 		.bind(line_id)
 		.bind(query.year_from.unwrap_or(1900))
 		.bind(query.year_to.unwrap_or(2100))
+		.bind(limit)
 		.fetch_all(self.database.pool())
 		.await
 		.map_err(Into::into)

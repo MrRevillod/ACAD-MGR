@@ -8,6 +8,7 @@
 	import ProductivityHelpDialog from "./productivity-help-dialog.svelte"
 	import ProductivityPanel from "./productivity-panel.svelte"
 	import StatsSection from "./stats-section.svelte"
+	import TopLimitSelect from "./top-limit-select.svelte"
 	import TopPublishersTable from "./top-publishers-table.svelte"
 	import TrendLine from "./trend-line.svelte"
 
@@ -17,9 +18,10 @@
 	interface Props {
 		data: ResearchLineStatsResponse
 		productivity: ProductivitySectionProps
+		limit?: string
 	}
 
-	let { data, productivity }: Props = $props()
+	let { data, productivity, limit = $bindable("10") }: Props = $props()
 
 	let openSection = $state<"trend" | "ranking" | "productivity">("trend")
 	function initialDegree() {
@@ -53,6 +55,10 @@
 	>
 		<Info class="size-5" />
 	</button>
+{/snippet}
+
+{#snippet rankingAction()}
+	<TopLimitSelect bind:value={limit} />
 {/snippet}
 
 <div class="space-y-4">
@@ -104,7 +110,8 @@
 			icon={Trophy}
 			open={openSection === "ranking"}
 			ontoggle={() => (openSection = "ranking")}
-			description="Top 20 publicadores del periodo, ordenados por total de publicaciones."
+			action={rankingAction}
+			description="Top {limit} publicadores del periodo, ordenados por total de publicaciones."
 		>
 			<div class="grid grid-cols-1 items-start gap-8 lg:grid-cols-[320px_1fr]">
 				<div class="w-full">

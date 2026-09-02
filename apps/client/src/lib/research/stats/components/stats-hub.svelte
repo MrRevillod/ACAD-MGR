@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { WorksStatsResponse } from "$stats/dtos"
 
-	import { ArrowRight, Building2, ChartBar, Gauge, Info, Layers } from "@lucide/svelte"
+	import { ArrowRight, Building2, ChartBar, Gauge, Info, Layers, Trophy } from "@lucide/svelte"
 
 	import { buildProductivityDescription } from "../productivity-labels"
 	import { withScopeColors } from "./scope-colors"
@@ -11,6 +11,8 @@
 	import ProductivityHelpDialog from "./productivity-help-dialog.svelte"
 	import ProductivityPanel from "./productivity-panel.svelte"
 	import StatsSection from "./stats-section.svelte"
+	import TopLimitSelect from "./top-limit-select.svelte"
+	import TopPublishersTable from "./top-publishers-table.svelte"
 	import TrendLine from "./trend-line.svelte"
 
 	import type { ProductivityDegree, ProductivityJceScope } from "../dtos"
@@ -19,11 +21,14 @@
 	interface Props {
 		data: WorksStatsResponse
 		productivity: ProductivitySectionProps
+		limit?: string
 	}
 
-	let { data, productivity }: Props = $props()
+	let { data, productivity, limit = $bindable("10") }: Props = $props()
 
-	let openSection = $state<"faculty" | "departments" | "lines" | "productivity">("faculty")
+	let openSection = $state<"faculty" | "ranking" | "departments" | "lines" | "productivity">(
+		"faculty",
+	)
 	let deptKind = $state<"wos" | "scopus">("wos")
 	let lineKind = $state<"wos" | "scopus">("wos")
 	function initialDegree() {
@@ -73,6 +78,10 @@
 	<IndexationToggle bind:kind={lineKind} />
 {/snippet}
 
+{#snippet rankingAction()}
+	<TopLimitSelect bind:value={limit} />
+{/snippet}
+
 {#snippet productivityInfoAction()}
 	<button
 		type="button"
@@ -96,6 +105,17 @@
 		description="Publicaciones de la Facultad de Ingeniería indexadas en WoS y Scopus, por año."
 	>
 		<TrendLine journalKind={data.byJournalKind} />
+	</StatsSection>
+
+	<StatsSection
+		title="Top publicadores de la facultad"
+		icon={Trophy}
+		open={openSection === "ranking"}
+		ontoggle={() => (openSection = "ranking")}
+		action={rankingAction}
+		description="Top {limit} publicadores del periodo, ordenados por total de publicaciones."
+	>
+		<TopPublishersTable publishers={data.topPublishers} />
 	</StatsSection>
 
 	<StatsSection

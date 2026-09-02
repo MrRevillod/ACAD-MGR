@@ -50,10 +50,24 @@ impl WorksImportService {
 				continue;
 			};
 
+			if let Some(pub_date) = ow.publication_date
+				&& pub_date < academic.joined_at
+			{
+				continue;
+			}
+
 			let Some(oa_work) = self.openalex.get_work_by_doi(doi).await? else {
 				not_found_in_openalex += 1;
 				continue;
 			};
+
+			if ow.publication_date.is_none() {
+				match oa_work.publication_date() {
+					Some(pub_date) if pub_date < academic.joined_at => continue,
+					Some(_) => {}
+					None => continue,
+				}
+			}
 
 			if oa_work.ty() != WorkType::Article {
 				continue;

@@ -17,6 +17,9 @@ pub struct WorksStatsQuery {
 
 	#[validate(range(min = 1900, max = 2100))]
 	pub year_to: Option<i16>,
+
+	#[validate(range(min = 1, max = 100))]
+	pub limit: Option<i32>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -82,6 +85,9 @@ pub struct DepartmentDetailQuery {
 	pub option: Option<AcademicOption>,
 
 	pub journal_kind: Option<JournalKind>,
+
+	#[validate(range(min = 1, max = 100))]
+	pub limit: Option<i32>,
 }
 
 #[derive(Debug, Deserialize, Validate, Default)]
@@ -155,6 +161,9 @@ pub struct ResearchLineStatsQuery {
 
 	#[validate(range(min = 1900, max = 2100))]
 	pub year_to: Option<i16>,
+
+	#[validate(range(min = 1, max = 100))]
+	pub limit: Option<i32>,
 }
 
 #[derive(Debug, Clone, Copy, Deserialize, Serialize)]

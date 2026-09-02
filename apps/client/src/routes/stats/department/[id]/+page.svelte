@@ -24,6 +24,7 @@
 		yearTo: v.optional(v.fallback(v.string(), defaultYearTo), defaultYearTo),
 		option: v.optional(v.fallback(v.string(), ""), ""),
 		journalKind: v.optional(v.fallback(v.string(), ""), ""),
+		limit: v.optional(v.fallback(v.string(), "10"), "10"),
 	})
 
 	const params = useSearchParams(searchParamsSchema, {
@@ -40,6 +41,7 @@
 		...(params.journalKind && {
 			journalKind: params.journalKind as "wos" | "scopus",
 		}),
+		limit: Number(params.limit),
 	})
 
 	const optionItems = [
@@ -97,6 +99,7 @@
 
 		<DepartmentStats
 			data={detailQuery.data}
+			bind:limit={params.limit}
 			productivity={{
 				denominator: "del departamento",
 				degree: "magister",

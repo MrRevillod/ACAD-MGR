@@ -1,12 +1,14 @@
 use crate::research::WorksError;
 use crate::shared::AppResult;
 
+use chrono::NaiveDate;
 use orcid::Client as OrcidApiClient;
 use sword::prelude::*;
 
 #[derive(Debug, Clone)]
 pub struct OrcidWork {
 	pub doi: Option<String>,
+	pub publication_date: Option<NaiveDate>,
 }
 
 #[injectable(provider)]
@@ -40,7 +42,18 @@ impl OrcidClient {
 					.find(|(ty, _)| ty == "doi")
 					.map(|(_, value)| value.clone());
 
-				OrcidWork { doi }
+				let publication_date = w.publication_date.year().and_then(|year| {
+					NaiveDate::from_ymd_opt(
+						year as i32,
+						u32::from(w.publication_date.month().unwrap_or(1)),
+						u32::from(w.publication_date.day().unwrap_or(1)),
+					)
+				});
+
+				OrcidWork {
+					doi,
+					publication_date,
+				}
 			})
 			.collect())
 	}

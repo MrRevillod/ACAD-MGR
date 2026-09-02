@@ -416,6 +416,7 @@ paths:
         - $ref: "#/components/parameters/StatsDepartmentId"
         - $ref: "#/components/parameters/StatsYearFrom"
         - $ref: "#/components/parameters/StatsYearTo"
+        - $ref: "#/components/parameters/StatsLimit"
       responses:
         "200":
           description: Estadísticas obtenidas exitosamente
@@ -455,6 +456,7 @@ paths:
         - $ref: "#/components/parameters/StatsYearTo"
         - $ref: "#/components/parameters/StatsOption"
         - $ref: "#/components/parameters/StatsJournalKind"
+        - $ref: "#/components/parameters/StatsLimit"
       responses:
         "200":
           description: Estadísticas del departamento obtenidas exitosamente
@@ -544,6 +546,7 @@ paths:
           example: 9a8b7c6d-5e4f-3210-9876-fedcbaabcdef
         - $ref: "#/components/parameters/StatsYearFrom"
         - $ref: "#/components/parameters/StatsYearTo"
+        - $ref: "#/components/parameters/StatsLimit"
       responses:
         "200":
           description: Estadísticas de la línea obtenidas exitosamente
@@ -1079,6 +1082,16 @@ components:
       required: false
       schema:
         $ref: "#/components/schemas/AcademicOption"
+    StatsLimit:
+      name: limit
+      in: query
+      description: Número máximo de publicadores a retornar (top N)
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 10
 
     # ------------------------------------------------------------------
     # WorkClassificationQueryDto

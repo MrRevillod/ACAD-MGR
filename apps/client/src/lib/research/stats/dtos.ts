@@ -3,6 +3,7 @@ export interface StatsQuery {
 	departmentId?: string
 	yearFrom?: number
 	yearTo?: number
+	limit?: number
 }
 
 export interface YearValue {
@@ -70,6 +71,7 @@ export interface DepartmentDetailQuery {
 	yearTo?: number
 	option?: "teaching" | "research"
 	journalKind?: "wos" | "scopus"
+	limit?: number
 }
 
 export interface AcademicStatsQuery {
@@ -102,6 +104,7 @@ export interface AcademicStatsResponse {
 export interface ResearchLineStatsQuery {
 	yearFrom?: number
 	yearTo?: number
+	limit?: number
 }
 
 export interface ResearchLineStatsResponse {

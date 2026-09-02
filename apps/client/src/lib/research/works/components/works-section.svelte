@@ -3,9 +3,12 @@
 	import type { Academic } from "$academics/entity"
 
 	import { useWorksByAcademicQuery } from "$works/queries"
+	import { useResearchLinesQuery } from "$research/classification/queries"
 	import { CircleAlert, BookOpen, Loader } from "@lucide/svelte"
 	import { goto } from "$app/navigation"
 
+	import Label from "$shared/components/ui/label.svelte"
+	import Select from "$shared/components/ui/select.svelte"
 	import YearRange from "$shared/components/ui/year-range.svelte"
 	import WorksTable from "./works-table.svelte"
 	import SyncWorksButton from "./sync-works-button.svelte"
@@ -14,6 +17,8 @@
 		academic: Academic
 		yearFrom?: string
 		yearTo?: string
+		researchLineId?: string
+		journalKind?: string
 		readonly?: boolean
 	}
 
@@ -21,13 +26,30 @@
 		academic,
 		yearFrom = $bindable(""),
 		yearTo = $bindable(""),
+		researchLineId = $bindable(""),
+		journalKind = $bindable(""),
 		readonly = false,
 	}: Props = $props()
+
+	const researchLinesQuery = useResearchLinesQuery()
+
+	const researchLineItems = $derived([
+		{ value: "", label: "Todas las líneas" },
+		...(researchLinesQuery.data?.map((rl) => ({ value: rl.id, label: rl.name })) ?? []),
+	])
+
+	const journalKindItems = $derived([
+		{ value: "", label: "Todas las clasificaciones" },
+		{ value: "wos", label: "WoS" },
+		{ value: "scopus", label: "Scopus" },
+	])
 
 	function worksParams() {
 		return {
 			...(yearFrom && { yearFrom: Number(yearFrom) }),
 			...(yearTo && { yearTo: Number(yearTo) }),
+			...(researchLineId && { researchLineId }),
+			...(journalKind && { journalKind }),
 		}
 	}
 
@@ -39,35 +61,31 @@
 </script>
 
 <section class="rounded-xl border border-corp-gray/20 bg-white p-6">
-	<div class="mb-6 flex flex-wrap items-center justify-between gap-3">
-		<div
-			class="flex items-center gap-2 text-xs font-semibold tracking-widest uppercase text-corp-blue"
-		>
-			<BookOpen class="size-4 text-corp-blue" />
-			Publicaciones
-			{#if worksQuery.data}
-				<span
-					class="rounded-full bg-corp-gray/10 px-2 py-0.5 text-[11px] font-semibold tracking-wide text-corp-gray tabular-nums"
-				>
-					{worksQuery.data.length}
-				</span>
-			{/if}
+	<div class="mb-4 flex flex-row gap-2 justify-between">
+		<div class="space-y-2.5">
+			<Label>Línea de investigación</Label>
+			<Select items={researchLineItems} bind:value={researchLineId} class="min-w-40" />
 		</div>
-		<div class="flex items-end gap-3">
-			<YearRange
-				bind:yearFrom
-				bind:yearTo
-				label="Rango anual de publicación"
-				showLabels={false}
-				placeholderFrom="DESDE"
-				placeholderTo="HASTA"
-				minYear={1900}
-				class="min-w-72"
-			/>
-			{#if !readonly}
+		<div class="space-y-2.5">
+			<Label>Indexación</Label>
+			<Select items={journalKindItems} bind:value={journalKind} class="min-w-52" />
+		</div>
+		<YearRange
+			bind:yearFrom
+			bind:yearTo
+			label="Rango anual de publicación"
+			showLabels={false}
+			placeholderFrom="DESDE"
+			placeholderTo="HASTA"
+			minYear={1900}
+			class="min-w-72"
+		/>
+		{#if !readonly}
+			<div class="space-y-2.5 mt-5">
+				<Label>{null}</Label>
 				<SyncWorksButton academicId={academic.id} orcid={academic.orcid ?? null} />
-			{/if}
-		</div>
+			</div>
+		{/if}
 	</div>
 
 	{#if worksQuery.isPending}
