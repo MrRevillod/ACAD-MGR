@@ -12,13 +12,14 @@
 	import YearRange from "$shared/components/ui/year-range.svelte"
 	import WorksTable from "./works-table.svelte"
 	import SyncWorksButton from "./sync-works-button.svelte"
+	import type { JournalKind } from "../value-objects/journal-kind.value"
 
 	interface Props {
 		academic: Academic
 		yearFrom?: string
 		yearTo?: string
 		researchLineId?: string
-		journalKind?: string
+		journalKind?: JournalKind
 		readonly?: boolean
 	}
 
@@ -27,7 +28,7 @@
 		yearFrom = $bindable(""),
 		yearTo = $bindable(""),
 		researchLineId = $bindable(""),
-		journalKind = $bindable(""),
+		journalKind = $bindable("" as JournalKind),
 		readonly = false,
 	}: Props = $props()
 

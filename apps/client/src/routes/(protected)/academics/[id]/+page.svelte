@@ -1,6 +1,7 @@
 <script lang="ts">
 	import * as v from "valibot"
 	import type { Degree } from "$degrees/entity"
+	import type { JournalKind } from "$works/value-objects/journal-kind.value"
 
 	import { page } from "$app/state"
 	import { toast } from "svelte-sonner"
@@ -484,7 +485,7 @@
 								bind:yearFrom={filtersParams.yearFrom}
 								bind:yearTo={filtersParams.yearTo}
 								bind:researchLineId={filtersParams.researchLineId}
-								bind:journalKind={filtersParams.journalKind}
+								bind:journalKind={filtersParams.journalKind as JournalKind}
 							/>
 						{/if}
 					</div>
